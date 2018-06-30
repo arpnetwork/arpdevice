@@ -1,0 +1,3 @@
+[submodule "adb"]
+	path = adb
+	url = https://github.com/arpnetwork/adb.git

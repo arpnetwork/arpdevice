@@ -1,0 +1,37 @@
+.DS_Store
+
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# Android Studio
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.idea/
+.gradle
+gradle
+/*/out
+/build
+/captures
+.externalNativeBuild
+/*/*/build
+/*/*/production
+*.iml
+*.iws
+*.ipr
+*~
+*.swp
+
+//ignore git submodule project.
+/adb

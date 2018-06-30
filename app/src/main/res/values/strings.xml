@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ARPDevice</string>
+    <string name="msg_user_cancelled">user cancelled</string>
+    <string name="service_start_label">recording...</string>
+</resources>
