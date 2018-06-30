@@ -2,18 +2,18 @@
 
 An Android app act as a container to install and run third-party android apps and streaming its screen content to arpclient which connecting with. This app also register current device to the cloud so that the cloud can pick one desired device to run this app once the arpclient request.
 
-##Pre-requisites
+## Pre-requisites
 
 * Android SDK v22
 * Android Studio v3.0
 
-##Features
+## Features
 
 *  install and run third-party android apps.
 *  streaming the third-party android apps contents to client.
 *  register user device to cloud.
 
-##Building
+## Building
 Clone this project from github.
 
 ```
@@ -28,7 +28,7 @@ git submodule update
 
 ```
 
-##Running
+## Running
 1,connect your android phone to computer with USB.
 
 2,push `arptouch` binary to /data/local/tmp by adb.
