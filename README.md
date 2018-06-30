@@ -18,6 +18,7 @@ Clone this project from github.
 
 ```
 git clone https://github.com/arpnetwork/arpdevice.git
+cd arpdevice
 
 ```
 download git submodule.
