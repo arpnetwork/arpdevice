@@ -32,6 +32,3 @@ gradle
 *.ipr
 *~
 *.swp
-
-//ignore git submodule project.
-/adb
