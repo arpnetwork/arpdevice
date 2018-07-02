@@ -18,13 +18,11 @@ package org.arpnetwork.arpdevice.screenrecoder;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
-import android.util.Log;
 import android.view.Surface;
 
 import java.util.Objects;
 
 class VideoEncoder extends BaseEncoder {
-    private static final boolean VERBOSE = false;
     private VideoEncodeConfig mConfig;
     private Surface mSurface;
 
@@ -35,7 +33,6 @@ class VideoEncoder extends BaseEncoder {
     @Override
     protected void onEncoderConfigured(MediaCodec encoder) {
         mSurface = encoder.createInputSurface();
-        if (VERBOSE) Log.i("@@", "VideoEncoder create input surface: " + mSurface);
     }
 
     @Override

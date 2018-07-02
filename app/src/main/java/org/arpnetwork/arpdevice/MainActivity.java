@@ -21,14 +21,12 @@ import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.server.DataServer;
+import org.arpnetwork.arpdevice.stream.RecordService;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "MainActivity";
-
     private static final int REQUEST_MEDIA_PROJECTION = 1;
     private MediaProjectionManager mMediaProjectionManager;
 
@@ -48,10 +46,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             if (resultCode != Activity.RESULT_OK) {
-                Log.i(TAG, "User cancelled");
                 Toast.makeText(this, R.string.msg_user_cancelled, Toast.LENGTH_SHORT).show();
                 return;
             }
+
             //TODO add toast to inform user to keep allowed once the user has granted.
             Intent service = new Intent(this, RecordService.class);
             service.putExtra("code", resultCode);
@@ -74,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private DataServer.ConnectionListener mConnectionListener = new DataServer.ConnectionListener() {
+
         @Override
         public void onConnected() {
 
@@ -100,11 +99,4 @@ public class MainActivity extends AppCompatActivity {
 
         }
     };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        Log.d(TAG, "onDestroy");
-    }
 }

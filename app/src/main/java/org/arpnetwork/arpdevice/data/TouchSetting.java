@@ -18,7 +18,7 @@ package org.arpnetwork.arpdevice.data;
 
 import android.text.TextUtils;
 
-import org.arpnetwork.arpdevice.Touch;
+import org.arpnetwork.arpdevice.stream.Touch;
 
 public class TouchSetting {
     public int contacts;

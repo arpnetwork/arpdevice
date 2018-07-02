@@ -23,7 +23,7 @@
         </activity>
 
         <service
-            android:name=".RecordService"
+            android:name=".stream.RecordService"
             android:enabled="true"
             android:exported="false" /> <!--only used by ourselves. -->
     </application>

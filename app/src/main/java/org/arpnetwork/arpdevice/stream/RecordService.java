@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice;
+package org.arpnetwork.arpdevice.stream;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -29,6 +29,8 @@ import android.util.Log;
 import android.util.SparseIntArray;
 import android.widget.Toast;
 
+import org.arpnetwork.arpdevice.MainActivity;
+import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.screenrecoder.ScreenRecorder;
 import org.arpnetwork.arpdevice.screenrecoder.VideoEncodeConfig;
 import org.arpnetwork.arpdevice.server.DataServer;
@@ -68,8 +70,6 @@ public class RecordService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand #" + startId);
-
         mResultCode = intent.getIntExtra("code", -1);
         mResultData = intent.getParcelableExtra("data");
         mQuality = intent.getIntExtra("quality", 0);
@@ -85,11 +85,6 @@ public class RecordService extends Service {
         return START_STICKY;
     }
 
-    private MediaProjection createMediaProjection() {
-        Log.i(TAG, "Create MediaProjection");
-        return mMediaProjectionManager.getMediaProjection(mResultCode, mResultData);
-    }
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -103,17 +98,19 @@ public class RecordService extends Service {
         hideNotification();
     }
 
+    private MediaProjection createMediaProjection() {
+        return mMediaProjectionManager.getMediaProjection(mResultCode, mResultData);
+    }
+
     private void startRecordIfNeeded() {
         if (mRecorder != null) return;
 
         VideoEncodeConfig video = createVideoConfig();
-        Log.d(TAG, "Create recorder with :" + video + " \n ");
-
         mRecorder = new ScreenRecorder(video, getResources().getDisplayMetrics().densityDpi, mMediaProjection);
         mRecorder.setCallback(new ScreenRecorder.Callback() {
+
             @Override
             public void onStop(Throwable error) {
-                Log.e(TAG, "onStop");
                 hideNotification();
                 if (error != null) {
                     Log.e(TAG, "onStop error = " + error.getMessage());
@@ -124,7 +121,6 @@ public class RecordService extends Service {
 
             @Override
             public void onStart() {
-                Log.d(TAG, "onStart");
                 showNotification("recording...");
             }
 
@@ -146,7 +142,6 @@ public class RecordService extends Service {
     }
 
     private void stopRecord() {
-        Log.e(TAG, "stopRecord");
         if (mRecorder != null) {
             mRecorder.quit();
         }

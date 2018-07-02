@@ -19,9 +19,10 @@ package org.arpnetwork.arpdevice;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import org.arpnetwork.arpdevice.server.DataServer;
+import org.arpnetwork.arpdevice.stream.RecordService;
+import org.arpnetwork.arpdevice.stream.Touch;
 
 public class CustomApplication extends Application {
 
@@ -30,8 +31,6 @@ public class CustomApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Log.d("CustomApplication", "CustomApplication onCreate");
 
         sInstance = this;
 

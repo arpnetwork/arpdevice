@@ -19,8 +19,8 @@ package org.arpnetwork.arpdevice.server;
 import android.os.Handler;
 import android.util.Log;
 
-import org.arpnetwork.arpdevice.RecordService;
-import org.arpnetwork.arpdevice.Touch;
+import org.arpnetwork.arpdevice.stream.RecordService;
+import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.data.AVPacket;
 import org.arpnetwork.arpdevice.data.ChangeQualityReq;
 import org.arpnetwork.arpdevice.data.ConnectReq;
@@ -47,17 +47,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private SendThread mAVDataThread;
     private int mQuality;
 
-    public static DataServer getInstance() {
-        if (null == sInstance) {
-            synchronized (DataServer.class) {
-                if (null == sInstance) {
-                    sInstance = new DataServer();
-                }
-            }
-        }
-        return sInstance;
-    }
-
     private NettyConnection mConn;
 
     private ConnectionListener mListener;
@@ -74,8 +63,15 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         void onException(Throwable cause);
     }
 
-    private DataServer() {
-        mConn = new NettyConnection(this);
+    public static DataServer getInstance() {
+        if (null == sInstance) {
+            synchronized (DataServer.class) {
+                if (null == sInstance) {
+                    sInstance = new DataServer();
+                }
+            }
+        }
+        return sInstance;
     }
 
     public void setListener(ConnectionListener listener) {
@@ -106,23 +102,36 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         }).start();
     }
 
+    public void onClientDisconnected() {
+        stop();
+    }
+
+    /**
+     * RecordService startRecord.
+     */
+    public void onVideoChanged(int width, int height, int quality) {
+        VideoInfo videoInfo = new VideoInfo(width, height, quality);
+        Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.VIDEO_CHANGED, 0, videoInfo);
+        mConn.write(pkt);
+    }
+
+    public void enqueueAVPacket(int type, long presentationTimeUs, byte[] bytes) {
+        mPacketQueue.add(new AVPacket(type, presentationTimeUs, bytes, bytes.length));
+    }
+
     @Override
     public void onConnected(NettyConnection conn) {
-        Log.d(TAG, "onConnected.");
-
         startHeartbeatTimer();
         startHeartbeatTimeout();
     }
 
     @Override
     public void onClosed(NettyConnection conn) {
-        Log.d(TAG, "onClosed.");
         stop();
     }
 
     @Override
     public void onMessage(NettyConnection conn, Message msg) throws Exception {
-        Log.d(TAG, "message reached. cmd = " + msg);
         switch (msg.type()) {
             case Message.HEARTBEAT:
                 onReceiveHeartbeat();
@@ -147,18 +156,20 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onException(NettyConnection conn, Throwable cause) {
-        Log.d(TAG, "onException.cause = " + cause.getMessage());
+        Log.e(TAG, "onException.cause = " + cause.getMessage());
+    }
+
+    private DataServer() {
+        mConn = new NettyConnection(this);
     }
 
     private void onReceiveHeartbeat() {
-        Log.d(TAG, "onReceiveHeartbeat");
         stopHeartbeatTimeout();
         startHeartbeatTimeout();
     }
 
     private void onReceiveTimestamp(long clientTime) {
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, 0, null);
-
         mConn.write(pkt);
     }
 
@@ -170,18 +181,15 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         switch (protocolPacket.id) {
             case ProtocolPacket.CONNECT_REQ:
                 onConnectFirstReq((ConnectReq) protocolPacket);
-
                 start();
                 break;
 
             case ProtocolPacket.DISCONNECT_REQ:
                 onReceiveDisconnect();
-
                 break;
 
             case ProtocolPacket.CHANGE_QUALITY_REQ:
                 onChangeQualityReq((ChangeQualityReq) protocolPacket);
-
                 break;
 
             default:
@@ -191,8 +199,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     private void onConnectFirstReq(ConnectReq req) {
         int quality = req.data.quality;
-        Log.e(TAG, "onConnectFirstReq quality = " + quality);
-
         mQuality = quality;
 
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, 0, null);
@@ -208,8 +214,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     private void onChangeQualityReq(ChangeQualityReq req) {
         int quality = req.data.quality;
-        Log.e(TAG, "onChangeQualityReq quality = " + quality);
-
         mQuality = quality;
         //TODO change quality need sync to execute.
 
@@ -257,29 +261,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         this.stopHeartbeatTimeout();
     }
 
-    public void onClientDisconnected() {
-        stop();
-    }
-
-    /**
-     * RecordService startRecord.
-     */
-    public void onVideoChanged(int width, int height, int quality) {
-        VideoInfo videoInfo = new VideoInfo(width, height, quality);
-        Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.VIDEO_CHANGED, 0, videoInfo);
-        mConn.write(pkt);
-    }
-
-    public void enqueueAVPacket(int type, long presentationTimeUs, byte[] bytes) {
-        mPacketQueue.add(new AVPacket(type, presentationTimeUs, bytes, bytes.length));
-    }
-
     private class SendThread extends Thread {
         private boolean mStopped;
 
         @Override
         public void run() {
-
             while (!mStopped) {
                 try {
                     AVPacket packet = mPacketQueue.take();
@@ -287,8 +273,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 } catch (InterruptedException e) {
                     Log.e(TAG, "SendThread interrupted.");
                 } catch (Exception e) {
-                    Log.e(TAG, "SendThread failed. msg: ");
-                    e.printStackTrace();
+                    Log.e(TAG, "SendThread failed.");
                 }
             }
         }
@@ -311,7 +296,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
         private void cancel() {
             mStopped = true;
-            Log.e(TAG, "send cancel");
         }
     }
 

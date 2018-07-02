@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice;
+package org.arpnetwork.arpdevice.stream;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -25,6 +25,7 @@ import org.arpnetwork.adb.Auth;
 import org.arpnetwork.adb.Channel;
 import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
+import org.arpnetwork.arpdevice.CustomApplication;
 
 import java.security.spec.InvalidKeySpecException;
 
@@ -51,46 +52,27 @@ public class Touch {
         return sInstance;
     }
 
-    private Touch() {
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(CustomApplication.sInstance.getApplicationContext());
-        String key = sp.getString("key", null);
-        if (key != null) {
-            try {
-                mAuth = new Auth(key);
-            } catch (InvalidKeySpecException e) {
-                e.printStackTrace();
-            }
-        } else {
-            mAuth = new Auth();
-            sp.edit().putString("key", mAuth.getPrivateKey()).apply();
-        }
-    }
-
     public void connect() {
-        Log.d(TAG, "connect.");
         mConn = new Connection(mAuth, "127.0.0.1", 5555);
         mConn.setListener(new Connection.ConnectionListener() {
             @Override
             public void onConnected(Connection conn) {
-                Log.d(TAG, "connected.");
-
                 ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
                 mShell = ss;
                 ss.setStreamListener(new Channel.ChannelListener() {
+
                     @Override
                     public void onOpened(Channel ch) {
-                        Log.d(TAG, "SHELL opened.");
                     }
 
                     @Override
                     public void onClosed(Channel ch) {
-                        Log.e(TAG, "SHELL closed.");
                     }
                 });
                 ss.setListener(new ShellChannel.ShellListener() {
+
                     @Override
                     public void onStdout(ShellChannel ch, String data) {
-                        Log.d(TAG, "STDOUT:" + data);
                         // 10 1440 2560 0 255 255\n
                         mBanner = data.trim();
                     }
@@ -102,7 +84,7 @@ public class Touch {
 
                     @Override
                     public void onExit(ShellChannel ch, int code) {
-                        Log.d(TAG, "Exit with code = " + code);
+                        Log.i(TAG, "Exit with code = " + code);
                     }
                 });
             }
@@ -114,7 +96,6 @@ public class Touch {
 
             @Override
             public void onAuth(Connection conn, String key) {
-                Log.d(TAG, "auth key = " + key);
             }
 
             @Override
@@ -133,6 +114,21 @@ public class Touch {
     public void sendTouch(String touchInfo) {
         if (!TextUtils.isEmpty(touchInfo) && mShell != null) {
             mShell.write(touchInfo);
+        }
+    }
+
+    private Touch() {
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(CustomApplication.sInstance.getApplicationContext());
+        String key = sp.getString("key", null);
+        if (key != null) {
+            try {
+                mAuth = new Auth(key);
+            } catch (InvalidKeySpecException e) {
+                e.printStackTrace();
+            }
+        } else {
+            mAuth = new Auth();
+            sp.edit().putString("key", mAuth.getPrivateKey()).apply();
         }
     }
 }

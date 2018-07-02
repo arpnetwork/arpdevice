@@ -26,6 +26,9 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 abstract class BaseEncoder implements Encoder {
+    private MediaCodec mEncoder;
+    private Callback mCallback;
+
     static abstract class Callback implements Encoder.Callback {
         void onInputBufferAvailable(BaseEncoder encoder, int index) {
         }
@@ -54,8 +57,8 @@ abstract class BaseEncoder implements Encoder {
         if (mEncoder != null) {
             throw new IllegalStateException("prepared!");
         }
+
         MediaFormat format = createMediaFormat();
-        Log.d("Encoder", "Create media format: " + format);
         String mimeType = format.getString(MediaFormat.KEY_MIME);
 
         final MediaCodec encoder = createEncoder(mimeType);
@@ -73,31 +76,6 @@ abstract class BaseEncoder implements Encoder {
         }
 
         mEncoder = encoder;
-    }
-
-    /**
-     * call immediately after {@link #getEncoder() MediaCodec}
-     * configure with {@link #createMediaFormat() MediaFormat} success
-     *
-     * @param encoder
-     */
-    protected void onEncoderConfigured(MediaCodec encoder) {
-    }
-
-    /**
-     * create a new instance of MediaCodec
-     */
-    private MediaCodec createEncoder(String type) throws IOException {
-        return MediaCodec.createEncoderByType(type);
-    }
-
-    /**
-     * create {@link MediaFormat} for {@link MediaCodec}
-     */
-    protected abstract MediaFormat createMediaFormat();
-
-    protected final MediaCodec getEncoder() {
-        return Objects.requireNonNull(mEncoder, "doesn't prepare()");
     }
 
     /**
@@ -154,12 +132,36 @@ abstract class BaseEncoder implements Encoder {
         }
     }
 
-    private MediaCodec mEncoder;
-    private Callback mCallback;
+    /**
+     * call immediately after {@link #getEncoder() MediaCodec}
+     * configure with {@link #createMediaFormat() MediaFormat} success
+     *
+     * @param encoder
+     */
+    protected void onEncoderConfigured(MediaCodec encoder) {
+    }
+
+    /**
+     * create {@link MediaFormat} for {@link MediaCodec}
+     */
+    protected abstract MediaFormat createMediaFormat();
+
+    protected final MediaCodec getEncoder() {
+        return Objects.requireNonNull(mEncoder, "doesn't prepare()");
+    }
+
+    /**
+     * create a new instance of MediaCodec
+     */
+    private MediaCodec createEncoder(String type) throws IOException {
+        return MediaCodec.createEncoderByType(type);
+    }
+
     /**
      * let media codec run async mode if mCallback != null
      */
     private MediaCodec.Callback mCodecCallback = new MediaCodec.Callback() {
+
         @Override
         public void onInputBufferAvailable(MediaCodec codec, int index) {
             mCallback.onInputBufferAvailable(BaseEncoder.this, index);
@@ -180,6 +182,4 @@ abstract class BaseEncoder implements Encoder {
             mCallback.onOutputFormatChanged(BaseEncoder.this, format);
         }
     };
-
-
 }

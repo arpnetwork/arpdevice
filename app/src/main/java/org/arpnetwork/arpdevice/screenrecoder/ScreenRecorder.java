@@ -33,9 +33,10 @@ import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ScreenRecorder {
+    public static final String VIDEO_MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
+
     private static final String TAG = "ScreenRecorder";
     private static final boolean VERBOSE = true;
-    public static final String VIDEO_MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
 
     private int mWidth;
     private int mHeight;
@@ -63,12 +64,32 @@ public class ScreenRecorder {
     private LinkedList<Integer> mPendingVideoEncoderBufferIndices = new LinkedList<>();
     private LinkedList<MediaCodec.BufferInfo> mPendingVideoEncoderBufferInfos = new LinkedList<>();
 
+    public interface Callback {
+        void onStop(Throwable error);
+
+        void onStart();
+
+        void onRecording(long presentationTimeUs);
+
+        void onRecordingVideo(long presentationTimeUs, byte[] bytes);
+
+        void onRecordingAudio(long presentationTimeUs, byte[] bytes);
+    }
+
     public ScreenRecorder(VideoEncodeConfig video, int dpi, MediaProjection mp) {
         mWidth = video.width;
         mHeight = video.height;
         mDpi = dpi;
         mMediaProjection = mp;
         mVideoEncoder = new VideoEncoder(video);
+    }
+
+    public void start() {
+        if (mWorker != null) throw new IllegalStateException();
+        mWorker = new HandlerThread(TAG);
+        mWorker.start();
+        mHandler = new CallbackHandler(mWorker.getLooper());
+        mHandler.sendEmptyMessage(MSG_START);
     }
 
     /**
@@ -84,74 +105,14 @@ public class ScreenRecorder {
 
     }
 
-    public void start() {
-        if (mWorker != null) throw new IllegalStateException();
-        mWorker = new HandlerThread(TAG);
-        mWorker.start();
-        mHandler = new CallbackHandler(mWorker.getLooper());
-        mHandler.sendEmptyMessage(MSG_START);
-    }
-
     public void setCallback(Callback callback) {
         mCallback = callback;
-    }
-
-    public interface Callback {
-        void onStop(Throwable error);
-
-        void onStart();
-
-        void onRecording(long presentationTimeUs);
-
-        void onRecordingVideo(long presentationTimeUs, byte[] bytes);
-
-        void onRecordingAudio(long presentationTimeUs, byte[] bytes);
-    }
-
-    private static final int MSG_START = 0;
-    private static final int MSG_STOP = 1;
-    private static final int MSG_ERROR = 2;
-    private static final int STOP_WITH_EOS = 1;
-
-    private class CallbackHandler extends Handler {
-        CallbackHandler(Looper looper) {
-            super(looper);
-        }
-
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_START:
-                    try {
-                        record();
-                        if (mCallback != null) {
-                            mCallback.onStart();
-                        }
-                        break;
-                    } catch (Exception e) {
-                        msg.obj = e;
-                    }
-                case MSG_STOP:
-                case MSG_ERROR:
-                    stopEncoders();
-                    if (msg.arg1 != STOP_WITH_EOS) signalEndOfStream();
-                    if (mCallback != null) {
-                        mCallback.onStop((Throwable) msg.obj);
-                    }
-                    release();
-                    break;
-
-                default:
-                    break;
-            }
-        }
     }
 
     private void signalEndOfStream() {
         MediaCodec.BufferInfo eos = new MediaCodec.BufferInfo();
         ByteBuffer buffer = ByteBuffer.allocate(0);
         eos.set(0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
-        if (VERBOSE) Log.i(TAG, "Signal EOS. ");
 
         writeSampleData(eos, buffer);
     }
@@ -192,8 +153,6 @@ public class ScreenRecorder {
         writeSampleData(bufferInfo, encodedData);
         mVideoEncoder.releaseOutputBuffer(index);
         if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-            if (VERBOSE)
-                Log.d(TAG, "Stop encoder and extractor, since the buffer has been marked with EOS");
             // send release msg
             signalStop(true);
         }
@@ -201,18 +160,12 @@ public class ScreenRecorder {
 
     private void writeSampleData(MediaCodec.BufferInfo bufferInfo, ByteBuffer encodedData) {
         if ((bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-            if (VERBOSE) Log.d(TAG, "Ignoring BUFFER_FLAG_CODEC_CONFIG");
             bufferInfo.size = 0;
         }
         boolean eos = (bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
         if (bufferInfo.size == 0 && !eos) {
-            if (VERBOSE) Log.d(TAG, "info.size == 0, drop it.");
             encodedData = null;
         } else {
-            if (VERBOSE)
-                Log.d(TAG, "[" + Thread.currentThread().getId() + "] Got buffer"
-                        + ", info: size=" + bufferInfo.size
-                        + ", presentationTimeUs=" + bufferInfo.presentationTimeUs);
             if (!eos && mCallback != null) {
                 mCallback.onRecording(bufferInfo.presentationTimeUs);
             }
@@ -239,13 +192,11 @@ public class ScreenRecorder {
         if (mCallback != null) {
             ByteBuffer sps = newFormat.getByteBuffer("csd-0");//sps
             byte[] bytes = new byte[sps.remaining()];
-            Log.i(TAG, "Sent sps " + bytes.length);
             sps.get(bytes);
             mCallback.onRecordingVideo(0, bytes);
 
             ByteBuffer pps = newFormat.getByteBuffer("csd-1");//pps
             bytes = new byte[pps.remaining()];
-            Log.i(TAG, "Sent pps " + bytes.length);
             pps.get(bytes);
             mCallback.onRecordingVideo(0, bytes);
         }
@@ -270,7 +221,6 @@ public class ScreenRecorder {
         if (VERBOSE) Log.i(TAG, "extract pending video output buffers done.");
     }
 
-    // @WorkerThread
     private void prepareVideoEncoder() throws IOException {
         VideoEncoder.Callback callback = new VideoEncoder.Callback() {
             boolean ranIntoError = false;
@@ -342,4 +292,41 @@ public class ScreenRecorder {
         mHandler = null;
     }
 
+    private static final int MSG_START = 0;
+    private static final int MSG_STOP = 1;
+    private static final int MSG_ERROR = 2;
+    private static final int STOP_WITH_EOS = 1;
+
+    private class CallbackHandler extends Handler {
+        CallbackHandler(Looper looper) {
+            super(looper);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_START:
+                    try {
+                        record();
+                        if (mCallback != null) {
+                            mCallback.onStart();
+                        }
+                        break;
+                    } catch (Exception e) {
+                        msg.obj = e;
+                    }
+                case MSG_STOP:
+                case MSG_ERROR:
+                    stopEncoders();
+                    if (msg.arg1 != STOP_WITH_EOS) signalEndOfStream();
+                    if (mCallback != null) {
+                        mCallback.onStop((Throwable) msg.obj);
+                    }
+                    release();
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
 }
