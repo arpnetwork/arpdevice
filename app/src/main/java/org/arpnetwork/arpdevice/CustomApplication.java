@@ -62,5 +62,4 @@ public class CustomApplication extends Application {
 
         DataServer.getInstance().shutdown();
     }
-
 }

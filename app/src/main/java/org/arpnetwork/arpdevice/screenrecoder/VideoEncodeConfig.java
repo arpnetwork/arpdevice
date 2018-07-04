@@ -46,7 +46,7 @@ public class VideoEncodeConfig {
         format.setInteger(MediaFormat.KEY_FRAME_RATE, framerate);
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iframeInterval);
 
-        //see https://developer.android.com/reference/android/media/MediaFormat#KEY_LEVEL
+        // see https://developer.android.com/reference/android/media/MediaFormat#KEY_LEVEL
         format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline);
         format.setInteger("level", MediaCodecInfo.CodecProfileLevel.AVCLevel52);
 

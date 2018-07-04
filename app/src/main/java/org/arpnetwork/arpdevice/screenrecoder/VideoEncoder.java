@@ -31,6 +31,15 @@ class VideoEncoder extends BaseEncoder {
     }
 
     @Override
+    public void release() {
+        if (mSurface != null) {
+            mSurface.release();
+            mSurface = null;
+        }
+        super.release();
+    }
+
+    @Override
     protected void onEncoderConfigured(MediaCodec encoder) {
         mSurface = encoder.createInputSurface();
     }
@@ -45,14 +54,5 @@ class VideoEncoder extends BaseEncoder {
      */
     Surface getInputSurface() {
         return Objects.requireNonNull(mSurface, "doesn't prepare()");
-    }
-
-    @Override
-    public void release() {
-        if (mSurface != null) {
-            mSurface.release();
-            mSurface = null;
-        }
-        super.release();
     }
 }

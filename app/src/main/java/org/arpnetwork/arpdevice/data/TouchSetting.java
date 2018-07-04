@@ -49,7 +49,7 @@ public class TouchSetting {
                 int minor = Integer.parseInt(banner.split(" ")[5]);
                 return new TouchSetting(contacts, x, y, pressure, major, minor);
             } catch (NumberFormatException e) {
-                return null;
+                // ignored
             }
         }
         return null;

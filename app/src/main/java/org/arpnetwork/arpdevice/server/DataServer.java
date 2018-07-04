@@ -37,13 +37,13 @@ import io.netty.buffer.Unpooled;
 
 public final class DataServer implements NettyConnection.ConnectionListener {
     private static final String TAG = "DataServer";
+    private static final int HEARTBEAT_TIMEOUT = 10000;
+    private static final int HEARTBEAT_INTERVAL = 5000;
     private static volatile DataServer sInstance;
 
     private final LinkedBlockingQueue<AVPacket> mPacketQueue = new LinkedBlockingQueue<AVPacket>();
-
     private Handler mHandler = new Handler();
-    private static final int HEARTBEAT_TIMEOUT = 10000;
-    private static final int HEARTBEAT_INTERVAL = 5000;
+
     private SendThread mAVDataThread;
     private int mQuality;
 
@@ -64,9 +64,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public static DataServer getInstance() {
-        if (null == sInstance) {
+        if (sInstance == null) {
             synchronized (DataServer.class) {
-                if (null == sInstance) {
+                if (sInstance == null) {
                     sInstance = new DataServer();
                 }
             }
@@ -87,7 +87,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 try {
                     mConn.startServer();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // ignored
                 }
             }
         }).start();
@@ -198,8 +198,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void onConnectFirstReq(ConnectReq req) {
-        int quality = req.data.quality;
-        mQuality = quality;
+        mQuality = req.data.quality;
 
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, 0, null);
         mConn.write(pkt);
@@ -213,9 +212,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void onChangeQualityReq(ChangeQualityReq req) {
-        int quality = req.data.quality;
-        mQuality = quality;
-        //TODO change quality need sync to execute.
+        mQuality = req.data.quality;
+        // TODO change quality need sync to execute.
 
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CHANGE_QUALITY_RESP, 0, null);
         mConn.write(pkt);
@@ -233,7 +231,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private void start() {
         onMinitouchData();
 
-        //start record service.
+        // start record service.
         if (mListener != null) {
             mListener.onRecordStart(mQuality);
         }
@@ -254,7 +252,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
         mConn.closeConnection();
 
-        //fix client terminate with no touch up.
+        // fix client terminate with no touch up.
         Touch.getInstance().sendTouch("r");
 
         this.stopHeartbeatTimer();

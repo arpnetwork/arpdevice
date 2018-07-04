@@ -79,6 +79,27 @@ abstract class BaseEncoder implements Encoder {
     }
 
     /**
+     * @see MediaCodec#stop()
+     */
+    @Override
+    public void stop() {
+        if (mEncoder != null) {
+            mEncoder.stop();
+        }
+    }
+
+    /**
+     * @see MediaCodec#release()
+     */
+    @Override
+    public void release() {
+        if (mEncoder != null) {
+            mEncoder.release();
+            mEncoder = null;
+        }
+    }
+
+    /**
      * @throws NullPointerException if prepare() not call
      * @see MediaCodec#getOutputBuffer(int)
      */
@@ -109,27 +130,6 @@ abstract class BaseEncoder implements Encoder {
      */
     public final void releaseOutputBuffer(int index) {
         getEncoder().releaseOutputBuffer(index, false);
-    }
-
-    /**
-     * @see MediaCodec#stop()
-     */
-    @Override
-    public void stop() {
-        if (mEncoder != null) {
-            mEncoder.stop();
-        }
-    }
-
-    /**
-     * @see MediaCodec#release()
-     */
-    @Override
-    public void release() {
-        if (mEncoder != null) {
-            mEncoder.release();
-            mEncoder = null;
-        }
     }
 
     /**

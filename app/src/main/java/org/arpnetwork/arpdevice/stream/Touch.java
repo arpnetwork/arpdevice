@@ -38,13 +38,12 @@ public class Touch {
     private ShellChannel mShell;
 
     private Auth mAuth;
-
     private String mBanner;
 
     public static Touch getInstance() {
-        if (null == sInstance) {
+        if (sInstance == null) {
             synchronized (Touch.class) {
-                if (null == sInstance) {
+                if (sInstance == null) {
                     sInstance = new Touch();
                 }
             }
@@ -124,7 +123,7 @@ public class Touch {
             try {
                 mAuth = new Auth(key);
             } catch (InvalidKeySpecException e) {
-                e.printStackTrace();
+                Log.e(TAG, "InvalidKeySpecException");
             }
         } else {
             mAuth = new Auth();

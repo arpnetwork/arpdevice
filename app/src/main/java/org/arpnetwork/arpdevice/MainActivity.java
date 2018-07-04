@@ -28,8 +28,8 @@ import org.arpnetwork.arpdevice.stream.RecordService;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_MEDIA_PROJECTION = 1;
-    private MediaProjectionManager mMediaProjectionManager;
 
+    private MediaProjectionManager mMediaProjectionManager;
     private int mQuality;
 
     @Override
@@ -38,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mMediaProjectionManager = (MediaProjectionManager) getApplicationContext().getSystemService(MEDIA_PROJECTION_SERVICE);
-
         DataServer.getInstance().setListener(mConnectionListener);
     }
 
@@ -50,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            //TODO add toast to inform user to keep allowed once the user has granted.
+            // TODO add toast to inform user to keep allowed once the user has granted.
             Intent service = new Intent(this, RecordService.class);
             service.putExtra("code", resultCode);
             service.putExtra("data", data);
@@ -72,10 +71,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private DataServer.ConnectionListener mConnectionListener = new DataServer.ConnectionListener() {
-
         @Override
         public void onConnected() {
-
         }
 
         @Override
@@ -96,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onException(Throwable cause) {
-
         }
     };
 }

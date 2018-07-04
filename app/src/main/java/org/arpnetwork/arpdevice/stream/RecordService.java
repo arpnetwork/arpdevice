@@ -43,21 +43,18 @@ public class RecordService extends Service {
     public static final String EXTRA_COMMAND = "command";
     public static final int COMMAND_START = 0;
     public static final int COMMAND_STOP = 1;
-
     public static final int TYPE_AUDIO = 1;
     public static final int TYPE_VIDEO = 2;
-    private ScreenRecorder mRecorder;
-
+    private static final int id = 0x1fff;
     private static SparseIntArray sQualities = new SparseIntArray(2);
 
+    private NotificationManager mNM;
+    private ScreenRecorder mRecorder;
     private MediaProjectionManager mMediaProjectionManager;
     private MediaProjection mMediaProjection;
-    private int mResultCode;
     private Intent mResultData;
+    private int mResultCode;
     private int mQuality = 0;
-
-    private static final int id = 0x1fff;
-    private NotificationManager mNM;
 
     @Override
     public void onCreate() {
@@ -93,7 +90,7 @@ public class RecordService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.e(TAG, "onDestroy");
+        Log.d(TAG, "onDestroy");
 
         hideNotification();
     }
@@ -108,7 +105,6 @@ public class RecordService extends Service {
         VideoEncodeConfig video = createVideoConfig();
         mRecorder = new ScreenRecorder(video, getResources().getDisplayMetrics().densityDpi, mMediaProjection);
         mRecorder.setCallback(new ScreenRecorder.Callback() {
-
             @Override
             public void onStop(Throwable error) {
                 hideNotification();
@@ -154,7 +150,6 @@ public class RecordService extends Service {
         int framerate = 30;
         int iframe = 100;
         int bitrate = sQualities.get(mQuality, 2500 * 1000);
-
         DataServer.getInstance().onVideoChanged(width, height, mQuality);
 
         return new VideoEncodeConfig(width, height, bitrate, framerate, iframe, VIDEO_MIME_TYPE);
@@ -170,7 +165,6 @@ public class RecordService extends Service {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(contentIntent)
                 .build();
-
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
 
         mNM.notify(id, notification);

@@ -97,7 +97,7 @@ public class NettyConnection {
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT);
 
-            mChannelFuture = b.bind(mPort).sync(); // (7)
+            mChannelFuture = b.bind(mPort).sync();
             mChannelFuture.channel().closeFuture().sync();
 
             mChannelFutrueListener = new GenericFutureListener<ChannelFuture>() {
@@ -128,6 +128,7 @@ public class NettyConnection {
         try {
             mChannelFuture.sync().channel().close().sync();
         } catch (InterruptedException e) {
+            // ignored
         }
         mWorkerGroup.shutdownGracefully();
         mBossGroup.shutdownGracefully();
@@ -161,7 +162,7 @@ public class NettyConnection {
             NettyConnection conn = mConn.get();
             if (conn != null) {
                 if (conn.getClientNumber() > 1) {
-                    //only one client can be served and reject the others.
+                    // only one client can be served and reject the others.
                     ctx.close().addListener(ChannelFutureListener.CLOSE);
                     return;
                 }
