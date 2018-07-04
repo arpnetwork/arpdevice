@@ -145,9 +145,9 @@ public class RecordService extends Service {
     }
 
     private VideoEncodeConfig createVideoConfig() {
-        int width = 640;
-        int height = 1136;
-        int framerate = 30;
+        int width = 720;
+        int height = 1280;
+        int framerate = 15;
         int iframe = 100;
         int bitrate = sQualities.get(mQuality, 2500 * 1000);
         DataServer.getInstance().onVideoChanged(width, height, mQuality);
