@@ -32,8 +32,8 @@ public class ProtocolPacket<T> {
     public static final int VIDEO_CHANGED = 101;
 
     public int id;
-    public T data;
     public int result;
+    public T data;
 
     public ProtocolPacket(int id, int result, T data) {
         this.id = id;
@@ -48,7 +48,7 @@ public class ProtocolPacket<T> {
 
         int bufferSize = payload.length() + 1;
         ByteBuf byteBuf = Unpooled.buffer(bufferSize);
-        byteBuf.writeByte(Message.PROTOCOL); // type
+        byteBuf.writeByte(Message.PROTOCOL);
         byteBuf.writeBytes(payload.getBytes());
 
         return new Message(byteBuf);

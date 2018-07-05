@@ -36,7 +36,7 @@ public class ScreenRecorder {
     private static final String TAG = "ScreenRecorder";
     private static final boolean VERBOSE = false;
 
-    public static final String VIDEO_MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
+    public static final String VIDEO_MIME_TYPE = "video/avc"; // H.264
 
     private int mWidth;
     private int mHeight;
@@ -60,11 +60,11 @@ public class ScreenRecorder {
     private HandlerThread mWorker;
     private CallbackHandler mHandler;
 
-    private Callback mCallback;
+    private RecorderCallback mCallback;
     private LinkedList<Integer> mPendingVideoEncoderBufferIndices = new LinkedList<>();
     private LinkedList<MediaCodec.BufferInfo> mPendingVideoEncoderBufferInfos = new LinkedList<>();
 
-    public interface Callback {
+    public interface RecorderCallback {
         void onStop(Throwable error);
 
         void onStart();
@@ -92,9 +92,6 @@ public class ScreenRecorder {
         mHandler.sendEmptyMessage(MSG_START);
     }
 
-    /**
-     * stop task
-     */
     public final void quit() {
         mForceQuit.set(true);
         if (!mIsRunning.get()) {
@@ -105,7 +102,7 @@ public class ScreenRecorder {
 
     }
 
-    public void setCallback(Callback callback) {
+    public void setCallback(RecorderCallback callback) {
         mCallback = callback;
     }
 
@@ -191,12 +188,12 @@ public class ScreenRecorder {
         }
         mVideoOutputFormat = newFormat;
         if (mCallback != null) {
-            ByteBuffer sps = newFormat.getByteBuffer("csd-0");// sps
+            ByteBuffer sps = newFormat.getByteBuffer("csd-0"); // sps
             byte[] bytes = new byte[sps.remaining()];
             sps.get(bytes);
             mCallback.onRecordingVideo(0, bytes);
 
-            ByteBuffer pps = newFormat.getByteBuffer("csd-1");// pps
+            ByteBuffer pps = newFormat.getByteBuffer("csd-1"); // pps
             bytes = new byte[pps.remaining()];
             pps.get(bytes);
             mCallback.onRecordingVideo(0, bytes);
@@ -259,7 +256,6 @@ public class ScreenRecorder {
     private void stopEncoders() {
         mIsRunning.set(false);
         mPendingVideoEncoderBufferIndices.clear();
-        // maybe called on an error has been occurred
         try {
             if (mVideoEncoder != null) mVideoEncoder.stop();
         } catch (IllegalStateException e) {
@@ -316,6 +312,7 @@ public class ScreenRecorder {
                             mCallback.onStart();
                         }
                         break;
+
                     } catch (Exception e) {
                         msg.obj = e;
                         // exception goto MSG_STOP.

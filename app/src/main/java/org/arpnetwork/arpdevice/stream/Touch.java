@@ -58,21 +58,10 @@ public class Touch {
             public void onConnected(Connection conn) {
                 ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
                 mShell = ss;
-                ss.setStreamListener(new Channel.ChannelListener() {
-
-                    @Override
-                    public void onOpened(Channel ch) {
-                    }
-
-                    @Override
-                    public void onClosed(Channel ch) {
-                    }
-                });
                 ss.setListener(new ShellChannel.ShellListener() {
-
                     @Override
                     public void onStdout(ShellChannel ch, String data) {
-                        // 10 1440 2560 0 255 255\n
+                        // contacts x y pressure major minor\n
                         mBanner = data.trim();
                     }
 

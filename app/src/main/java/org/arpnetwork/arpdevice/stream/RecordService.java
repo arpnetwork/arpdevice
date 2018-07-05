@@ -90,8 +90,6 @@ public class RecordService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "onDestroy");
-
         hideNotification();
     }
 
@@ -104,7 +102,7 @@ public class RecordService extends Service {
 
         VideoEncodeConfig video = createVideoConfig();
         mRecorder = new ScreenRecorder(video, getResources().getDisplayMetrics().densityDpi, mMediaProjection);
-        mRecorder.setCallback(new ScreenRecorder.Callback() {
+        mRecorder.setCallback(new ScreenRecorder.RecorderCallback() {
             @Override
             public void onStop(Throwable error) {
                 hideNotification();

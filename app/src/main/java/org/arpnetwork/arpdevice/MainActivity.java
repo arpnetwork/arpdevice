@@ -21,6 +21,7 @@ import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.server.DataServer;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            // TODO add toast to inform user to keep allowed once the user has granted.
+            // TODO: add toast to inform user to keep allowed once the user has granted.
             Intent service = new Intent(this, RecordService.class);
             service.putExtra("code", resultCode);
             service.putExtra("data", data);

@@ -52,7 +52,7 @@ public class NettyConnection {
     private EventLoopGroup mWorkerGroup;
     private EventLoopGroup mBossGroup;
     private ChannelFuture mChannelFuture;
-    private GenericFutureListener<ChannelFuture> mChannelFutrueListener;
+    private GenericFutureListener<ChannelFuture> mChannelFutureListener;
 
     public interface ConnectionListener {
         void onConnected(NettyConnection conn);
@@ -100,7 +100,7 @@ public class NettyConnection {
             mChannelFuture = b.bind(mPort).sync();
             mChannelFuture.channel().closeFuture().sync();
 
-            mChannelFutrueListener = new GenericFutureListener<ChannelFuture>() {
+            mChannelFutureListener = new GenericFutureListener<ChannelFuture>() {
                 @Override
                 public void operationComplete(ChannelFuture future) {
                     if (future.cause() != null) {
@@ -108,7 +108,7 @@ public class NettyConnection {
                     }
                 }
             };
-            mChannelFuture.addListener(mChannelFutrueListener);
+            mChannelFuture.addListener(mChannelFutureListener);
         } finally {
             mWorkerGroup.shutdownGracefully();
             mBossGroup.shutdownGracefully();
@@ -124,7 +124,7 @@ public class NettyConnection {
     }
 
     public synchronized void shutdown() {
-        mChannelFuture.removeListener(mChannelFutrueListener);
+        mChannelFuture.removeListener(mChannelFutureListener);
         try {
             mChannelFuture.sync().channel().close().sync();
         } catch (InterruptedException e) {
@@ -162,7 +162,7 @@ public class NettyConnection {
             NettyConnection conn = mConn.get();
             if (conn != null) {
                 if (conn.getClientNumber() > 1) {
-                    // only one client can be served and reject the others.
+                    // only one client can be served and reject the others
                     ctx.close().addListener(ChannelFutureListener.CLOSE);
                     return;
                 }
@@ -210,7 +210,6 @@ public class NettyConnection {
     }
 
     private static class MessageDecoder extends ReplayingDecoder<Void> {
-
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
             Message msg = Message.readFrom(in);
@@ -221,7 +220,6 @@ public class NettyConnection {
     }
 
     private static class MessageEncoder extends MessageToByteEncoder<Message> {
-
         @Override
         protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) {
             msg.writeTo(out);

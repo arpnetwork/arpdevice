@@ -25,7 +25,6 @@ import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.stream.Touch;
 
 public class CustomApplication extends Application {
-
     public static CustomApplication sInstance;
 
     @Override

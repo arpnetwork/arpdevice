@@ -24,30 +24,28 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 public class Message {
-    public static final int HEARTBEAT = -1;
+    public static final int HEARTBEAT = -5;
     public static final int VIDEO = 0;
     public static final int AUDIO = 1;
     public static final int TOUCH = 2;
     public static final int PROTOCOL = 3;
     public static final int TIME = 4;
 
-    private int type = -1;
+    private int mType = -1;
     private ByteBuf mData;
 
     public Message(ByteBuf data) {
         mData = data;
     }
 
-    public int type() {
-        if (type == -1) {
-            type = mData.readByte();
+    public int getType() {
+        if (mType == -1) {
+            mType = mData.readByte();
         }
-
-        return type;
+        return mType;
     }
 
     public static Message readFrom(ByteBuf buf) throws IOException {
-        // Header
         int size = buf.readInt();
         if (size == 0) {
             int bufferSize = 1;
@@ -60,14 +58,13 @@ public class Message {
             return null;
         }
 
-        // Body
         ByteBuf body = buf.readBytes(size);
         return new Message(body);
     }
 
     public void writeTo(ByteBuf buf) {
-        if (mData == null) { //send Heartbeat.
-            buf.writeInt(0);
+        if (mData == null) {
+            buf.writeInt(0); // send heartbeat
         } else {
             buf.writeInt(mData.capacity());
             buf.writeBytes(mData);
@@ -77,16 +74,17 @@ public class Message {
     public <T> T parsePacket(Class<T> clazz) {
         Object obj = null;
         T responseT = null;
-        switch (type) {
+        switch (mType) {
             case TOUCH:
-                int all = mData.readableBytes();
-                byte[] bytes = new byte[all];
+                int size = mData.readableBytes();
+                byte[] bytes = new byte[size];
                 mData.readBytes(bytes);
                 obj = new String(bytes);
                 break;
+
             case PROTOCOL:
-                int readableBytes = mData.readableBytes();
-                byte[] allBytes = new byte[readableBytes];
+                int allSize = mData.readableBytes();
+                byte[] allBytes = new byte[allSize];
                 mData.readBytes(allBytes);
                 obj = new String(allBytes);
                 Gson gson = new Gson();

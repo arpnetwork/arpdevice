@@ -26,16 +26,16 @@ public class VideoEncodeConfig {
     public final int height;
     public final int bitrate;
     public final int framerate;
-    public final int iframeInterval;
+    public final int iFrameInterval;
     public final String mimeType;
 
     public VideoEncodeConfig(int width, int height, int bitrate,
-                             int framerate, int iframeInterval, String mimeType) {
+                             int framerate, int iFrameInterval, String mimeType) {
         this.width = width;
         this.height = height;
         this.bitrate = bitrate;
         this.framerate = framerate;
-        this.iframeInterval = iframeInterval;
+        this.iFrameInterval = iFrameInterval;
         this.mimeType = Objects.requireNonNull(mimeType);
     }
 
@@ -44,7 +44,7 @@ public class VideoEncodeConfig {
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitrate);
         format.setInteger(MediaFormat.KEY_FRAME_RATE, framerate);
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iframeInterval);
+        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval);
 
         // see https://developer.android.com/reference/android/media/MediaFormat#KEY_LEVEL
         format.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline);
@@ -62,7 +62,7 @@ public class VideoEncodeConfig {
                 ", height=" + height +
                 ", bitrate=" + bitrate +
                 ", framerate=" + framerate +
-                ", iframeInterval=" + iframeInterval +
+                ", iFrameInterval=" + iFrameInterval +
                 ", mimeType='" + mimeType + '\'' +
                 '}';
     }

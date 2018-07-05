@@ -37,6 +37,7 @@ import io.netty.buffer.Unpooled;
 
 public final class DataServer implements NettyConnection.ConnectionListener {
     private static final String TAG = "DataServer";
+    private static final boolean VERBOSE = false;
     private static final int HEARTBEAT_TIMEOUT = 10000;
     private static final int HEARTBEAT_INTERVAL = 5000;
     private static volatile DataServer sInstance;
@@ -79,7 +80,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void startServer() {
-        Log.d(TAG, "startServer.");
+        if (VERBOSE) {
+            Log.d(TAG, "startServer.");
+        }
 
         new Thread(new Runnable() {
             @Override
@@ -107,7 +110,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     /**
-     * RecordService startRecord.
+     * Called by RecordService.
      */
     public void onVideoChanged(int width, int height, int quality) {
         VideoInfo videoInfo = new VideoInfo(width, height, quality);
@@ -132,7 +135,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onMessage(NettyConnection conn, Message msg) throws Exception {
-        switch (msg.type()) {
+        switch (msg.getType()) {
             case Message.HEARTBEAT:
                 onReceiveHeartbeat();
                 break;
@@ -146,7 +149,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 break;
 
             case Message.PROTOCOL:
-                processProtocolPktBuffer(msg.parsePacket(ConnectReq.class));
+                processProtocolPacket(msg.parsePacket(ConnectReq.class));
                 break;
 
             default:
@@ -169,7 +172,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void onReceiveTimestamp(long clientTime) {
-        // fixme add time delay with client.
+        // fixme: add time delay with client.
         /*Message pkt = ProtocolPacket.generateTimestamp(clientTime);
         mConn.write(pkt);*/
     }
@@ -178,7 +181,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Touch.getInstance().sendTouch(cmd);
     }
 
-    private void processProtocolPktBuffer(Req protocolPacket) {
+    private void processProtocolPacket(Req protocolPacket) {
         switch (protocolPacket.id) {
             case ProtocolPacket.CONNECT_REQ:
                 onConnectFirstReq((ConnectReq) protocolPacket);
@@ -198,6 +201,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         }
     }
 
+    // client send first req.
     private void onConnectFirstReq(ConnectReq req) {
         mQuality = req.data.quality;
 
@@ -214,14 +218,14 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     private void onChangeQualityReq(ChangeQualityReq req) {
         mQuality = req.data.quality;
-        // TODO change quality need sync to execute.
+        // TODO: change quality need sync to execute.
 
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CHANGE_QUALITY_RESP, 0, null);
         mConn.write(pkt);
     }
 
     /**
-     * arptouch connect.
+     * Send arptouch info when connected.
      */
     private void onMinitouchData() {
         TouchSetting touchSetting = TouchSetting.createTouchSetting();

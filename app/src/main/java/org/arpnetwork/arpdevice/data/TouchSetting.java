@@ -38,7 +38,7 @@ public class TouchSetting {
     }
 
     public static TouchSetting createTouchSetting() {
-        String banner = Touch.getInstance().getBanner();  // 10 1440 2560 0 255 255
+        String banner = Touch.getInstance().getBanner();
         if (!TextUtils.isEmpty(banner)) {
             try {
                 String[] items = banner.split(" ");

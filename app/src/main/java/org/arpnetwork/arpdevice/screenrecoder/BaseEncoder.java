@@ -46,7 +46,7 @@ abstract class BaseEncoder implements Encoder {
     }
 
     /**
-     * Must call in a worker handler thread!
+     * Must be called in a worker handler thread!
      */
     @Override
     public void prepare() throws IOException {
@@ -161,7 +161,6 @@ abstract class BaseEncoder implements Encoder {
      * let media codec run async mode if mCallback != null
      */
     private MediaCodec.Callback mCodecCallback = new MediaCodec.Callback() {
-
         @Override
         public void onInputBufferAvailable(MediaCodec codec, int index) {
             mCallback.onInputBufferAvailable(BaseEncoder.this, index);
