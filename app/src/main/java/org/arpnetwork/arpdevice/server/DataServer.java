@@ -253,7 +253,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         mConn.closeConnection();
 
         // fix client terminate with no touch up.
-        Touch.getInstance().sendTouch("r");
+        Touch.getInstance().sendTouch("r\n");
 
         this.stopHeartbeatTimer();
         this.stopHeartbeatTimeout();
