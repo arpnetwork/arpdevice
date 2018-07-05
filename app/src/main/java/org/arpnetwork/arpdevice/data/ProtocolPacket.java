@@ -48,7 +48,7 @@ public class ProtocolPacket<T> {
 
         int bufferSize = payload.length() + 1;
         ByteBuf byteBuf = Unpooled.buffer(bufferSize);
-        byteBuf.writeByte(Message.PROTOCOL); //type
+        byteBuf.writeByte(Message.PROTOCOL); // type
         byteBuf.writeBytes(payload.getBytes());
 
         return new Message(byteBuf);
@@ -56,5 +56,16 @@ public class ProtocolPacket<T> {
 
     public static Message generateHeartbeat() {
         return new Message(null);
+    }
+
+    public static Message generateTimestamp(long clientTime) {
+        int bufferSize = 1 + 8 + 8;
+
+        ByteBuf byteBuf = Unpooled.buffer(bufferSize);
+        byteBuf.writeByte(Message.TIME);
+        byteBuf.writeLong(clientTime);
+        byteBuf.writeLong(System.currentTimeMillis());
+
+        return new Message(byteBuf);
     }
 }

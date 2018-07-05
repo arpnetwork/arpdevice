@@ -41,12 +41,13 @@ public class TouchSetting {
         String banner = Touch.getInstance().getBanner();  // 10 1440 2560 0 255 255
         if (!TextUtils.isEmpty(banner)) {
             try {
-                int contacts = Integer.parseInt(banner.split(" ")[0]);
-                int x = Integer.parseInt(banner.split(" ")[1]);
-                int y = Integer.parseInt(banner.split(" ")[2]);
-                int pressure = Integer.parseInt(banner.split(" ")[3]);
-                int major = Integer.parseInt(banner.split(" ")[4]);
-                int minor = Integer.parseInt(banner.split(" ")[5]);
+                String[] items = banner.split(" ");
+                int contacts = Integer.parseInt(items[0]);
+                int x = Integer.parseInt(items[1]);
+                int y = Integer.parseInt(items[2]);
+                int pressure = Integer.parseInt(items[3]);
+                int major = Integer.parseInt(items[4]);
+                int minor = Integer.parseInt(items[5]);
                 return new TouchSetting(contacts, x, y, pressure, major, minor);
             } catch (NumberFormatException e) {
                 // ignored

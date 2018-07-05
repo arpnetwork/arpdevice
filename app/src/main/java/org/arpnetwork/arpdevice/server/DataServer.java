@@ -169,8 +169,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void onReceiveTimestamp(long clientTime) {
-        Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, 0, null);
-        mConn.write(pkt);
+        // fixme add time delay with client.
+        /*Message pkt = ProtocolPacket.generateTimestamp(clientTime);
+        mConn.write(pkt);*/
     }
 
     private void onClientMinitouchData(String cmd) {
@@ -282,9 +283,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             ByteBuf byteBuf = Unpooled.buffer(bufferSize);
             int avType = packet.type;
             if (avType == RecordService.TYPE_VIDEO) {
-                byteBuf.writeByte(Message.VIDEO); //video type
+                byteBuf.writeByte(Message.VIDEO);
             } else if (avType == RecordService.TYPE_AUDIO) {
-                byteBuf.writeByte(Message.AUDIO); //audio type
+                byteBuf.writeByte(Message.AUDIO);
             }
             byteBuf.writeLong(packet.pts);
             byteBuf.writeBytes(packet.data);

@@ -174,7 +174,7 @@ public class ScreenRecorder {
             encodedData.position(bufferInfo.offset);
             encodedData.limit(bufferInfo.offset + bufferInfo.size);
             if (mCallback != null) {
-                byte[] bytes = new byte[encodedData.remaining()]; //ByteBuffer转化为byte[]
+                byte[] bytes = new byte[encodedData.remaining()];
                 encodedData.get(bytes);
                 mCallback.onRecordingVideo(bufferInfo.presentationTimeUs, bytes);
             }
@@ -230,8 +230,6 @@ public class ScreenRecorder {
 
     private void prepareVideoEncoder() throws IOException {
         VideoEncoder.Callback callback = new VideoEncoder.Callback() {
-            boolean ranIntoError = false;
-
             @Override
             public void onOutputBufferAvailable(BaseEncoder codec, int index, MediaCodec.BufferInfo info) {
                 extractVideo(index, info);
@@ -239,7 +237,6 @@ public class ScreenRecorder {
 
             @Override
             public void onError(Encoder codec, Exception e) {
-                ranIntoError = true;
                 Log.e(TAG, "VideoEncoder ran into an error! ", e);
                 Message.obtain(mHandler, MSG_ERROR, e).sendToTarget();
             }
