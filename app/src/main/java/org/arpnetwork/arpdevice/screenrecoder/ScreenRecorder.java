@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ScreenRecorder {
     private static final String TAG = "ScreenRecorder";
-    private static final boolean VERBOSE = false;
+    private static final boolean DEBUG = false;
 
     public static final String VIDEO_MIME_TYPE = "video/avc"; // H.264
 
@@ -183,7 +183,7 @@ public class ScreenRecorder {
         if (mExtractStarted) {
             throw new IllegalStateException("output format already changed!");
         }
-        if (VERBOSE) {
+        if (DEBUG) {
             Log.i(TAG, "Video output format changed.\n New format: " + newFormat.toString());
         }
         mVideoOutputFormat = newFormat;
@@ -206,13 +206,13 @@ public class ScreenRecorder {
         }
 
         mExtractStarted = true;
-        if (VERBOSE) {
+        if (DEBUG) {
             Log.i(TAG, "Started media extract");
         }
         if (mPendingVideoEncoderBufferIndices.isEmpty()) {
             return;
         }
-        if (VERBOSE) {
+        if (DEBUG) {
             Log.i(TAG, "extract pending video output buffers...");
         }
         MediaCodec.BufferInfo info;
@@ -220,7 +220,7 @@ public class ScreenRecorder {
             int index = mPendingVideoEncoderBufferIndices.poll();
             extractVideo(index, info);
         }
-        if (VERBOSE) {
+        if (DEBUG) {
             Log.i(TAG, "extract pending video output buffers done.");
         }
     }
@@ -258,8 +258,7 @@ public class ScreenRecorder {
         mPendingVideoEncoderBufferIndices.clear();
         try {
             if (mVideoEncoder != null) mVideoEncoder.stop();
-        } catch (IllegalStateException e) {
-            // ignored
+        } catch (IllegalStateException ignored) {
         }
     }
 

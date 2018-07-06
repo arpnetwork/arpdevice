@@ -37,7 +37,7 @@ import io.netty.buffer.Unpooled;
 
 public final class DataServer implements NettyConnection.ConnectionListener {
     private static final String TAG = "DataServer";
-    private static final boolean VERBOSE = false;
+    private static final boolean DEBUG = false;
     private static final int HEARTBEAT_TIMEOUT = 10000;
     private static final int HEARTBEAT_INTERVAL = 5000;
     private static volatile DataServer sInstance;
@@ -80,7 +80,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void startServer() {
-        if (VERBOSE) {
+        if (DEBUG) {
             Log.d(TAG, "startServer.");
         }
 
@@ -89,8 +89,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             public void run() {
                 try {
                     mConn.startServer();
-                } catch (InterruptedException e) {
-                    // ignored
+                } catch (InterruptedException ignored) {
                 }
             }
         }).start();

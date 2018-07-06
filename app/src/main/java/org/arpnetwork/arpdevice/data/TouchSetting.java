@@ -49,8 +49,7 @@ public class TouchSetting {
                 int major = Integer.parseInt(items[4]);
                 int minor = Integer.parseInt(items[5]);
                 return new TouchSetting(contacts, x, y, pressure, major, minor);
-            } catch (NumberFormatException e) {
-                // ignored
+            } catch (NumberFormatException ignored) {
             }
         }
         return null;

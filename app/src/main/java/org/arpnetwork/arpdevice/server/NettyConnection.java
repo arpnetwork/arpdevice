@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.arpnetwork.arpdevice.server;
 
 import org.arpnetwork.arpdevice.data.Message;
@@ -127,8 +128,7 @@ public class NettyConnection {
         mChannelFuture.removeListener(mChannelFutureListener);
         try {
             mChannelFuture.sync().channel().close().sync();
-        } catch (InterruptedException e) {
-            // ignored
+        } catch (InterruptedException ignored) {
         }
         mWorkerGroup.shutdownGracefully();
         mBossGroup.shutdownGracefully();

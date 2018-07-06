@@ -30,17 +30,12 @@ git submodule update
 ```
 
 ## Running
-1,connect your android phone to computer with USB.
 
-2,push `arptouch` binary to /data/local/tmp by adb.
+1.connect your android phone to computer with USB.
 
-```
-adb push /arptouch /data/local/tmp
-```
+2.make your adb run in tcpip mode with 5555 port.
 
-3,make your adb run in tcpip mode with 5555 port.
 ```
 adb tcpip 5555
 ```
-
-4,run this app and wait clients to connect.
+3.run this app and wait clients to connect.
