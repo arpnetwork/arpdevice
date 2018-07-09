@@ -30,7 +30,7 @@ public class VideoEncodeConfig {
     public final String mimeType;
 
     public VideoEncodeConfig(int width, int height, int bitrate,
-                             int framerate, int iFrameInterval, String mimeType) {
+            int framerate, int iFrameInterval, String mimeType) {
         this.width = width;
         this.height = height;
         this.bitrate = bitrate;

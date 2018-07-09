@@ -79,7 +79,9 @@ public class Utils {
             } catch (IOException ignored) {
             } finally {
                 try {
-                    in.close();
+                    if (in != null) {
+                        in.close();
+                    }
                 } catch (IOException ignored) {
                 }
             }
@@ -89,8 +91,8 @@ public class Utils {
         return md5;
     }
 
-    public static void copyFromAsset(String assetFileName, String desFileName) throws IOException {
+    public static void copyFromAsset(String assetFileName, File desFile) throws IOException {
         AssetManager assetManager = CustomApplication.sInstance.getAssets();
-        Utils.copy(assetManager.open(assetFileName), new FileOutputStream(new File(desFileName)));
+        Utils.copy(assetManager.open(assetFileName), new FileOutputStream(desFile));
     }
 }

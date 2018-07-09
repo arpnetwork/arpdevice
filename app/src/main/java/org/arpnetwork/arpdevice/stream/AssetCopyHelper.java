@@ -18,7 +18,8 @@
 
 package org.arpnetwork.arpdevice.stream;
 
-import android.os.AsyncTask;
+import android.os.Environment;
+
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.utils.Utils;
 
@@ -27,49 +28,25 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class TouchCopyHelper {
-    private static final String TAG = "TouchCopyHelper";
+public class AssetCopyHelper {
+    private static final String TAG = "AssetCopyHelper";
     private static final String ARPTOUCH_FILE_NAME = "arptouch";
     private static final String ARP_PROPERTIES_NAME = "arp.properties";
 
-    public static void copyTouchAsync(Callback callback) {
-        CopyTouchTask task = new CopyTouchTask(callback);
-        task.execute();
+    public static boolean copyTouch2Sdcard() {
+        return copyAsset2Sdcard(ARPTOUCH_FILE_NAME, "md5");
     }
 
-    public interface Callback {
-        void onResult(boolean success);
-    }
-
-    public static final class CopyTouchTask extends AsyncTask<Void, Void, Boolean> {
-        private Callback func;
-
-        public CopyTouchTask(Callback func) {
-            this.func = func;
-        }
-
-        @Override
-        protected Boolean doInBackground(Void... voids) {
-            return copyFromAsset();
-        }
-
-        @Override
-        protected void onPostExecute(Boolean success) {
-            func.onResult(success);
-        }
-    }
-
-    public static boolean copyFromAsset() {
+    public static boolean copyAsset2Sdcard(String assetFileName, String keyOfMd5) {
         boolean success = true;
 
-        String destFileName = "/data/local/tmp/" + ARPTOUCH_FILE_NAME;
-        File destFile = new File(destFileName);
+        File sdcardFile = new File(Environment.getExternalStorageDirectory() + File.separator + assetFileName);
         try {
-            if (!destFile.exists()) {
-                Utils.copyFromAsset(ARPTOUCH_FILE_NAME, destFileName);
-            } else if (!(getMd5FromAssets().equals(Utils.md5(destFile)))) {
-                destFile.delete();
-                Utils.copyFromAsset(ARPTOUCH_FILE_NAME, destFileName);
+            if (!sdcardFile.exists()) {
+                Utils.copyFromAsset(assetFileName, sdcardFile);
+            } else if (!(getMd5FromAssets(keyOfMd5).equals(Utils.md5(sdcardFile)))) {
+                sdcardFile.delete();
+                Utils.copyFromAsset(assetFileName, sdcardFile);
             }
         } catch (IOException e) {
             success = false;
@@ -78,17 +55,34 @@ public class TouchCopyHelper {
         return success;
     }
 
-    private static String getMd5FromAssets() {
+    public static boolean isValidTouchBinary() {
+        return isValidBinary(ARPTOUCH_FILE_NAME, "md5");
+    }
+
+    public static boolean isValidBinary(String destFileName, String keyOfMd5) {
+        boolean success = true;
+
+        File destFile = new File("/data/local/tmp/" + destFileName);
+        if (!destFile.exists()) {
+            success = false;
+        } else if (!(getMd5FromAssets(keyOfMd5).equals(Utils.md5(destFile)))) {
+            success = false;
+        }
+
+        return success;
+    }
+
+    private static String getMd5FromAssets(String key) {
         String md5 = "";
         try {
             InputStream in = CustomApplication.sInstance.getAssets().open(ARP_PROPERTIES_NAME);
-            md5 = getProperty(in, "md5");
+            md5 = getProperty(in, key);
         } catch (IOException ignored) {
         }
         return md5;
     }
 
-    private static final String getProperty(InputStream in, String key) {
+    private static String getProperty(InputStream in, String key) {
         String value = null;
 
         if (in != null) {

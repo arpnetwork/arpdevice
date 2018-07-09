@@ -19,16 +19,16 @@ package org.arpnetwork.arpdevice;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.utils.PreferenceManager;
-import org.arpnetwork.arpdevice.stream.TouchCopyHelper;
 
 public class CustomApplication extends Application {
     private static final String TAG = "CustomApplication";
     private static final boolean DEBUG = false;
+
     public static CustomApplication sInstance;
 
     @Override
@@ -40,14 +40,6 @@ public class CustomApplication extends Application {
         PreferenceManager.init(this);
         Touch.getInstance().connect();
         DataServer.getInstance().startServer();
-        TouchCopyHelper.copyTouchAsync(new TouchCopyHelper.Callback() {
-            @Override
-            public void onResult(boolean success) {
-               if (DEBUG) {
-                   Log.d(TAG, "CopyTouchTask result = " + success);
-               }
-            }
-        });
     }
 
     @Override
