@@ -19,12 +19,13 @@
 package org.arpnetwork.arpdevice.utils;
 
 import android.content.res.AssetManager;
+
+import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,10 +38,11 @@ public class Utils {
         // prevent initial.
     }
 
-    public static final void copy(InputStream in, OutputStream out) {
+    public static void copy(InputStream in, OutputStream out) {
         if (in != null && out != null) {
-            byte[] buffer = new byte[1024 * 8];
-            int len = 0;
+            int BUFFER_SIZE = 1024 * 8;
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int len;
             try {
                 while ((len = in.read(buffer, 0, buffer.length)) != -1) {
                     out.write(buffer, 0, len);
@@ -57,7 +59,33 @@ public class Utils {
         }
     }
 
-    public static final String md5(File file) {
+    public static void copy(InputStream in, SyncChannel out) throws IOException {
+        if (in != null && out != null) {
+            int BUFFER_SIZE = 1024 * 8;
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int len;
+            try {
+                while ((len = in.read(buffer, 0, buffer.length)) != -1) {
+                    if (len < BUFFER_SIZE) {
+                        byte[] temp = new byte[len];
+                        System.arraycopy(buffer, 0, temp, 0, temp.length);
+                        out.writeData(temp);
+                    } else {
+                        out.writeData(buffer);
+                    }
+                }
+                out.writeDone((int) (System.currentTimeMillis() / 1000));
+            } finally {
+                try {
+                    out.close();
+                    in.close();
+                } catch (IOException ignored) {
+                }
+            }
+        }
+    }
+
+    public static String md5(File file) {
         String md5 = null;
         MessageDigest digest = null;
         if (file != null && file.isFile()) {
@@ -91,8 +119,8 @@ public class Utils {
         return md5;
     }
 
-    public static void copyFromAsset(String assetFileName, File desFile) throws IOException {
+    public static void copyFromAsset(String assetFileName, SyncChannel syncChannel) throws IOException {
         AssetManager assetManager = CustomApplication.sInstance.getAssets();
-        Utils.copy(assetManager.open(assetFileName), new FileOutputStream(desFile));
+        Utils.copy(assetManager.open(assetFileName), syncChannel);
     }
 }

@@ -24,13 +24,14 @@ import android.util.Log;
 import org.arpnetwork.adb.Auth;
 import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
+import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 
 import java.security.spec.InvalidKeySpecException;
 
 public class Touch {
     private static final String TAG = "Touch";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private static volatile Touch sInstance = null;
 
@@ -59,11 +60,21 @@ public class Touch {
                 if (AssetCopyHelper.isValidTouchBinary()) {
                     startTouch();
                 } else {
-                    if (AssetCopyHelper.copyTouch2Sdcard()){
-                        doCopyWithStart();
-                    } else {
-                        Log.e(TAG, "copy to sdcard failed.");
-                    }
+                    SyncChannel ss = mConn.openSync();
+                    AssetCopyHelper.pushTouch(ss, new AssetCopyHelper.PushCallback() {
+                        @Override
+                        public void onStart() {
+                        }
+
+                        @Override
+                        public void onComplete(boolean success, Throwable throwable) {
+                            if (success) {
+                                startTouch();
+                            } else {
+                                Log.e(TAG, "push error: " + throwable);
+                            }
+                        }
+                    });
                 }
             }
 
@@ -98,7 +109,7 @@ public class Touch {
     private void startTouch() {
         ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
         mShell = ss;
-        ss.setListener(new SimpleShellListener() {
+        ss.setListener(new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, String data) {
                 // contacts x y pressure major minor\n
@@ -109,16 +120,10 @@ public class Touch {
             public void onStderr(ShellChannel ch, String data) {
                 Log.e(TAG, "STDERR:" + data);
             }
-        });
-    }
 
-    private void doCopyWithStart() {
-        // Use chmod 777 to make arptouch executable and we can calculate its md5.
-        ShellChannel ss = mConn.openShell("cp sdcard/arptouch /data/local/tmp/; chmod 777 /data/local/tmp/arptouch");
-        ss.setListener(new SimpleShellListener() {
             @Override
             public void onExit(ShellChannel ch, int code) {
-                startTouch();
+                Log.e(TAG, "onExit:" + code);
             }
         });
     }
@@ -135,23 +140,6 @@ public class Touch {
         } else {
             mAuth = new Auth();
             sp.edit().putString("key", mAuth.getPrivateKey()).apply();
-        }
-    }
-
-    private class SimpleShellListener implements ShellChannel.ShellListener {
-        @Override
-        public void onStdout(ShellChannel ch, String data) {
-            // Empty implementation.
-        }
-
-        @Override
-        public void onStderr(ShellChannel ch, String data) {
-            // Empty implementation.
-        }
-
-        @Override
-        public void onExit(ShellChannel ch, int code) {
-            // Empty implementation.
         }
     }
 }

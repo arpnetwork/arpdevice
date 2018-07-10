@@ -18,8 +18,8 @@
 
 package org.arpnetwork.arpdevice.stream;
 
-import android.os.Environment;
-
+import org.arpnetwork.adb.Channel;
+import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.utils.Utils;
 
@@ -30,39 +30,58 @@ import java.util.Properties;
 
 public class AssetCopyHelper {
     private static final String TAG = "AssetCopyHelper";
+    private static final boolean DEBUG = true;
     private static final String ARPTOUCH_FILE_NAME = "arptouch";
     private static final String ARP_PROPERTIES_NAME = "arp.properties";
 
-    public static boolean copyTouch2Sdcard() {
-        return copyAsset2Sdcard(ARPTOUCH_FILE_NAME, "md5");
+    public interface PushCallback {
+        void onStart();
+
+        void onComplete(boolean success, Throwable throwable);
     }
 
-    public static boolean copyAsset2Sdcard(String assetFileName, String keyOfMd5) {
-        boolean success = true;
+    public static void pushTouch(final SyncChannel ss, PushCallback listener) {
+        pushFile(ss, "/data/local/tmp/" + ARPTOUCH_FILE_NAME, ARPTOUCH_FILE_NAME, listener);
+    }
 
-        File sdcardFile = new File(Environment.getExternalStorageDirectory() + File.separator + assetFileName);
-        try {
-            if (!sdcardFile.exists()) {
-                Utils.copyFromAsset(assetFileName, sdcardFile);
-            } else if (!(getMd5FromAssets(keyOfMd5).equals(Utils.md5(sdcardFile)))) {
-                sdcardFile.delete();
-                Utils.copyFromAsset(assetFileName, sdcardFile);
+    public static void pushFile(final SyncChannel ss, final String destFilePath,
+            final String assetFileName, final PushCallback listener) {
+
+        ss.setStreamListener(new Channel.ChannelListener() {
+            @Override
+            public void onOpened(Channel ch) {
+                if (listener != null) {
+                    listener.onStart();
+                }
+
+                ss.send(destFilePath, SyncChannel.MODE_EXECUTABLE);
+
+                try {
+                    Utils.copyFromAsset(assetFileName, ss);
+                } catch (IOException e) {
+                    if (listener != null) {
+                        listener.onComplete(false, e);
+                    }
+                }
             }
-        } catch (IOException e) {
-            success = false;
-        }
 
-        return success;
+            @Override
+            public void onClosed(Channel ch) {
+                if (listener != null) {
+                    listener.onComplete(true, null);
+                }
+            }
+        });
     }
 
     public static boolean isValidTouchBinary() {
-        return isValidBinary(ARPTOUCH_FILE_NAME, "md5");
+        return isValidBinary("/data/local/tmp/" + ARPTOUCH_FILE_NAME, "md5");
     }
 
-    public static boolean isValidBinary(String destFileName, String keyOfMd5) {
+    public static boolean isValidBinary(String destFilePath, String keyOfMd5) {
         boolean success = true;
 
-        File destFile = new File("/data/local/tmp/" + destFileName);
+        File destFile = new File(destFilePath);
         if (!destFile.exists()) {
             success = false;
         } else if (!(getMd5FromAssets(keyOfMd5).equals(Utils.md5(destFile)))) {
