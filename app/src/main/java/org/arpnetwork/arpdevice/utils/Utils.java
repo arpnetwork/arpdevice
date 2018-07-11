@@ -66,13 +66,7 @@ public class Utils {
             int len;
             try {
                 while ((len = in.read(buffer, 0, buffer.length)) != -1) {
-                    if (len < BUFFER_SIZE) {
-                        byte[] temp = new byte[len];
-                        System.arraycopy(buffer, 0, temp, 0, temp.length);
-                        out.writeData(temp);
-                    } else {
-                        out.writeData(buffer);
-                    }
+                    out.writeData(buffer, 0, len);
                 }
                 out.writeDone((int) (System.currentTimeMillis() / 1000));
             } finally {
