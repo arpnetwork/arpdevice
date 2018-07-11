@@ -16,6 +16,8 @@
 
 package org.arpnetwork.arpdevice.server;
 
+import android.util.Log;
+
 import org.arpnetwork.arpdevice.data.Message;
 
 import java.lang.ref.WeakReference;
@@ -42,7 +44,6 @@ import io.netty.util.concurrent.GenericFutureListener;
 
 public class NettyConnection {
     private static final int CONNECT_TIMEOUT = 30000;
-    private static final int PORT = 9000;
 
     private ConnectionHandler mServerHandler;
 
@@ -63,10 +64,6 @@ public class NettyConnection {
         void onMessage(NettyConnection conn, Message msg) throws Exception;
 
         void onException(NettyConnection conn, Throwable cause);
-    }
-
-    public NettyConnection(ConnectionListener listener) {
-        this(listener, PORT);
     }
 
     public NettyConnection(ConnectionListener listener, int port) {
@@ -176,6 +173,7 @@ public class NettyConnection {
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+            Log.d("NettyConnection", "channelInactive");
             NettyConnection conn = mConn.get();
             if (conn != null) {
                 conn.decrementClient();
@@ -195,6 +193,7 @@ public class NettyConnection {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+            Log.d("NettyConnection", "exceptionCaught = " + cause.getMessage());
             NettyConnection conn = mConn.get();
             if (conn != null) {
                 conn.decrementClient();

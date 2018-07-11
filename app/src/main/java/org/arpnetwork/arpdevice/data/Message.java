@@ -34,6 +34,10 @@ public class Message {
     private int mType = -1;
     private ByteBuf mData;
 
+    public Message() {
+        this(null);
+    }
+
     public Message(ByteBuf data) {
         mData = data;
     }
@@ -43,6 +47,16 @@ public class Message {
             mType = mData.readByte();
         }
         return mType;
+    }
+
+    public String toJson() {
+        if (mData != null) {
+            int len = mData.readableBytes();
+            byte[] bytes = new byte[len];
+            mData.readBytes(bytes);
+            return new String(bytes);
+        }
+        return null;
     }
 
     public static Message readFrom(ByteBuf buf) throws IOException {

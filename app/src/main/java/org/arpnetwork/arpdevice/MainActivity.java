@@ -19,11 +19,22 @@ package org.arpnetwork.arpdevice;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.utils.UIHelper;
+
+import android.util.Log;
+
+import org.arpnetwork.arpdevice.data.DeviceInfo;
+import org.arpnetwork.arpdevice.device.DeviceService;
+import org.arpnetwork.arpdevice.opengl.GLRenderer;
+import org.arpnetwork.arpdevice.util.NetworkHelper;
+
+import javax.microedition.khronos.opengles.GL10;
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_MEDIA_PROJECTION = 1;
@@ -36,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initViews();
+        DeviceInfo.init(this);
+
         mMediaProjectionManager = (MediaProjectionManager) getApplicationContext().getSystemService(MEDIA_PROJECTION_SERVICE);
         DataServer.getInstance().setListener(mConnectionListener);
     }
@@ -44,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             if (resultCode != Activity.RESULT_OK) {
-                UIHelper.showToast(MainActivity.this,getString(R.string.msg_user_cancelled));
+                UIHelper.showToast(MainActivity.this, getString(R.string.msg_user_cancelled));
                 return;
             }
 
@@ -56,6 +70,28 @@ public class MainActivity extends AppCompatActivity {
             service.putExtra(RecordService.EXTRA_COMMAND, RecordService.COMMAND_START);
             startService(service);
         }
+    }
+
+    private void initViews() {
+        GLSurfaceView surfaceView = findViewById(R.id.gl_surface);
+        surfaceView.setEGLContextClientVersion(1);
+        surfaceView.setEGLConfigChooser(8, 8, 8, 8, 0, 0);
+        surfaceView.setRenderer(new GLRenderer(new GLRenderer.Callback() {
+            @Override
+            public void onSurfaceCreated(GL10 gl) {
+                String glRenderer = gl.glGetString(GL10.GL_RENDERER);
+                Log.d("MainActivity", "glRenderer = " + glRenderer);
+
+                DeviceInfo.get().gpu = glRenderer;
+                DeviceInfo.get().netType = NetworkHelper.getInstance().getNetworkType();
+                startService();
+            }
+        }));
+    }
+
+    private void startService() {
+        Intent intent = new Intent(this, DeviceService.class);
+        startService(intent);
     }
 
     private void startCaptureIntent() {

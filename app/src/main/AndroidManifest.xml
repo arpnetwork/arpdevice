@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -25,7 +27,8 @@
         <service
             android:name=".stream.RecordService"
             android:enabled="true"
-            android:exported="false" /> <!--only used by ourselves. -->
+            android:exported="false" />
+        <service android:name=".device.DeviceService" />
     </application>
 
 </manifest>

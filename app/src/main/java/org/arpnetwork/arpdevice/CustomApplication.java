@@ -20,10 +20,12 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 
+import org.arpnetwork.arpdevice.device.DeviceService;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.utils.PreferenceManager;
+import org.arpnetwork.arpdevice.util.NetworkHelper;
 
 public class CustomApplication extends Application {
     private static final String TAG = "CustomApplication";
@@ -38,6 +40,7 @@ public class CustomApplication extends Application {
         sInstance = this;
 
         PreferenceManager.init(this);
+        NetworkHelper.init(getApplicationContext());
         Touch.getInstance().connect();
         DataServer.getInstance().startServer();
     }
@@ -61,10 +64,14 @@ public class CustomApplication extends Application {
     public void onTerminate() {
         super.onTerminate();
 
-        Intent intent = new Intent(this, RecordService.class);
-        stopService(intent);
+        Intent recordIntent = new Intent(this, RecordService.class);
+        stopService(recordIntent);
+
+        Intent deviceIntent = new Intent(this, DeviceService.class);
+        stopService(deviceIntent);
 
         DataServer.getInstance().shutdown();
         PreferenceManager.fini();
+        NetworkHelper.fini();
     }
 }
