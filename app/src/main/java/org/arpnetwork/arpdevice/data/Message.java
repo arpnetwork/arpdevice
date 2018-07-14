@@ -16,8 +16,6 @@
 
 package org.arpnetwork.arpdevice.data;
 
-import com.google.gson.Gson;
-
 import java.io.IOException;
 
 import io.netty.buffer.ByteBuf;
@@ -101,8 +99,7 @@ public class Message {
                 byte[] allBytes = new byte[allSize];
                 mData.readBytes(allBytes);
                 obj = new String(allBytes);
-                Gson gson = new Gson();
-                return gson.fromJson((String) obj, clazz);
+                break;
 
             case TIME:
                 obj = mData.readLong();

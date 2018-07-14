@@ -23,14 +23,12 @@ import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.RecordService;
-import org.arpnetwork.arpdevice.utils.UIHelper;
-
-import android.util.Log;
+import org.arpnetwork.arpdevice.util.UIHelper;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
-import org.arpnetwork.arpdevice.device.DeviceService;
 import org.arpnetwork.arpdevice.opengl.GLRenderer;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 
@@ -42,13 +40,14 @@ public class MainActivity extends AppCompatActivity {
     private MediaProjectionManager mMediaProjectionManager;
     private int mQuality;
 
+    private DeviceManager mDeviceManager;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         initViews();
-        DeviceInfo.init(this);
 
         mMediaProjectionManager = (MediaProjectionManager) getApplicationContext().getSystemService(MEDIA_PROJECTION_SERVICE);
         DataServer.getInstance().setListener(mConnectionListener);
@@ -72,6 +71,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (mDeviceManager != null) {
+            mDeviceManager.close();
+        }
+        getApplication().onTerminate();
+    }
+
     private void initViews() {
         GLSurfaceView surfaceView = findViewById(R.id.gl_surface);
         surfaceView.setEGLContextClientVersion(1);
@@ -80,18 +89,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSurfaceCreated(GL10 gl) {
                 String glRenderer = gl.glGetString(GL10.GL_RENDERER);
-                Log.d("MainActivity", "glRenderer = " + glRenderer);
 
                 DeviceInfo.get().gpu = glRenderer;
                 DeviceInfo.get().netType = NetworkHelper.getInstance().getNetworkType();
-                startService();
+                startDeviceService();
             }
         }));
     }
 
-    private void startService() {
-        Intent intent = new Intent(this, DeviceService.class);
-        startService(intent);
+    private void startDeviceService() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mDeviceManager = new DeviceManager();
+                mDeviceManager.connect();
+                DataServer.getInstance().setDeviceManager(mDeviceManager);
+            }
+        });
     }
 
     private void startCaptureIntent() {

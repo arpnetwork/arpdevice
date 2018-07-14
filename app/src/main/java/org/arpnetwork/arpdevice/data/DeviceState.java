@@ -19,10 +19,10 @@ package org.arpnetwork.arpdevice.data;
 import com.google.gson.annotations.SerializedName;
 
 public class DeviceState {
+    public static final int IDLE = 0;
+    public static final int REQUESTING = 1;
+    public static final int USING = 2;
 
-    /**
-     * -1 error, 0 idle, 1 requesting, 2 in use
-     */
     public int state;
     public String session;
 

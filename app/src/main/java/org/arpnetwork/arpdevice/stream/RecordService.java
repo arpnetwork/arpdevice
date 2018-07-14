@@ -25,15 +25,14 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.util.SparseIntArray;
-import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.MainActivity;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.screenrecoder.ScreenRecorder;
 import org.arpnetwork.arpdevice.screenrecoder.VideoEncodeConfig;
 import org.arpnetwork.arpdevice.server.DataServer;
+import org.arpnetwork.arpdevice.util.UIHelper;
 
 import static org.arpnetwork.arpdevice.screenrecoder.ScreenRecorder.VIDEO_MIME_TYPE;
 
@@ -107,8 +106,7 @@ public class RecordService extends Service {
             public void onStop(Throwable error) {
                 hideNotification();
                 if (error != null) {
-                    Log.e(TAG, "onStop error = " + error.getMessage());
-                    Toast.makeText(RecordService.this, "record error,disconnected.", Toast.LENGTH_SHORT).show();
+                    UIHelper.showToast(RecordService.this, getString(R.string.record_error));
                     DataServer.getInstance().onClientDisconnected();
                 }
             }

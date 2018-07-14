@@ -21,7 +21,8 @@ package org.arpnetwork.arpdevice.stream;
 import org.arpnetwork.adb.Channel;
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
-import org.arpnetwork.arpdevice.utils.Utils;
+import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.util.Util;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import java.util.Properties;
 
 public class AssetCopyHelper {
     private static final String TAG = "AssetCopyHelper";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = Config.DEBUG;
     private static final String ARPTOUCH_FILE_NAME = "arptouch";
     private static final String ARP_PROPERTIES_NAME = "arp.properties";
 
@@ -57,7 +58,7 @@ public class AssetCopyHelper {
                 ss.send(destFilePath, SyncChannel.MODE_EXECUTABLE);
 
                 try {
-                    Utils.copyFromAsset(assetFileName, ss);
+                    Util.copyFromAsset(assetFileName, ss);
                 } catch (IOException e) {
                     if (listener != null) {
                         listener.onComplete(false, e);
@@ -84,7 +85,7 @@ public class AssetCopyHelper {
         File destFile = new File(destFilePath);
         if (!destFile.exists()) {
             success = false;
-        } else if (!(getMd5FromAssets(keyOfMd5).equals(Utils.md5(destFile)))) {
+        } else if (!(getMd5FromAssets(keyOfMd5).equals(Util.md5(destFile)))) {
             success = false;
         }
 

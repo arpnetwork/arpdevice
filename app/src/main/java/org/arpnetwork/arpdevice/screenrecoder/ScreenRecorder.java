@@ -27,6 +27,8 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import org.arpnetwork.arpdevice.config.Config;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
@@ -34,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ScreenRecorder {
     private static final String TAG = "ScreenRecorder";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = Config.DEBUG;
 
     public static final String VIDEO_MIME_TYPE = "video/avc"; // H.264
 
@@ -99,7 +101,6 @@ public class ScreenRecorder {
         } else {
             signalStop(false);
         }
-
     }
 
     public void setCallback(RecorderCallback callback) {

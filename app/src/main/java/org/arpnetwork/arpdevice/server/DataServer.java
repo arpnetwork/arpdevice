@@ -20,7 +20,10 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
-import org.arpnetwork.arpdevice.data.NotifyReq;
+import com.google.gson.Gson;
+
+import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.data.DeviceState;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.stream.Touch;
@@ -42,7 +45,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     public static final int PORT = 9000;
 
     private static final String TAG = "DataServer";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = Config.DEBUG;
     private static final int HEARTBEAT_TIMEOUT = 10000;
     private static final int HEARTBEAT_INTERVAL = 5000;
     private static final int CONNECT_TIMEOUT = 10000;
@@ -50,6 +53,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     private final LinkedBlockingQueue<AVPacket> mPacketQueue = new LinkedBlockingQueue<AVPacket>();
     private Handler mHandler = new Handler();
+
+    private DeviceManager mDeviceManager;
+    private Gson mGson;
 
     private SendThread mAVDataThread;
     private int mQuality;
@@ -85,12 +91,13 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     public void setListener(ConnectionListener listener) {
         mListener = listener;
     }
+    
+    public void setDeviceManager(DeviceManager deviceManager) {
+        mDeviceManager = deviceManager;
+        mDeviceManager.setOnStateChangedListener(mOnDeviceStateChangedListener);
+    }
 
     public void startServer() {
-        if (DEBUG) {
-            Log.d(TAG, "startServer.");
-        }
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -100,11 +107,10 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 }
             }
         }).start();
-        DeviceManager.getInstance().setOnStateChangedListener(mOnDeviceStateChangedListener);
     }
 
     public void shutdown() {
-        DeviceManager.getInstance().setOnStateChangedListener(null);
+        mDeviceManager.setOnStateChangedListener(null);
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -132,16 +138,21 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onConnected(NettyConnection conn) {
+        mReceiveDisconnect = false;
+        if (mDeviceManager == null || !mDeviceManager.isRegistered()) {
+            stop();
+            return;
+        }
+
         startHeartbeatTimer();
         startHeartbeatTimeout();
-        mReceiveDisconnect = false;
     }
 
     @Override
     public void onClosed(NettyConnection conn) {
-        stop();
         if (!mReceiveDisconnect) {
-            DeviceManager.getInstance().notifyServer(NotifyReq.ID_FINISH_USE, 0);
+            stop();
+            mDeviceManager.notifyServer(DeviceManager.FINISHED, 1);
         }
     }
 
@@ -161,7 +172,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 break;
 
             case Message.PROTOCOL:
-                processProtocolPacket(msg.parsePacket(ConnectReq.class));
+                processProtocolPacket(msg.parsePacket(String.class));
                 break;
 
             default:
@@ -176,6 +187,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     private DataServer() {
         mConn = new NettyConnection(this, PORT);
+        mGson = new Gson();
     }
 
     private void onReceiveHeartbeat() {
@@ -193,13 +205,18 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Touch.getInstance().sendTouch(cmd);
     }
 
-    private void processProtocolPacket(Req protocolPacket) {
-        switch (protocolPacket.id) {
+    private void processProtocolPacket(String protocolJson) {
+        Req req = mGson.fromJson(protocolJson, Req.class);
+        switch (req.id) {
             case ProtocolPacket.CONNECT_REQ:
-                if (verifySession((ConnectReq) protocolPacket)) {
+                ConnectReq connectReq = mGson.fromJson(protocolJson, ConnectReq.class);
+                if (verifySession(connectReq)) {
                     mHandler.removeCallbacks(mConnectTimeoutRunnable);
-                    onConnectFirstReq((ConnectReq) protocolPacket);
+                    onConnectFirstReq(connectReq);
                     start();
+                } else {
+                    mHandler.removeCallbacks(mConnectTimeoutRunnable);
+                    stop(); // close client.
                 }
                 break;
 
@@ -208,7 +225,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 break;
 
             case ProtocolPacket.CHANGE_QUALITY_REQ:
-                onChangeQualityReq((ChangeQualityReq) protocolPacket);
+                ChangeQualityReq changeQualityReq = mGson.fromJson(protocolJson, ChangeQualityReq.class);
+                onChangeQualityReq(changeQualityReq);
                 break;
 
             default:
@@ -217,7 +235,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private boolean verifySession(ConnectReq req) {
-        return !TextUtils.isEmpty(req.data.session) && req.data.session.equals(DeviceManager.getInstance().getSession());
+        return !TextUtils.isEmpty(req.data.session) && req.data.session.equals(mDeviceManager.getSession());
     }
 
     private void onConnectFirstReq(ConnectReq req) {
@@ -226,7 +244,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, 0, null);
         mConn.write(pkt);
 
-        DeviceManager.getInstance().notifyServer(NotifyReq.ID_CONNECTED, 0);
+        mDeviceManager.notifyServer(DeviceManager.CONNECTED, 0);
     }
 
     private void onReceiveDisconnect() {
@@ -235,7 +253,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         mConn.write(pkt);
 
         stop();
-        DeviceManager.getInstance().notifyServer(NotifyReq.ID_FINISH_USE, 0);
+        mDeviceManager.notifyServer(DeviceManager.FINISHED, 0);
     }
 
     private void onChangeQualityReq(ChangeQualityReq req) {
@@ -361,7 +379,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private DeviceManager.OnStateChangedListener mOnDeviceStateChangedListener = new DeviceManager.OnStateChangedListener() {
         @Override
         public void onStateChanged(int state) {
-            if (state == 1) {
+            if (state == DeviceState.REQUESTING) {
                 mHandler.postDelayed(mConnectTimeoutRunnable, CONNECT_TIMEOUT);
             }
         }
@@ -371,7 +389,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         @Override
         public void run() {
             stop();
-            DeviceManager.getInstance().notifyServer(NotifyReq.ID_CONNECT_TIMEOUT, 0);
+            mDeviceManager.notifyServer(DeviceManager.CONNECT_TIMEOUT, 0);
         }
     };
 }

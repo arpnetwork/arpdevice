@@ -17,16 +17,9 @@
 package org.arpnetwork.arpdevice.data;
 
 public class NotifyReq extends Req<NotifyReqData> {
-    public static final int ID_CONNECTED = 4;
-    public static final int ID_CONNECT_TIMEOUT = 5;
-    public static final int ID_FINISH_USE = 6;
-
     public int result;
 
     public NotifyReq(int id, int result, String session) {
-        if (id < ID_CONNECTED || id > ID_FINISH_USE) {
-            throw new IllegalArgumentException("Id is illegal.");
-        }
         this.id = id;
         this.result = result;
         this.data = new NotifyReqData(session);

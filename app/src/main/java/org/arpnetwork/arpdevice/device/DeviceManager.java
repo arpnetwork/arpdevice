@@ -22,7 +22,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
-import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.data.DeviceState;
 import org.arpnetwork.arpdevice.data.StateChangedResponse;
 import org.arpnetwork.arpdevice.data.Message;
 import org.arpnetwork.arpdevice.data.NotifyReq;
@@ -34,19 +34,22 @@ import io.netty.buffer.Unpooled;
 
 public class DeviceManager implements DeviceConnection.Listener {
     private static final String TAG = DeviceManager.class.getSimpleName();
-    private static final boolean DEBUG = Config.DEBUG;
+
+    public static final int REGISTER_SUCCESS = 2;
+    public static final int STATE_CHANGED = 3;
+    public static final int CONNECTED = 4;
+    public static final int CONNECT_TIMEOUT = 5;
+    public static final int FINISHED = 6;
 
     private static final String HOST = "dev.arpnetwork.org";
     private static final int PORT = 8000;
     private static final int HEARTBEAT_INTERVAL = 30000;
 
-    private static DeviceManager sInstance;
-
     private DeviceConnection mConnection;
     private Gson mGson;
 
     private String mSession;
-    private boolean mRegister;
+    private boolean mRegistered;
 
     private Handler mHandler = new Handler();
     private OnStateChangedListener mOnStateChangedListener;
@@ -55,47 +58,56 @@ public class DeviceManager implements DeviceConnection.Listener {
         void onStateChanged(int state);
     }
 
-    public static DeviceManager getInstance() {
-        if (sInstance == null) {
-            synchronized (DeviceManager.class) {
-                if (sInstance == null) {
-                    sInstance = new DeviceManager();
-                }
-            }
-        }
-        return sInstance;
+    public DeviceManager() {
+        mGson = new Gson();
+        mRegistered = false;
     }
 
     public void setOnStateChangedListener(OnStateChangedListener listener) {
         mOnStateChangedListener = listener;
     }
 
+    /**
+     * Connect to a server
+     */
     public void connect() {
         mConnection = new DeviceConnection(this);
         mConnection.connect(HOST, PORT);
     }
 
+    /**
+     * Close a connection
+     */
     public void close() {
         if (mConnection != null) {
             mConnection.close();
         }
     }
 
-    public boolean isRegister() {
-        return mRegister;
+    /**
+     * Check whether this device is registered
+     */
+    public boolean isRegistered() {
+        return mRegistered;
     }
 
+    /**
+     * Return the session which is assigned from the server
+     */
     public String getSession() {
         return mSession;
     }
 
+    /**
+     * Notify the server when this device's state is changed
+     *
+     * @param reqId  {@link #CONNECTED}, {@link #CONNECT_TIMEOUT}, {@link #FINISHED}
+     * @param result 0 represents success, 1 represents failed
+     */
     public void notifyServer(int reqId, int result) {
-        if (mRegister) {
+        if (mRegistered) {
             NotifyReq req = new NotifyReq(reqId, result, mSession);
             String content = mGson.toJson(req);
-            if (DEBUG) {
-                Log.d(TAG, "notifyServer. req = " + content);
-            }
             ByteBuf byteBuf = Unpooled.buffer(content.length());
             byteBuf.writeBytes(content.getBytes());
 
@@ -105,10 +117,6 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     @Override
     public void onConnected(DeviceConnection conn) {
-        if (DEBUG) {
-            Log.d(TAG, "onConnected");
-        }
-
         register();
         startHeartbeat();
     }
@@ -116,19 +124,15 @@ public class DeviceManager implements DeviceConnection.Listener {
     @Override
     public void onMessage(DeviceConnection conn, Message msg) {
         String json = msg.toJson();
-        if (DEBUG) {
-            Log.d(TAG, "onMessage. json = " + json);
-        }
-
         if (!TextUtils.isEmpty(json)) {
             Response response = mGson.fromJson(json, Response.class);
-            if (response.id == 2 && response.result == 0) {
-                mRegister = true;
-            } else if (response.id == 3) {
+            if (response.id == REGISTER_SUCCESS && response.result == 0) {
+                mRegistered = true;
+            } else if (response.id == STATE_CHANGED) {
                 StateChangedResponse res = mGson.fromJson(json, StateChangedResponse.class);
-                if (res.data.state == 0) {
+                if (res.data.state == DeviceState.IDLE) {
                     mSession = null;
-                } else if (res.data.state == 1) {
+                } else if (res.data.state == DeviceState.REQUESTING) {
                     mSession = res.data.session;
                 }
 
@@ -141,33 +145,19 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     @Override
     public void onClosed(DeviceConnection conn) {
-        if (DEBUG) {
-            Log.d(TAG, "onClosed");
-        }
-
         reset();
     }
 
     @Override
     public void onException(DeviceConnection conn, Throwable cause) {
-        if (DEBUG) {
-            Log.d(TAG, "onException. cause = " + cause);
-        }
+        Log.e(TAG, "onException. message = " + cause.getMessage());
 
         reset();
-    }
-
-    private DeviceManager() {
-        mGson = new Gson();
-        mRegister = false;
     }
 
     private void register() {
         RegisterReq req = new RegisterReq();
         String content = mGson.toJson(req);
-        if (DEBUG) {
-            Log.d(TAG, "register. req = " + content);
-        }
         ByteBuf byteBuf = Unpooled.buffer(content.length());
         byteBuf.writeBytes(content.getBytes());
 
@@ -178,9 +168,6 @@ public class DeviceManager implements DeviceConnection.Listener {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (DEBUG) {
-                    Log.d(TAG, "startHeartbeat.");
-                }
                 mConnection.write(new Message());
                 startHeartbeat();
             }

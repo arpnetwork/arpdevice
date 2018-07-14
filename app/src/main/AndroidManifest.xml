@@ -28,7 +28,6 @@
             android:name=".stream.RecordService"
             android:enabled="true"
             android:exported="false" />
-        <service android:name=".device.DeviceService" />
     </application>
 
 </manifest>

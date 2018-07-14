@@ -16,12 +16,12 @@
 
 package org.arpnetwork.arpdevice.data;
 
-import android.app.Activity;
+import android.content.Context;
 
 import com.google.gson.annotations.SerializedName;
 
 import org.arpnetwork.arpdevice.server.DataServer;
-import org.arpnetwork.arpdevice.util.Util;
+import org.arpnetwork.arpdevice.util.DeviceUtil;
 
 public class DeviceInfo {
     public String id;
@@ -29,6 +29,9 @@ public class DeviceInfo {
     public String brand;
     public String model;
     public String cpu;
+
+    @SerializedName("cpu_company")
+    public String cpuCompany;
     public String gpu;
     public long ram;
     public long storage;
@@ -45,19 +48,20 @@ public class DeviceInfo {
 
     private static DeviceInfo sInstance;
 
-    public static void init(Activity activity) {
+    public static void create(Context context) {
         DeviceInfo info = new DeviceInfo();
-        info.id = Util.getAndroidId(activity);
+        info.id = DeviceUtil.getAndroidId(context);
         info.port = DataServer.PORT;
-        info.brand = Util.getBrand();
-        info.model = Util.getModel();
-        info.cpu = Util.getCpu();
+        info.brand = DeviceUtil.getBrand();
+        info.model = DeviceUtil.getModel();
+        info.cpu = DeviceUtil.getCpu();
+        info.cpuCompany = DeviceUtil.getCpuCompany();
         info.gpu = "";
-        info.ram = Util.getMemoryTotal(activity);
-        info.storage = Util.getExternalDiskAvailable(activity);
-        info.resolution = Util.getResolutionStr(activity);
-        info.osVer = Util.getAndroidVersion();
-        info.systemVer = Util.getSysUIVersion();
+        info.ram = DeviceUtil.getMemoryTotal(context);
+        info.storage = DeviceUtil.getExternalDiskAvailable(context);
+        info.resolution = DeviceUtil.getResolutionStr(context);
+        info.osVer = DeviceUtil.getAndroidVersion();
+        info.systemVer = DeviceUtil.getSysUIVersion();
         info.netType = -1;
         sInstance = info;
     }

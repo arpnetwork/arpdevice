@@ -120,7 +120,7 @@ public class DeviceConnection {
     }
 
     /**
-     * Close socket
+     * Close a connection
      */
     public void close() {
         mChannelFuture.removeListener(mChannelFutureListener);
@@ -132,7 +132,7 @@ public class DeviceConnection {
     }
 
     /**
-     * Send socket message
+     * Send a message to server
      *
      * @param msg
      */
@@ -191,7 +191,6 @@ public class DeviceConnection {
     }
 
     private static class MessageDecoder extends ReplayingDecoder<Void> {
-
         @Override
         protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
             out.add(Message.readFrom(in));
@@ -199,7 +198,6 @@ public class DeviceConnection {
     }
 
     private static class MessageEncoder extends MessageToByteEncoder<Message> {
-
         @Override
         protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) {
             msg.writeTo(out);
