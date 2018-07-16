@@ -29,9 +29,6 @@ public class DeviceInfo {
     public String brand;
     public String model;
     public String cpu;
-
-    @SerializedName("cpu_company")
-    public String cpuCompany;
     public String gpu;
     public long ram;
     public long storage;
@@ -55,7 +52,6 @@ public class DeviceInfo {
         info.brand = DeviceUtil.getBrand();
         info.model = DeviceUtil.getModel();
         info.cpu = DeviceUtil.getCpu();
-        info.cpuCompany = DeviceUtil.getCpuCompany();
         info.gpu = "";
         info.ram = DeviceUtil.getMemoryTotal(context);
         info.storage = DeviceUtil.getExternalDiskAvailable(context);

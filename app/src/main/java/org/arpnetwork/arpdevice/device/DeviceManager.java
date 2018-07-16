@@ -22,8 +22,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
-import org.arpnetwork.arpdevice.data.DeviceState;
-import org.arpnetwork.arpdevice.data.StateChangedResponse;
+import org.arpnetwork.arpdevice.data.UserRequestResponse;
 import org.arpnetwork.arpdevice.data.Message;
 import org.arpnetwork.arpdevice.data.NotifyReq;
 import org.arpnetwork.arpdevice.data.RegisterReq;
@@ -35,10 +34,10 @@ import io.netty.buffer.Unpooled;
 public class DeviceManager implements DeviceConnection.Listener {
     private static final String TAG = DeviceManager.class.getSimpleName();
 
-    public static final int REGISTER_SUCCESS = 2;
-    public static final int STATE_CHANGED = 3;
+    public static final int REGISTERED = 2;
+    public static final int CLIENT_REQUEST = 3;
     public static final int CONNECTED = 4;
-    public static final int CONNECT_TIMEOUT = 5;
+    public static final int CONNECTED_TIMEOUT = 5;
     public static final int FINISHED = 6;
 
     private static final String HOST = "dev.arpnetwork.org";
@@ -52,10 +51,10 @@ public class DeviceManager implements DeviceConnection.Listener {
     private boolean mRegistered;
 
     private Handler mHandler = new Handler();
-    private OnStateChangedListener mOnStateChangedListener;
+    private OnClientRequestListener mOnClientRequestListener;
 
-    public interface OnStateChangedListener {
-        void onStateChanged(int state);
+    public interface OnClientRequestListener {
+        void onClientRequest();
     }
 
     public DeviceManager() {
@@ -63,8 +62,8 @@ public class DeviceManager implements DeviceConnection.Listener {
         mRegistered = false;
     }
 
-    public void setOnStateChangedListener(OnStateChangedListener listener) {
-        mOnStateChangedListener = listener;
+    public void setOnClientRequestListener(OnClientRequestListener listener) {
+        mOnClientRequestListener = listener;
     }
 
     /**
@@ -101,17 +100,20 @@ public class DeviceManager implements DeviceConnection.Listener {
     /**
      * Notify the server when this device's state is changed
      *
-     * @param reqId  {@link #CONNECTED}, {@link #CONNECT_TIMEOUT}, {@link #FINISHED}
-     * @param result 0 represents success, 1 represents failed
+     * @param reqId {@link #CONNECTED}, {@link #CONNECTED_TIMEOUT}, {@link #FINISHED}
      */
-    public void notifyServer(int reqId, int result) {
+    public void notifyServer(int reqId) {
         if (mRegistered) {
-            NotifyReq req = new NotifyReq(reqId, result, mSession);
+            NotifyReq req = new NotifyReq(reqId);
             String content = mGson.toJson(req);
             ByteBuf byteBuf = Unpooled.buffer(content.length());
             byteBuf.writeBytes(content.getBytes());
 
             mConnection.write(new Message(byteBuf));
+
+            if (reqId == FINISHED) {
+                mSession = null;
+            }
         }
     }
 
@@ -126,18 +128,14 @@ public class DeviceManager implements DeviceConnection.Listener {
         String json = msg.toJson();
         if (!TextUtils.isEmpty(json)) {
             Response response = mGson.fromJson(json, Response.class);
-            if (response.id == REGISTER_SUCCESS && response.result == 0) {
+            if (response.id == REGISTERED && response.result == 0) {
                 mRegistered = true;
-            } else if (response.id == STATE_CHANGED) {
-                StateChangedResponse res = mGson.fromJson(json, StateChangedResponse.class);
-                if (res.data.state == DeviceState.IDLE) {
-                    mSession = null;
-                } else if (res.data.state == DeviceState.REQUESTING) {
-                    mSession = res.data.session;
-                }
+            } else if (response.id == CLIENT_REQUEST) {
+                UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
+                mSession = res.data.session;
 
-                if (mOnStateChangedListener != null) {
-                    mOnStateChangedListener.onStateChanged(res.data.state);
+                if (mOnClientRequestListener != null) {
+                    mOnClientRequestListener.onClientRequest();
                 }
             }
         }

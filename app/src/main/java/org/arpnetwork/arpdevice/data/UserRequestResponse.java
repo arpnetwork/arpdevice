@@ -16,5 +16,5 @@
 
 package org.arpnetwork.arpdevice.data;
 
-public class StateChangedResponse extends Response<DeviceState> {
+public class UserRequestResponse extends Response<Client> {
 }

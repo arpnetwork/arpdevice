@@ -50,20 +50,8 @@ public class DeviceUtil {
 
     public static String getCpu() {
         String property = getSystemProperty(KEY_BORAD, "");
-        return !TextUtils.isEmpty(property) ? property : Build.BOARD;
-    }
-
-    public static String getCpuCompany() {
-        String company = "";
-        String cpu = getCpu();
-        if (cpu.startsWith("msm") || cpu.startsWith("sdm")) {
-            company = "Qualcomm";
-        } else if (cpu.startsWith("mt")) {
-            company = "MediaTek";
-        } else if (cpu.startsWith("hi")) {
-            company = "Huawei";
-        }
-        return company;
+        String cpu = !TextUtils.isEmpty(property) ? property : Build.BOARD;
+        return cpu.toLowerCase();
     }
 
     public static String getAndroidVersion() {

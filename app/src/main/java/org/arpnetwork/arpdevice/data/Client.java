@@ -18,12 +18,7 @@ package org.arpnetwork.arpdevice.data;
 
 import com.google.gson.annotations.SerializedName;
 
-public class DeviceState {
-    public static final int IDLE = 0;
-    public static final int REQUESTING = 1;
-    public static final int USING = 2;
-
-    public int state;
+public class Client {
     public String session;
 
     @SerializedName("user_ip")

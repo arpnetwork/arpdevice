@@ -16,12 +16,9 @@
 
 package org.arpnetwork.arpdevice.data;
 
-public class NotifyReq extends Req<NotifyReqData> {
-    public int result;
+public class NotifyReq extends Req<Void> {
 
-    public NotifyReq(int id, int result, String session) {
+    public NotifyReq(int id) {
         this.id = id;
-        this.result = result;
-        this.data = new NotifyReqData(session);
     }
 }
