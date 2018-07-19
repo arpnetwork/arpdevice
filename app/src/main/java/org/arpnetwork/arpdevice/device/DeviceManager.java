@@ -22,11 +22,14 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.arpnetwork.arpdevice.data.Req;
+import org.arpnetwork.arpdevice.data.UploadSpeedReq;
 import org.arpnetwork.arpdevice.data.UserRequestResponse;
 import org.arpnetwork.arpdevice.data.Message;
 import org.arpnetwork.arpdevice.data.NotifyReq;
 import org.arpnetwork.arpdevice.data.RegisterReq;
 import org.arpnetwork.arpdevice.data.Response;
+import org.arpnetwork.arpdevice.util.Util;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -40,6 +43,13 @@ public class DeviceManager implements DeviceConnection.Listener {
     public static final int CONNECTED_TIMEOUT = 5;
     public static final int FINISHED = 6;
 
+    private static final int MSG_JSON = 1;
+    private static final int MSG_SPEED = 2;
+
+    private static final int FLAG_DATA = 1;
+    private static final int FLAG_START = 2;
+    private static final int FLAG_END = 3;
+
     private static final String HOST = "dev.arpnetwork.org";
     private static final int PORT = 8000;
     private static final int HEARTBEAT_INTERVAL = 30000;
@@ -48,6 +58,8 @@ public class DeviceManager implements DeviceConnection.Listener {
     private Gson mGson;
 
     private String mSession;
+    private long mCurrentTime;
+    private int mDataLen;
     private boolean mRegistered;
 
     private Handler mHandler = new Handler();
@@ -70,6 +82,7 @@ public class DeviceManager implements DeviceConnection.Listener {
      * Connect to a server
      */
     public void connect() {
+        mDataLen = 0;
         mConnection = new DeviceConnection(this);
         mConnection.connect(HOST, PORT);
     }
@@ -104,12 +117,7 @@ public class DeviceManager implements DeviceConnection.Listener {
      */
     public void notifyServer(int reqId) {
         if (mRegistered) {
-            NotifyReq req = new NotifyReq(reqId);
-            String content = mGson.toJson(req);
-            ByteBuf byteBuf = Unpooled.buffer(content.length());
-            byteBuf.writeBytes(content.getBytes());
-
-            mConnection.write(new Message(byteBuf));
+            send(new NotifyReq(reqId));
 
             if (reqId == FINISHED) {
                 mSession = null;
@@ -125,18 +133,34 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     @Override
     public void onMessage(DeviceConnection conn, Message msg) {
-        String json = msg.toJson();
-        if (!TextUtils.isEmpty(json)) {
-            Response response = mGson.fromJson(json, Response.class);
-            if (response.id == REGISTERED && response.result == 0) {
-                mRegistered = true;
-            } else if (response.id == CLIENT_REQUEST) {
-                UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
-                mSession = res.data.session;
+        int type = msg.getType();
+        if (type == MSG_JSON) {
+            String json = msg.toJson();
+            if (!TextUtils.isEmpty(json)) {
+                Response response = mGson.fromJson(json, Response.class);
+                if (response.id == REGISTERED && response.result == 0) {
+                    mRegistered = true;
+                } else if (response.id == CLIENT_REQUEST) {
+                    UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
+                    mSession = res.data.session;
 
-                if (mOnClientRequestListener != null) {
-                    mOnClientRequestListener.onClientRequest();
+                    if (mOnClientRequestListener != null) {
+                        mOnClientRequestListener.onClientRequest();
+                    }
                 }
+            }
+        } else if (type == MSG_SPEED) {
+            int flag = msg.getData().readByte();
+            if (flag == FLAG_START) {
+                mCurrentTime = System.currentTimeMillis();
+                mDataLen = 0;
+            } else if (flag == FLAG_DATA) {
+                mDataLen += msg.getDataLen();
+                long interval = System.currentTimeMillis() - mCurrentTime;
+                int speed = (int) (mDataLen / (interval / 1000.0));
+                uploadSpeed(speed);
+            } else if (flag == FLAG_END) {
+                sendRandomData();
             }
         }
     }
@@ -153,23 +177,59 @@ public class DeviceManager implements DeviceConnection.Listener {
         reset();
     }
 
-    private void register() {
-        RegisterReq req = new RegisterReq();
-        String content = mGson.toJson(req);
-        ByteBuf byteBuf = Unpooled.buffer(content.length());
-        byteBuf.writeBytes(content.getBytes());
-
-        mConnection.write(new Message(byteBuf));
-    }
-
     private void startHeartbeat() {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mConnection.write(new Message());
+                mConnection.write((ByteBuf) null);
                 startHeartbeat();
             }
         }, HEARTBEAT_INTERVAL);
+    }
+
+    private void register() {
+        send(new RegisterReq());
+    }
+
+    private void uploadSpeed(int speed) {
+        send(new UploadSpeedReq(speed));
+    }
+
+    private void sendRandomData() {
+        int len = 10 * 1024 * 1024;
+        String str = Util.getRandomString(len);
+
+        sendFlagData(FLAG_START);
+        send(MSG_SPEED, FLAG_DATA, str);
+        sendFlagData(FLAG_END);
+    }
+
+    private void sendFlagData(int flag) {
+        send(MSG_SPEED, flag, null);
+    }
+
+    private void send(Req req) {
+        String content = mGson.toJson(req);
+        send(MSG_JSON, -1, content);
+    }
+
+    private void send(int type, int flag, String content) {
+        int len = content != null ? content.length() : 0;
+        if (type == MSG_JSON) {
+            len += 1;
+        } else {
+            len += 2;
+        }
+        ByteBuf byteBuf = Unpooled.buffer(len);
+        byteBuf.writeByte(type);
+        if (type == MSG_SPEED) {
+            byteBuf.writeByte(flag);
+        }
+        if (content != null) {
+            byteBuf.writeBytes(content.getBytes());
+        }
+
+        mConnection.write(byteBuf);
     }
 
     private void reset() {

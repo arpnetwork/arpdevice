@@ -19,12 +19,9 @@ package org.arpnetwork.arpdevice.util;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.graphics.Point;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
-import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -33,6 +30,7 @@ import android.view.WindowManager;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 public class DeviceUtil {
     private static final String KEY_MIUI_VERSION = "ro.miui.ui.version.name";
@@ -46,6 +44,12 @@ public class DeviceUtil {
 
     public static String getModel() {
         return Build.MODEL;
+    }
+
+    public static String getIMSI(Context context) {
+        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String imsi = tm.getSubscriberId();
+        return imsi != null ? imsi : "";
     }
 
     public static String getCpu() {
@@ -100,30 +104,8 @@ public class DeviceUtil {
         return String.format("%s*%s", r[0], r[1]);
     }
 
-    public static String getDeviceId(Context context) {
-        String deviceId = "";
-        try {
-            deviceId = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-        } catch (Exception e) {
-        }
-        return deviceId;
-    }
-
-    public static String getAndroidId(Context context) {
-        String androidId = "";
-        try {
-            androidId = Settings.System.getString(context.getContentResolver(), "android_id");
-        } catch (Exception e) {
-        }
-        return androidId;
-    }
-
-    public static int getNetworkType(Context context) {
-        NetworkInfo info = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        if (info != null && info.isConnected()) {
-            return info.getType();
-        }
-        return -1;
+    public static String getUUID() {
+        return UUID.randomUUID().toString();
     }
 
     public static long getMemoryTotal(Context context) {

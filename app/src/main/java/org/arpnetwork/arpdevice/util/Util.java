@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 public class Util {
     private Util() {
@@ -114,5 +115,16 @@ public class Util {
     public static void copyFromAsset(String assetFileName, SyncChannel syncChannel) throws IOException {
         AssetManager assetManager = CustomApplication.sInstance.getAssets();
         Util.copy(assetManager.open(assetFileName), syncChannel);
+    }
+
+    public static String getRandomString(int length) {
+        String str = "zxcvbnmlkjhgfdsaqwertyuiopQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
+        Random random = new Random();
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < length; ++i) {
+            int number = random.nextInt(str.length());
+            sb.append(str.charAt(number));
+        }
+        return sb.toString();
     }
 }

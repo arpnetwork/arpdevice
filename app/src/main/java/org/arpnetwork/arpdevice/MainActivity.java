@@ -19,6 +19,7 @@ package org.arpnetwork.arpdevice;
 import android.app.Activity;
 import android.content.Intent;
 import android.media.projection.MediaProjectionManager;
+import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -90,8 +91,14 @@ public class MainActivity extends AppCompatActivity {
             public void onSurfaceCreated(GL10 gl) {
                 String glRenderer = gl.glGetString(GL10.GL_RENDERER);
 
-                DeviceInfo.get().gpu = glRenderer;
-                DeviceInfo.get().netType = NetworkHelper.getInstance().getNetworkType();
+                DeviceInfo info = DeviceInfo.get();
+                info.gpu = glRenderer;
+                int type = NetworkHelper.getInstance().getNetworkType();
+                info.connNetType = type;
+                if (type == ConnectivityManager.TYPE_MOBILE) {
+                    info.telNetType = NetworkHelper.getTelephonyNetworkType(getApplicationContext());
+                }
+
                 startDeviceService();
             }
         }));

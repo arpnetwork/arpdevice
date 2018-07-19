@@ -23,6 +23,7 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
@@ -108,6 +109,11 @@ public class NetworkHelper {
 
     public static int getNetworkType(NetworkInfo networkInfo) {
         return networkInfo != null ? networkInfo.getType() : -1;
+    }
+
+    public static int getTelephonyNetworkType(Context context) {
+        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        return telephonyManager.getNetworkType();
     }
 
     private void onReceiveNetworkBroadcast() {

@@ -28,6 +28,7 @@ public class DeviceInfo {
     public int port;
     public String brand;
     public String model;
+    public String imsi;
     public String cpu;
     public String gpu;
     public long ram;
@@ -40,17 +41,21 @@ public class DeviceInfo {
     @SerializedName("system_ver")
     public String systemVer;
 
-    @SerializedName("net_type")
-    public int netType;
+    @SerializedName("conn_net_type")
+    public int connNetType;
+
+    @SerializedName("tel_net_type")
+    public int telNetType;
 
     private static DeviceInfo sInstance;
 
     public static void create(Context context) {
         DeviceInfo info = new DeviceInfo();
-        info.id = DeviceUtil.getAndroidId(context);
+        info.id = DeviceUtil.getUUID();
         info.port = DataServer.PORT;
         info.brand = DeviceUtil.getBrand();
         info.model = DeviceUtil.getModel();
+        info.imsi = DeviceUtil.getIMSI(context);
         info.cpu = DeviceUtil.getCpu();
         info.gpu = "";
         info.ram = DeviceUtil.getMemoryTotal(context);
@@ -58,7 +63,8 @@ public class DeviceInfo {
         info.resolution = DeviceUtil.getResolutionStr(context);
         info.osVer = DeviceUtil.getAndroidVersion();
         info.systemVer = DeviceUtil.getSysUIVersion();
-        info.netType = -1;
+        info.connNetType = -1;
+        info.telNetType = 0;
         sInstance = info;
     }
 

@@ -132,6 +132,18 @@ public class DeviceConnection {
     }
 
     /**
+     * Send data to server
+     *
+     * @param byteBuf
+     */
+    public void write(ByteBuf byteBuf) {
+        try {
+            write(new Message(byteBuf));
+        } catch (Exception e) {
+        }
+    }
+
+    /**
      * Send a message to server
      *
      * @param msg

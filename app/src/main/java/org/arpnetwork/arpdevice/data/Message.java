@@ -47,6 +47,14 @@ public class Message {
         return mType;
     }
 
+    public ByteBuf getData() {
+        return mData;
+    }
+
+    public int getDataLen() {
+        return mData != null ? mData.capacity() : 0;
+    }
+
     public String toJson() {
         if (mData != null) {
             int len = mData.readableBytes();

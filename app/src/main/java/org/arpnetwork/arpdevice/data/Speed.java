@@ -14,8 +14,15 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.config;
+package org.arpnetwork.arpdevice.data;
 
-public class Config {
-    public static final boolean DEBUG = false;
+import com.google.gson.annotations.SerializedName;
+
+public class Speed {
+    @SerializedName("dl_speed")
+    public int dlSpeed;
+
+    public Speed(int speed) {
+        this.dlSpeed = speed;
+    }
 }

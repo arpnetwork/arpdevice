@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.config;
+package org.arpnetwork.arpdevice.data;
 
-public class Config {
-    public static final boolean DEBUG = false;
+public class UploadSpeedReq extends Req<Speed> {
+
+    public UploadSpeedReq(int speed) {
+        this.id = 7;
+        this.data = new Speed(speed);
+    }
 }
