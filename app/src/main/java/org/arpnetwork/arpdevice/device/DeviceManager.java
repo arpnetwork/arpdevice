@@ -43,7 +43,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     public static final int CONNECTED_TIMEOUT = 5;
     public static final int FINISHED = 6;
 
-    private static final int MSG_JSON = 1;
+    private static final int MSG_DEVICE = 1;
     private static final int MSG_SPEED = 2;
 
     private static final int FLAG_DATA = 1;
@@ -64,9 +64,14 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     private Handler mHandler = new Handler();
     private OnClientRequestListener mOnClientRequestListener;
+    private OnErrorListener mOnErrorListener;
 
     public interface OnClientRequestListener {
         void onClientRequest();
+    }
+
+    public interface OnErrorListener {
+        void onError(int code, String msg);
     }
 
     public DeviceManager() {
@@ -76,6 +81,10 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     public void setOnClientRequestListener(OnClientRequestListener listener) {
         mOnClientRequestListener = listener;
+    }
+
+    public void setOnErrorListener(OnErrorListener listener) {
+        mOnErrorListener = listener;
     }
 
     /**
@@ -134,34 +143,10 @@ public class DeviceManager implements DeviceConnection.Listener {
     @Override
     public void onMessage(DeviceConnection conn, Message msg) {
         int type = msg.getType();
-        if (type == MSG_JSON) {
-            String json = msg.toJson();
-            if (!TextUtils.isEmpty(json)) {
-                Response response = mGson.fromJson(json, Response.class);
-                if (response.id == REGISTERED && response.result == 0) {
-                    mRegistered = true;
-                } else if (response.id == CLIENT_REQUEST) {
-                    UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
-                    mSession = res.data.session;
-
-                    if (mOnClientRequestListener != null) {
-                        mOnClientRequestListener.onClientRequest();
-                    }
-                }
-            }
+        if (type == MSG_DEVICE) {
+            onDeviceMessage(msg);
         } else if (type == MSG_SPEED) {
-            int flag = msg.getData().readByte();
-            if (flag == FLAG_START) {
-                mCurrentTime = System.currentTimeMillis();
-                mDataLen = 0;
-            } else if (flag == FLAG_DATA) {
-                mDataLen += msg.getDataLen();
-                long interval = System.currentTimeMillis() - mCurrentTime;
-                int speed = (int) (mDataLen / (interval / 1000.0));
-                uploadSpeed(speed);
-            } else if (flag == FLAG_END) {
-                sendRandomData();
-            }
+            onSpeedMessage(msg);
         }
     }
 
@@ -177,11 +162,58 @@ public class DeviceManager implements DeviceConnection.Listener {
         reset();
     }
 
+    private void onDeviceMessage(Message msg) {
+        String json = msg.toJson();
+        if (!TextUtils.isEmpty(json)) {
+            Response response = mGson.fromJson(json, Response.class);
+            if (response.id == REGISTERED) {
+                if (response.result == 0) {
+                    mRegistered = true;
+                } else {
+                    if (mOnErrorListener != null) {
+                        mOnErrorListener.onError(response.result, "Incompatible protocol");
+                    }
+                }
+            } else if (response.id == CLIENT_REQUEST) {
+                UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
+                mSession = res.data.session;
+
+                if (mOnClientRequestListener != null) {
+                    mOnClientRequestListener.onClientRequest();
+                }
+            }
+        }
+    }
+
+    private void onSpeedMessage(Message msg) {
+        int flag = msg.getData().readByte();
+        switch (flag) {
+            case FLAG_START:
+                mCurrentTime = System.currentTimeMillis();
+                mDataLen = 0;
+                break;
+
+            case FLAG_DATA:
+                mDataLen += msg.getDataLen();
+                break;
+
+            case FLAG_END:
+                float interval = (System.currentTimeMillis() - mCurrentTime) / 1000.0f;
+                int speed = (int) (mDataLen / interval);
+                uploadSpeed(speed);
+                sendRandomData();
+                break;
+
+            default:
+                break;
+        }
+    }
+
     private void startHeartbeat() {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mConnection.write((ByteBuf) null);
+                mConnection.write(null);
                 startHeartbeat();
             }
         }, HEARTBEAT_INTERVAL);
@@ -210,12 +242,12 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     private void send(Req req) {
         String content = mGson.toJson(req);
-        send(MSG_JSON, -1, content);
+        send(MSG_DEVICE, -1, content);
     }
 
     private void send(int type, int flag, String content) {
         int len = content != null ? content.length() : 0;
-        if (type == MSG_JSON) {
+        if (type == MSG_DEVICE) {
             len += 1;
         } else {
             len += 2;

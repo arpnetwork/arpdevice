@@ -31,6 +31,11 @@ public class ProtocolPacket<T> {
     public static final int TOUCH_INFO = 100;
     public static final int VIDEO_CHANGED = 101;
 
+    public static final int RESULT_OK = 0;
+    public static final int RESULT_NOT_FOUND = 1;
+    public static final int RESULT_FORBIDDEN = 2;
+    public static final int RESULT_NOT_SUPPORT = 3;
+
     public int id;
     public int result;
     public T data;

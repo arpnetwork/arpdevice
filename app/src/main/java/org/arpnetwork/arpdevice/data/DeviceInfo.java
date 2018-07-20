@@ -20,10 +20,12 @@ import android.content.Context;
 
 import com.google.gson.annotations.SerializedName;
 
+import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
 
 public class DeviceInfo {
+    public String ver;
     public String id;
     public int port;
     public String brand;
@@ -51,6 +53,7 @@ public class DeviceInfo {
 
     public static void create(Context context) {
         DeviceInfo info = new DeviceInfo();
+        info.ver = Config.PROTOCOL_VERSION;
         info.id = DeviceUtil.getUUID();
         info.port = DataServer.PORT;
         info.brand = DeviceUtil.getBrand();

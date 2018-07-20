@@ -208,14 +208,18 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Req req = mGson.fromJson(protocolJson, Req.class);
         switch (req.id) {
             case ProtocolPacket.CONNECT_REQ:
+                mHandler.removeCallbacks(mConnectedTimeoutRunnable);
+
                 ConnectReq connectReq = mGson.fromJson(protocolJson, ConnectReq.class);
-                if (verifySession(connectReq)) {
-                    mHandler.removeCallbacks(mConnectedTimeoutRunnable);
+                if (!protocolCompatible(connectReq)) {
+                    Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, ProtocolPacket.RESULT_NOT_SUPPORT, null);
+                    mConn.write(pkt);
+                    stop();
+                } else if (!sessionValid(connectReq)) {
+                    stop(); // close client.
+                } else {
                     onConnectFirstReq(connectReq);
                     start();
-                } else {
-                    mHandler.removeCallbacks(mConnectedTimeoutRunnable);
-                    stop(); // close client.
                 }
                 break;
 
@@ -233,7 +237,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         }
     }
 
-    private boolean verifySession(ConnectReq req) {
+    private boolean protocolCompatible(ConnectReq req) {
+        return Config.PROTOCOL_VERSION.equals(req.data.version);
+    }
+
+    private boolean sessionValid(ConnectReq req) {
         return !TextUtils.isEmpty(req.data.session) && req.data.session.equals(mDeviceManager.getSession());
     }
 

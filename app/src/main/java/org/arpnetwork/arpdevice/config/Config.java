@@ -18,4 +18,6 @@ package org.arpnetwork.arpdevice.config;
 
 public class Config {
     public static final boolean DEBUG = false;
+
+    public static final String PROTOCOL_VERSION = "1.0";
 }

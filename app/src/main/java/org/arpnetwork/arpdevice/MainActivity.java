@@ -23,6 +23,7 @@ import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.server.DataServer;
@@ -109,6 +110,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 mDeviceManager = new DeviceManager();
+                mDeviceManager.setOnErrorListener(mOnErrorListener);
                 mDeviceManager.connect();
                 DataServer.getInstance().setDeviceManager(mDeviceManager);
             }
@@ -149,6 +151,18 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onException(Throwable cause) {
+        }
+    };
+
+    private DeviceManager.OnErrorListener mOnErrorListener = new DeviceManager.OnErrorListener() {
+        @Override
+        public void onError(int code, final String msg) {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    UIHelper.showToast(MainActivity.this, msg, Toast.LENGTH_SHORT);
+                }
+            });
         }
     };
 }

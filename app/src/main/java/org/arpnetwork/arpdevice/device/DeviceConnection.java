@@ -143,12 +143,7 @@ public class DeviceConnection {
         }
     }
 
-    /**
-     * Send a message to server
-     *
-     * @param msg
-     */
-    public void write(Message msg) {
+    private void write(Message msg) {
         if (!mChannelFuture.isSuccess()) {
             throw new IllegalStateException();
         }
