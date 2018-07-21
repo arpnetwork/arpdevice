@@ -18,9 +18,7 @@ package org.arpnetwork.arpdevice.util;
 
 import android.content.Context;
 import android.os.Build;
-import android.util.DisplayMetrics;
 import android.util.TypedValue;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.lang.reflect.Field;
@@ -110,20 +108,6 @@ public class UIHelper {
                 actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data, context.getResources().getDisplayMetrics());
         }
         return actionBarHeight;
-    }
-
-    public static int getScreenWidth(Context context) {
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        return dm.widthPixels;
-    }
-
-    public static int getScreenHeight(Context context) {
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        return dm.heightPixels;
     }
 
     public static int dip2px(Context context, float dpValue) {

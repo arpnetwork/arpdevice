@@ -17,21 +17,31 @@
 package org.arpnetwork.arpdevice.stream;
 
 import android.content.SharedPreferences;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
 import org.arpnetwork.adb.Auth;
+import org.arpnetwork.adb.Channel;
 import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
+import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.server.DataServer;
 
 import java.security.spec.InvalidKeySpecException;
 
 public class Touch {
     private static final String TAG = "Touch";
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = Config.DEBUG;
+
+    public static final int STATE_INIT = -1;
+    public static final int STATE_CLOSED = 0;
+    public static final int STATE_CONNECTED = 1;
+
+    public static final int RETRY_COUNT = 3;
 
     private static volatile Touch sInstance = null;
 
@@ -40,6 +50,9 @@ public class Touch {
 
     private Auth mAuth;
     private String mBanner;
+
+    private int mState;
+    private int mRetryCount;
 
     public static Touch getInstance() {
         if (sInstance == null) {
@@ -53,47 +66,15 @@ public class Touch {
     }
 
     public void connect() {
-        mConn = new Connection(mAuth, "127.0.0.1", 5555);
-        mConn.setListener(new Connection.ConnectionListener() {
-            @Override
-            public void onConnected(Connection conn) {
-                if (AssetCopyHelper.isValidTouchBinary()) {
-                    startTouch();
-                } else {
-                    SyncChannel ss = mConn.openSync();
-                    AssetCopyHelper.pushTouch(ss, new AssetCopyHelper.PushCallback() {
-                        @Override
-                        public void onStart() {
-                        }
-
-                        @Override
-                        public void onComplete(boolean success, Throwable throwable) {
-                            if (success) {
-                                startTouch();
-                            } else {
-                                Log.e(TAG, "push error: " + throwable);
-                            }
-                        }
-                    });
-                }
-            }
-
-            @Override
-            public void onClosed(Connection conn) {
-                Log.d(TAG, "closed.");
-            }
-
-            @Override
-            public void onAuth(Connection conn, String key) {
-            }
-
-            @Override
-            public void onException(Connection conn, Throwable cause) {
-                Log.e(TAG, "EXCEPTION: " + cause.getMessage());
-            }
-        });
-
+        if (mConn == null) {
+            mConn = new Connection(mAuth, "127.0.0.1", 5555);
+            mConn.setListener(mConnectionListener);
+        }
         mConn.connect();
+    }
+
+    public Connection getConnection() {
+        return mConn;
     }
 
     public String getBanner() {
@@ -101,9 +82,16 @@ public class Touch {
     }
 
     public void sendTouch(String touchInfo) {
-        if (!TextUtils.isEmpty(touchInfo) && mShell != null) {
+        if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mShell != null) {
             mShell.write(touchInfo);
         }
+    }
+
+    /**
+     * Return the current connection state.
+     */
+    public synchronized int getState() {
+        return mState;
     }
 
     private void startTouch() {
@@ -129,6 +117,8 @@ public class Touch {
     }
 
     private Touch() {
+        mState = STATE_INIT;
+
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(CustomApplication.sInstance.getApplicationContext());
         String key = sp.getString("key", null);
         if (key != null) {
@@ -142,4 +132,55 @@ public class Touch {
             sp.edit().putString("key", mAuth.getPrivateKey()).apply();
         }
     }
+
+    private Connection.ConnectionListener mConnectionListener = new Connection.ConnectionListener() {
+        @Override
+        public void onConnected(Connection conn) {
+            mState = STATE_CONNECTED;
+            mRetryCount = 0;
+
+            if (AssetCopyHelper.isValidTouchBinary()) {
+                startTouch();
+            } else {
+                SyncChannel ss = mConn.openSync();
+                AssetCopyHelper.pushTouch(ss, new AssetCopyHelper.PushCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onComplete(boolean success, Throwable throwable) {
+                        if (success) {
+                            startTouch();
+                        } else {
+                            Log.e(TAG, "push error: " + throwable);
+                        }
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onClosed(Connection conn) {
+            mState = STATE_CLOSED;
+            // Reconnect.
+            if (mRetryCount < RETRY_COUNT) {
+                mRetryCount++;
+                connect();
+            } else {
+                mRetryCount = 0;
+                DataServer.getInstance().onClientDisconnected();
+            }
+        }
+
+        @Override
+        public void onAuth(Connection conn, String key) {
+        }
+
+        @Override
+        public void onException(Connection conn, Throwable cause) {
+            Log.e(TAG, "EXCEPTION: " + cause.getMessage());
+            mState = STATE_CLOSED;
+        }
+    };
 }

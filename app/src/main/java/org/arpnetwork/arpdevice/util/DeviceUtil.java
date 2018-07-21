@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.util;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Environment;
@@ -102,6 +103,28 @@ public class DeviceUtil {
     public static String getResolutionStr(Context context) {
         int[] r = getResolution(context);
         return String.format("%s*%s", r[0], r[1]);
+    }
+
+    public static int getHeightWithoutVisualBar(Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        return dm.heightPixels;
+    }
+
+    public static int getWidthWithoutVisualBar(Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        return dm.widthPixels;
+    }
+
+    public static int getVirtualBarHeight(Context context) {
+        int orientation = context.getResources().getConfiguration().orientation;
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            return getResolution(context)[1] - getHeightWithoutVisualBar(context);
+        }
+        return getResolution(context)[0] - getWidthWithoutVisualBar(context);
     }
 
     public static String getUUID() {

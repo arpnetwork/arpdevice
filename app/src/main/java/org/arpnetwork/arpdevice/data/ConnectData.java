@@ -21,4 +21,5 @@ public class ConnectData {
     public String platform;
     public String session;
     public int quality;
+    public String packageName;
 }

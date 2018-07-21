@@ -20,10 +20,19 @@ public class VideoInfo {
     public int width;
     public int height;
     public int quality;
+    public int statusBarHeight;
+    public int virtualBarHeight;
+    public int resolutionWidth;
+    public int resolutionHeight;
 
-    public VideoInfo(int width, int height, int quality) {
+    public VideoInfo(int width, int height, int quality, int statusBarHeight, int virtualBarHeight,
+            int resolutionWidth, int resolutionHeight) {
         this.width = width;
         this.height = height;
         this.quality = quality;
+        this.statusBarHeight = statusBarHeight;
+        this.virtualBarHeight = virtualBarHeight;
+        this.resolutionWidth = resolutionWidth;
+        this.resolutionHeight = resolutionHeight;
     }
 }

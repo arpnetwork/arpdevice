@@ -16,14 +16,17 @@
 
 package org.arpnetwork.arpdevice.server;
 
+import android.content.Context;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.device.DeviceManager;
+import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.data.AVPacket;
@@ -34,6 +37,8 @@ import org.arpnetwork.arpdevice.data.ProtocolPacket;
 import org.arpnetwork.arpdevice.data.Req;
 import org.arpnetwork.arpdevice.data.TouchSetting;
 import org.arpnetwork.arpdevice.data.VideoInfo;
+import org.arpnetwork.arpdevice.util.DeviceUtil;
+import org.arpnetwork.arpdevice.util.UIHelper;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -59,6 +64,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private SendThread mAVDataThread;
     private int mQuality;
     private boolean mReceiveDisconnect;
+    private TaskHelper mTaskHelper;
 
     private NettyConnection mConn;
 
@@ -126,7 +132,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
      * Called by RecordService.
      */
     public void onVideoChanged(int width, int height, int quality) {
-        VideoInfo videoInfo = new VideoInfo(width, height, quality);
+        Context context = CustomApplication.sInstance;
+        VideoInfo videoInfo = new VideoInfo(width, height, quality,
+                UIHelper.getStatusbarHeight(context), DeviceUtil.getVirtualBarHeight(context),
+                DeviceUtil.getResolution(context)[0], DeviceUtil.getResolution(context)[1]);
+
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.VIDEO_CHANGED, 0, videoInfo);
         mConn.write(pkt);
     }
@@ -210,7 +220,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             case ProtocolPacket.CONNECT_REQ:
                 mHandler.removeCallbacks(mConnectedTimeoutRunnable);
 
-                ConnectReq connectReq = mGson.fromJson(protocolJson, ConnectReq.class);
+                final ConnectReq connectReq = mGson.fromJson(protocolJson, ConnectReq.class);
                 if (!protocolCompatible(connectReq)) {
                     Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, ProtocolPacket.RESULT_NOT_SUPPORT, null);
                     mConn.write(pkt);
@@ -218,8 +228,18 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 } else if (!sessionValid(connectReq)) {
                     stop(); // close client.
                 } else {
+                    mTaskHelper = new TaskHelper(mHandler);
                     onConnectFirstReq(connectReq);
                     start();
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!mTaskHelper.launchApp(connectReq.data.packageName)) {
+                                mHandler.removeCallbacks(mConnectedTimeoutRunnable);
+                                stop(); // close client.
+                            }
+                        }
+                    }, 500);
                 }
                 break;
 
@@ -302,13 +322,19 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             mAVDataThread = null;
         }
 
+        // kill apk
+        if (mTaskHelper != null) {
+            mTaskHelper.killLaunchedApp();
+        }
+
+        mPacketQueue.clear();
         mConn.closeConnection();
 
         // fix client terminate with no touch up.
         Touch.getInstance().sendTouch("r\n");
 
-        this.stopHeartbeatTimer();
-        this.stopHeartbeatTimeout();
+        stopHeartbeatTimer();
+        stopHeartbeatTimeout();
     }
 
     private class SendThread extends Thread {
@@ -316,6 +342,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
         @Override
         public void run() {
+            mPacketQueue.clear();
+
             while (!mStopped) {
                 try {
                     AVPacket packet = mPacketQueue.take();
@@ -350,7 +378,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private final Runnable mServerHeartTimeout = new Runnable() {
-
         @Override
         public void run() {
             Message pkt = ProtocolPacket.generateHeartbeat();
