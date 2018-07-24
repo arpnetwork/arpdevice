@@ -118,6 +118,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void onClientDisconnected() {
+        Log.d(TAG,"onClientDisconnected");
         stop();
     }
 
@@ -214,7 +215,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                     Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, ProtocolPacket.RESULT_NOT_SUPPORT, null);
                     mConn.write(pkt);
                     stop();
-                } else if (!sessionValid(connectReq)) {
+                } else if (!verifySession(connectReq)) {
                     stop(); // close client.
                 } else {
                     mTaskHelper = new TaskHelper(mHandler);
@@ -250,7 +251,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         return Config.PROTOCOL_VERSION.equals(req.data.version);
     }
 
-    private boolean sessionValid(ConnectReq req) {
+    private boolean verifySession(ConnectReq req) {
         return !TextUtils.isEmpty(req.data.session) && req.data.session.equals(mDeviceManager.getSession());
     }
 

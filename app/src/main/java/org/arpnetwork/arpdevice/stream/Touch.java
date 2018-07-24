@@ -202,6 +202,8 @@ public class Touch {
 
         @Override
         public void onAuth(Connection conn, String key) {
+            Log.e(TAG, "onAuth");
+            mConn.auth();
         }
 
         @Override

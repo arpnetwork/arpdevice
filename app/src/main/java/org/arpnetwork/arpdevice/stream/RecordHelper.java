@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 ARP Network
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.arpnetwork.arpdevice.stream;
 
 import android.content.Context;
@@ -21,7 +37,7 @@ public class RecordHelper {
     private static final boolean DEBUG = Config.DEBUG;
 
     private ShellChannel mVideoShell;
-    private final ByteBuf buffer = Unpooled.buffer(1024 * 2);
+    private final ByteBuf mBuffer = Unpooled.buffer(1024 * 2);
 
     public void startRecord(int quality, Connection connection) {
         int width = 720;
@@ -32,26 +48,26 @@ public class RecordHelper {
         mVideoShell.setListener(new ShellChannel.ShellListener() {
             public void onStdout(ShellChannel ch, byte[] data) {
                 // Continue callback data format: int size + video data.
-                buffer.writeBytes(data);
+                mBuffer.writeBytes(data);
 
                 do {
-                    buffer.markReaderIndex();
-                    int size = buffer.readIntLE();
-                    if (buffer.readableBytes() < size) {
-                        buffer.resetReaderIndex();
+                    mBuffer.markReaderIndex();
+                    int size = mBuffer.readIntLE();
+                    if (mBuffer.readableBytes() < size) {
+                        mBuffer.resetReaderIndex();
                         break;
                     }
 
-                    ByteBuf videoData = buffer.readBytes(size);
+                    ByteBuf videoData = mBuffer.readBytes(size);
                     ByteBuf byteBuf = Unpooled.buffer(1 + 8 + size);
                     byteBuf.writeByte(Message.VIDEO);
                     byteBuf.writeLong(System.currentTimeMillis());
                     byteBuf.writeBytes(videoData);
 
                     DataServer.getInstance().enqueueAVPacket(byteBuf);
-                    buffer.discardReadBytes();
+                    mBuffer.discardReadBytes();
 
-                } while (buffer.readableBytes() > 4);
+                } while (mBuffer.readableBytes() > 4);
             }
 
             @Override
