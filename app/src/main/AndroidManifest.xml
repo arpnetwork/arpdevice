@@ -27,10 +27,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".stream.RecordService"
-            android:enabled="true"
-            android:exported="false" />
     </application>
 
 </manifest>

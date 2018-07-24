@@ -105,28 +105,6 @@ public class DeviceUtil {
         return String.format("%s*%s", r[0], r[1]);
     }
 
-    public static int getHeightWithoutVisualBar(Context context) {
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        return dm.heightPixels;
-    }
-
-    public static int getWidthWithoutVisualBar(Context context) {
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        return dm.widthPixels;
-    }
-
-    public static int getVirtualBarHeight(Context context) {
-        int orientation = context.getResources().getConfiguration().orientation;
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-            return getResolution(context)[1] - getHeightWithoutVisualBar(context);
-        }
-        return getResolution(context)[0] - getWidthWithoutVisualBar(context);
-    }
-
     public static String getUUID() {
         return UUID.randomUUID().toString();
     }

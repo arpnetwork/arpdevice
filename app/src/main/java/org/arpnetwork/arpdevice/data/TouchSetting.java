@@ -16,9 +16,12 @@
 
 package org.arpnetwork.arpdevice.data;
 
+import android.content.Context;
 import android.text.TextUtils;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.util.UIHelper;
 
 public class TouchSetting {
     public int contacts;
@@ -27,28 +30,32 @@ public class TouchSetting {
     public int pressure;
     public int major;
     public int minor;
+    public int statusBarHeight;
 
-    public TouchSetting(int contacts, int x, int y, int pressure, int major, int minor) {
+    public TouchSetting(int contacts, int x, int y, int pressure, int major, int minor, int statusBarHeight) {
         this.contacts = contacts;
         this.x = x;
         this.y = y;
         this.pressure = pressure;
         this.major = major;
         this.minor = minor;
+        this.statusBarHeight = statusBarHeight;
     }
 
     public static TouchSetting createTouchSetting() {
         String banner = Touch.getInstance().getBanner();
         if (!TextUtils.isEmpty(banner)) {
             try {
+                Context context = CustomApplication.sInstance;
                 String[] items = banner.split(" ");
                 int contacts = Integer.parseInt(items[0]);
                 int x = Integer.parseInt(items[1]);
-                int y = Integer.parseInt(items[2]);
+                int getDisplayHeight = UIHelper.getDisplayHeight(context);
                 int pressure = Integer.parseInt(items[3]);
                 int major = Integer.parseInt(items[4]);
                 int minor = Integer.parseInt(items[5]);
-                return new TouchSetting(contacts, x, y, pressure, major, minor);
+                return new TouchSetting(contacts, x, getDisplayHeight, pressure, major, minor,
+                        UIHelper.getStatusbarHeight(context));
             } catch (NumberFormatException ignored) {
             }
         }

@@ -51,8 +51,8 @@ public class TaskHelper {
         public void run() {
             mAdb.getTopAndroidTask(new ShellChannel.ShellListener() {
                 @Override
-                public void onStdout(ShellChannel ch, String data) {
-                    String topPackage = getTopPackage(data);
+                public void onStdout(ShellChannel ch, byte[] data) {
+                    String topPackage = getTopPackage(new String(data));
                     if (!topPackage.contains(mPackageName)) {
                         DataServer.getInstance().onClientDisconnected();
                         mHandler.removeCallbacksAndMessages(null);
@@ -60,7 +60,7 @@ public class TaskHelper {
                 }
 
                 @Override
-                public void onStderr(ShellChannel ch, String data) {
+                public void onStderr(ShellChannel ch, byte[] data) {
                 }
 
                 @Override

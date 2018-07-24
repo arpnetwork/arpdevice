@@ -16,9 +16,6 @@
 
 package org.arpnetwork.arpdevice;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.media.projection.MediaProjectionManager;
 import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -27,7 +24,7 @@ import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.server.DataServer;
-import org.arpnetwork.arpdevice.stream.RecordService;
+import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
@@ -37,9 +34,6 @@ import org.arpnetwork.arpdevice.util.NetworkHelper;
 import javax.microedition.khronos.opengles.GL10;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int REQUEST_MEDIA_PROJECTION = 1;
-
-    private MediaProjectionManager mMediaProjectionManager;
     private int mQuality;
 
     private DeviceManager mDeviceManager;
@@ -51,26 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         initViews();
 
-        mMediaProjectionManager = (MediaProjectionManager) getApplicationContext().getSystemService(MEDIA_PROJECTION_SERVICE);
         DataServer.getInstance().setListener(mConnectionListener);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_MEDIA_PROJECTION) {
-            if (resultCode != Activity.RESULT_OK) {
-                UIHelper.showToast(MainActivity.this, getString(R.string.msg_user_cancelled));
-                return;
-            }
-
-            // TODO: add toast to inform user to keep allowed once the user has granted.
-            Intent service = new Intent(this, RecordService.class);
-            service.putExtra("code", resultCode);
-            service.putExtra("data", data);
-            service.putExtra("quality", mQuality);
-            service.putExtra(RecordService.EXTRA_COMMAND, RecordService.COMMAND_START);
-            startService(service);
-        }
     }
 
     @Override
@@ -117,15 +92,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void startCaptureIntent() {
-        Intent captureIntent = mMediaProjectionManager.createScreenCaptureIntent();
-        startActivityForResult(captureIntent, REQUEST_MEDIA_PROJECTION);
+    private void startRecordIfNeeded() {
+        if (Touch.getInstance().isRecording()) return;
+        Touch.getInstance().startRecord(mQuality);
     }
 
     private void stopRecord() {
-        Intent service = new Intent(this, RecordService.class);
-        service.putExtra(RecordService.EXTRA_COMMAND, RecordService.COMMAND_STOP);
-        startService(service);
+        Touch.getInstance().stopRecord();
     }
 
     private DataServer.ConnectionListener mConnectionListener = new DataServer.ConnectionListener() {
@@ -140,8 +113,8 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onRecordStart(int quality) {
-            MainActivity.this.startCaptureIntent();
             mQuality = quality;
+            MainActivity.this.startRecordIfNeeded();
         }
 
         @Override

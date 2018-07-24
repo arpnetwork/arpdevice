@@ -18,11 +18,9 @@ package org.arpnetwork.arpdevice;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.Intent;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.server.DataServer;
-import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
@@ -61,9 +59,6 @@ public class CustomApplication extends Application {
     @Override
     public void onTerminate() {
         super.onTerminate();
-
-        Intent recordIntent = new Intent(this, RecordService.class);
-        stopService(recordIntent);
 
         DataServer.getInstance().shutdown();
         PreferenceManager.fini();

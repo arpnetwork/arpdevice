@@ -17,8 +17,11 @@
 package org.arpnetwork.arpdevice.util;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.Build;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import java.lang.reflect.Field;
@@ -79,6 +82,32 @@ public class UIHelper {
         showToast(context, context.getString(resId), duration);
     }
 
+    public static int getHeightNoVirtualBar(Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        return dm.heightPixels;
+    }
+
+    public static int getWidthNoVirtualBar(Context context) {
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        return dm.widthPixels;
+    }
+
+    public static int getVirtualBarHeight(Context context) {
+        int orientation = context.getResources().getConfiguration().orientation;
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            return DeviceUtil.getResolution(context)[1] - getHeightNoVirtualBar(context);
+        }
+        return DeviceUtil.getResolution(context)[0] - getWidthNoVirtualBar(context);
+    }
+
+    public static int getDisplayHeight(Context context) {
+        return getHeightNoVirtualBar(context) - getStatusbarHeight(context);
+    }
+
     public static int getStatusbarHeight(Context context) {
         Class<?> c = null;
         Object obj = null;
@@ -99,9 +128,6 @@ public class UIHelper {
 
     public static int getActionBarHeight(Context context) {
         int actionBarHeight = 0;
-//        int actionBarHeight = context.getActionBar().getHeight();
-//        if (actionBarHeight != 0)
-//            return actionBarHeight;
         final TypedValue tv = new TypedValue();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             if (context.getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true))

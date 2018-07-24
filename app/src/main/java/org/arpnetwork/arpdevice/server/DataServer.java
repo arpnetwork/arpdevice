@@ -16,20 +16,16 @@
 
 package org.arpnetwork.arpdevice.server;
 
-import android.content.Context;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.gson.Gson;
 
-import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.device.TaskHelper;
-import org.arpnetwork.arpdevice.stream.RecordService;
 import org.arpnetwork.arpdevice.stream.Touch;
-import org.arpnetwork.arpdevice.data.AVPacket;
 import org.arpnetwork.arpdevice.data.ChangeQualityReq;
 import org.arpnetwork.arpdevice.data.ConnectReq;
 import org.arpnetwork.arpdevice.data.Message;
@@ -37,13 +33,10 @@ import org.arpnetwork.arpdevice.data.ProtocolPacket;
 import org.arpnetwork.arpdevice.data.Req;
 import org.arpnetwork.arpdevice.data.TouchSetting;
 import org.arpnetwork.arpdevice.data.VideoInfo;
-import org.arpnetwork.arpdevice.util.DeviceUtil;
-import org.arpnetwork.arpdevice.util.UIHelper;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 
 public final class DataServer implements NettyConnection.ConnectionListener {
     public static final int PORT = 9000;
@@ -55,7 +48,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private static final int CONNECTED_TIMEOUT = 10000;
     private static volatile DataServer sInstance;
 
-    private final LinkedBlockingQueue<AVPacket> mPacketQueue = new LinkedBlockingQueue<AVPacket>();
+    private final LinkedBlockingQueue<ByteBuf> mPacketQueue = new LinkedBlockingQueue<ByteBuf>();
     private Handler mHandler = new Handler();
 
     private DeviceManager mDeviceManager;
@@ -132,17 +125,13 @@ public final class DataServer implements NettyConnection.ConnectionListener {
      * Called by RecordService.
      */
     public void onVideoChanged(int width, int height, int quality) {
-        Context context = CustomApplication.sInstance;
-        VideoInfo videoInfo = new VideoInfo(width, height, quality,
-                UIHelper.getStatusbarHeight(context), DeviceUtil.getVirtualBarHeight(context),
-                DeviceUtil.getResolution(context)[0], DeviceUtil.getResolution(context)[1]);
-
+        VideoInfo videoInfo = new VideoInfo(width, height, quality);
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.VIDEO_CHANGED, 0, videoInfo);
         mConn.write(pkt);
     }
 
-    public void enqueueAVPacket(int type, long presentationTimeUs, byte[] bytes) {
-        mPacketQueue.add(new AVPacket(type, presentationTimeUs, bytes, bytes.length));
+    public void enqueueAVPacket(ByteBuf byteBuf) {
+        mPacketQueue.add(byteBuf);
     }
 
     @Override
@@ -346,7 +335,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
             while (!mStopped) {
                 try {
-                    AVPacket packet = mPacketQueue.take();
+                    ByteBuf packet = mPacketQueue.take();
                     send(packet);
                 } catch (InterruptedException e) {
                     Log.e(TAG, "SendThread interrupted.");
@@ -356,20 +345,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             }
         }
 
-        private void send(AVPacket packet) {
-            int bufferSize = 1 + 8 + packet.data.length;
-
-            ByteBuf byteBuf = Unpooled.buffer(bufferSize);
-            int avType = packet.type;
-            if (avType == RecordService.TYPE_VIDEO) {
-                byteBuf.writeByte(Message.VIDEO);
-            } else if (avType == RecordService.TYPE_AUDIO) {
-                byteBuf.writeByte(Message.AUDIO);
-            }
-            byteBuf.writeLong(packet.pts);
-            byteBuf.writeBytes(packet.data);
-
-            mConn.write(new Message(byteBuf));
+        private void send(ByteBuf packet) {
+            mConn.write(new Message(packet));
         }
 
         private void cancel() {

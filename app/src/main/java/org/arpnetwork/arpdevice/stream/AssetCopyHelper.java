@@ -32,8 +32,12 @@ import java.util.Properties;
 public class AssetCopyHelper {
     private static final String TAG = "AssetCopyHelper";
     private static final boolean DEBUG = Config.DEBUG;
+
+    private static final String DIR = "/data/local/tmp/";
     private static final String ARPTOUCH_FILE_NAME = "arptouch";
     private static final String ARP_PROPERTIES_NAME = "arp.properties";
+    private static final String ARPCAP_FILE_NAME = "arpcap";
+    private static final String LIB_ARPCAP_FILE_NAME = "libarpcap.so";
 
     public interface PushCallback {
         void onStart();
@@ -42,7 +46,15 @@ public class AssetCopyHelper {
     }
 
     public static void pushTouch(final SyncChannel ss, PushCallback listener) {
-        pushFile(ss, "/data/local/tmp/" + ARPTOUCH_FILE_NAME, ARPTOUCH_FILE_NAME, listener);
+        pushFile(ss, DIR + ARPTOUCH_FILE_NAME, ARPTOUCH_FILE_NAME, listener);
+    }
+
+    public static void pushCap(final SyncChannel ss, PushCallback listener) {
+        pushFile(ss, DIR + ARPCAP_FILE_NAME, ARPCAP_FILE_NAME, listener);
+    }
+
+    public static void pushLibCap(final SyncChannel ss, PushCallback listener) {
+        pushFile(ss, DIR + LIB_ARPCAP_FILE_NAME, LIB_ARPCAP_FILE_NAME, listener);
     }
 
     public static void pushFile(final SyncChannel ss, final String destFilePath,
@@ -76,10 +88,18 @@ public class AssetCopyHelper {
     }
 
     public static boolean isValidTouchBinary() {
-        return isValidBinary("/data/local/tmp/" + ARPTOUCH_FILE_NAME, "md5");
+        return isValidFile(DIR + ARPTOUCH_FILE_NAME, "touch_md5");
     }
 
-    public static boolean isValidBinary(String destFilePath, String keyOfMd5) {
+    public static boolean isValidCapBinary() {
+        return isValidFile(DIR + ARPCAP_FILE_NAME, "cap_md5");
+    }
+
+    public static boolean isValidCapLib() {
+        return isValidFile(DIR + LIB_ARPCAP_FILE_NAME, "lib_cap_md5");
+    }
+
+    public static boolean isValidFile(String destFilePath, String keyOfMd5) {
         boolean success = true;
 
         File destFile = new File(destFilePath);

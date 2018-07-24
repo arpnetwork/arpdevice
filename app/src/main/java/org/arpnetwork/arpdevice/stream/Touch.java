@@ -17,13 +17,11 @@
 package org.arpnetwork.arpdevice.stream;
 
 import android.content.SharedPreferences;
-import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
 import org.arpnetwork.adb.Auth;
-import org.arpnetwork.adb.Channel;
 import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.adb.SyncChannel;
@@ -53,6 +51,8 @@ public class Touch {
 
     private int mState;
     private int mRetryCount;
+
+    private RecordHelper mRecordHelper;
 
     public static Touch getInstance() {
         if (sInstance == null) {
@@ -94,18 +94,36 @@ public class Touch {
         return mState;
     }
 
+    public void startRecord(int quality) {
+        mRecordHelper = new RecordHelper();
+        if (getState() == STATE_CONNECTED) {
+            mRecordHelper.startRecord(quality, mConn);
+        }
+    }
+
+    public void stopRecord(){
+        if (mRecordHelper != null){
+            mRecordHelper.stopRecord();
+            mRecordHelper = null;
+        }
+    }
+
+    public boolean isRecording(){
+        return mRecordHelper != null && mRecordHelper.isRecording();
+    }
+
     private void startTouch() {
         ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
         mShell = ss;
         ss.setListener(new ShellChannel.ShellListener() {
             @Override
-            public void onStdout(ShellChannel ch, String data) {
+            public void onStdout(ShellChannel ch, byte[] data) {
                 // contacts x y pressure major minor\n
-                mBanner = data.trim();
+                mBanner = new String(data).trim();
             }
 
             @Override
-            public void onStderr(ShellChannel ch, String data) {
+            public void onStderr(ShellChannel ch, byte[] data) {
                 Log.e(TAG, "STDERR:" + data);
             }
 
@@ -157,6 +175,15 @@ public class Touch {
                         }
                     }
                 });
+            }
+
+            if (!AssetCopyHelper.isValidCapBinary()) {
+                SyncChannel capChannel = mConn.openSync();
+                AssetCopyHelper.pushCap(capChannel, null);
+            }
+            if (!AssetCopyHelper.isValidCapLib()) {
+                SyncChannel capLibChannel = mConn.openSync();
+                AssetCopyHelper.pushLibCap(capLibChannel,null);
             }
         }
 
