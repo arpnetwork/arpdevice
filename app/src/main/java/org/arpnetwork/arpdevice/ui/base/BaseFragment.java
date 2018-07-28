@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.ui.base;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
@@ -29,6 +30,7 @@ import org.arpnetwork.arpdevice.R;
 
 public abstract class BaseFragment extends Fragment {
     private FragmentActivity mContext;
+    private ProgressDialog mProgressDialog;
 
     @Override
     public void onAttach(Activity activity) {
@@ -109,6 +111,23 @@ public abstract class BaseFragment extends Fragment {
 
     protected final View findViewById(int viewId) {
         return getView().findViewById(viewId);
+    }
+
+    protected void showProgressBar(String msg) {
+        showProgressBar(msg, true);
+    }
+
+    protected void showProgressBar(String msg, boolean cancel) {
+        mProgressDialog = ProgressDialog.show(getActivity(), null, msg);
+        mProgressDialog.setCanceledOnTouchOutside(cancel);
+        mProgressDialog.setCancelable(cancel);
+    }
+
+    protected void hideProgressBar() {
+        if (mProgressDialog != null) {
+            mProgressDialog.dismiss();
+            mProgressDialog = null;
+        }
     }
 
     protected void finish() {

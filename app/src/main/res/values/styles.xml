@@ -36,4 +36,36 @@
         <item name="actionMenuTextColor">@color/colorPrimary</item>
     </style>
 
+    <style name="WalletEditTextLayout">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">58dp</item>
+        <item name="android:layout_marginLeft">25dp</item>
+        <item name="android:layout_marginRight">13dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+    </style>
+
+    <style name="WalletLabel">
+        <item name="android:layout_width">@dimen/wallet_label_width</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">#9a9a9a</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="WalletEditText">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">#333333</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <style name="WalletDivider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">#ededed</item>
+    </style>
+
 </resources>

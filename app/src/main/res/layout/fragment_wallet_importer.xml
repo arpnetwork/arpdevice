@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/wallet_content_padding"
+    android:paddingRight="@dimen/wallet_content_padding"
+    android:paddingTop="@dimen/wallet_content_padding">
+
+    <LinearLayout
+        android:id="@+id/layout_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_corner_bg"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/layout_private_key"
+            style="@style/WalletEditTextLayout"
+            android:layout_height="80dp">
+
+            <TextView
+                style="@style/WalletLabel"
+                android:text="@string/private_key" />
+
+            <EditText
+                android:id="@+id/et_private_key"
+                style="@style/WalletEditText" />
+        </LinearLayout>
+
+        <View style="@style/WalletDivider" />
+
+        <LinearLayout
+            android:id="@+id/layout_wallet_name"
+            style="@style/WalletEditTextLayout">
+
+            <TextView
+                style="@style/WalletLabel"
+                android:text="@string/wallet_name" />
+
+            <EditText
+                android:id="@+id/et_wallet_name"
+                style="@style/WalletEditText"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <View style="@style/WalletDivider" />
+
+        <LinearLayout
+            android:id="@+id/layout_password"
+            style="@style/WalletEditTextLayout">
+
+            <TextView
+                style="@style/WalletLabel"
+                android:text="@string/password" />
+
+            <EditText
+                android:id="@+id/et_password"
+                style="@style/WalletEditText"
+                android:inputType="textPassword"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <View style="@style/WalletDivider" />
+
+        <LinearLayout
+            android:id="@+id/layout_confirm_password"
+            style="@style/WalletEditTextLayout">
+
+            <TextView
+                style="@style/WalletLabel"
+                android:text="@string/confirmed_password" />
+
+            <EditText
+                android:id="@+id/et_confirm_password"
+                style="@style/WalletEditText"
+                android:inputType="textPassword"
+                android:singleLine="true" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_import"
+        android:layout_width="86dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="25dp"
+        android:background="@drawable/btn_bg"
+        android:gravity="center"
+        android:text="@string/start_to_import"
+        android:textColor="@android:color/white"
+        android:textSize="15dp" />
+</LinearLayout>

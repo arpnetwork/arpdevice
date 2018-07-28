@@ -38,6 +38,7 @@ dependencies {
     implementation 'io.netty:netty-all:4.1.25.Final'
     implementation 'com.google.code.gson:gson:2.3.1'
     implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'org.web3j:core:3.3.1-android'
 
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     testImplementation 'junit:junit:4.12'

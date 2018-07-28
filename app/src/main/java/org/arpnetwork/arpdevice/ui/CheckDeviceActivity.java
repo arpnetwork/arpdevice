@@ -29,11 +29,13 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.arpnetwork.arpdevice.MainActivity;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
+import org.arpnetwork.arpdevice.ui.my.MyInfoActivity;
+import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
+import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 public class CheckDeviceActivity extends BaseActivity implements Handler.Callback {
@@ -116,11 +118,15 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
         }
     }
 
-    private void jumpToMain() {
+    private void jumpToNextActivity() {
         Touch.getInstance().connect();
 
         Intent intent = new Intent();
-        intent.setClass(this, MainActivity.class);
+        if (!WalletManager.getInstance().walletExist()) {
+            intent.setClass(this, WalletImporterActivity.class);
+        } else {
+            intent.setClass(this, MyInfoActivity.class);
+        }
         startActivity(intent);
         finish();
     }
@@ -167,7 +173,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
                 mTipButton.setVisibility(View.GONE);
                 mTipText.setText(R.string.check_success);
 
-                jumpToMain();
+                jumpToNextActivity();
                 break;
 
             default:

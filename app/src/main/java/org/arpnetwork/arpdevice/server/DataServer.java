@@ -118,7 +118,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void onClientDisconnected() {
-        Log.d(TAG,"onClientDisconnected");
         stop();
     }
 

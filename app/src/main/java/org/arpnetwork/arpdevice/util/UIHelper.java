@@ -33,13 +33,15 @@ public class UIHelper {
     private static Toast sToast = null;
 
     public static void showToast(Context context, CharSequence text) {
-        if (sToast == null) {
-            sToast = Toast.makeText(context.getApplicationContext(), text, Toast.LENGTH_SHORT);
-        } else {
-            sToast.setText(text);
-        }
+        showToast(context, text, Toast.LENGTH_SHORT);
+    }
 
-        sToast.show();
+    public static void showToast(Context context, int resId) {
+        showToast(context, resId, Toast.LENGTH_SHORT);
+    }
+
+    public static void showToast(Context context, int resId, int duration) {
+        showToast(context, context.getString(resId), duration);
     }
 
     public static void showToast(Context context, CharSequence text, int duration) {
@@ -76,10 +78,6 @@ public class UIHelper {
         }
 
         return resId;
-    }
-
-    public static void showToast(Context context, int resId, int duration) {
-        showToast(context, context.getString(resId), duration);
     }
 
     public static int getHeightNoVirtualBar(Context context) {

@@ -14,4 +14,22 @@
     <string name="check_highlight">Checked</string>
     <string name="check_highlight_safe">USB debugging（Security settings）</string>
     <string name="check_success">Checked success</string>
+
+    <!-- wallet -->
+    <string name="import_wallet">Import wallet</string>
+    <string name="private_key">Private key</string>
+    <string name="wallet_name">Wallet name</string>
+    <string name="password">Password</string>
+    <string name="confirmed_password">Confirm password</string>
+    <string name="start_to_import">Import</string>
+    <string name="complete_info">Please complete the information</string>
+    <string name="invalid_private_key">Invalid private key specified</string>
+    <string name="use_more_characters_password">Password must be 8 or more characters</string>
+    <string name="inconsistent_password">Inconsistent password</string>
+    <string name="importing">Importing</string>
+    <string name="import_success">Import success</string>
+    <string name="import_failed">Import failed</string>
+
+    <!-- my info -->
+    <string name="my_info">My info</string>
 </resources>

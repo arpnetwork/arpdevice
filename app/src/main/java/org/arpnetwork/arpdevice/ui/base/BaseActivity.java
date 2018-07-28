@@ -28,7 +28,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.arpnetwork.arpdevice.MainActivity;
+import org.arpnetwork.arpdevice.ui.my.MyInfoActivity;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
@@ -169,13 +169,13 @@ public class BaseActivity extends AppCompatActivity {
     public void onBackPressed() {
         boolean pressed = onBack();
         if (!pressed) {
-            if ((this instanceof MainActivity) && (System.currentTimeMillis() - mExitTime) > 2000) {
+            if ((this instanceof MyInfoActivity) && (System.currentTimeMillis() - mExitTime) > 2000) {
                 UIHelper.showToast(getApplicationContext(), R.string.exit_app, Toast.LENGTH_SHORT);
                 mExitTime = System.currentTimeMillis();
             } else {
                 super.onBackPressed();
 
-                if (this instanceof MainActivity) {
+                if (this instanceof MyInfoActivity) {
                     exit();
                 }
             }

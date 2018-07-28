@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice;
+package org.arpnetwork.arpdevice.ui.my;
 
 import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
+import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
@@ -34,7 +34,7 @@ import org.arpnetwork.arpdevice.util.NetworkHelper;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MainActivity extends BaseActivity {
+public class MyInfoActivity extends BaseActivity {
     private int mQuality;
 
     private DeviceManager mDeviceManager;
@@ -120,18 +120,18 @@ public class MainActivity extends BaseActivity {
 
         @Override
         public void onClosed() {
-            MainActivity.this.stopRecord();
+            MyInfoActivity.this.stopRecord();
         }
 
         @Override
         public void onRecordStart(int quality) {
             mQuality = quality;
-            MainActivity.this.startRecordIfNeeded();
+            MyInfoActivity.this.startRecordIfNeeded();
         }
 
         @Override
         public void onRecordStop() {
-            MainActivity.this.stopRecord();
+            MyInfoActivity.this.stopRecord();
         }
 
         @Override
@@ -145,7 +145,7 @@ public class MainActivity extends BaseActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    UIHelper.showToast(MainActivity.this, msg, Toast.LENGTH_SHORT);
+                    UIHelper.showToast(MyInfoActivity.this, msg, Toast.LENGTH_SHORT);
                 }
             });
         }
