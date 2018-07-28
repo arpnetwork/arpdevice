@@ -17,6 +17,8 @@
 package org.arpnetwork.arpdevice.stream;
 
 import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -27,6 +29,7 @@ import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.server.DataServer;
 
 import java.security.spec.InvalidKeySpecException;
@@ -52,6 +55,9 @@ public class Touch {
     private int mState;
     private int mRetryCount;
 
+    private boolean mDoAuth = false;
+    private Handler mCheckHandler;
+
     private RecordHelper mRecordHelper;
 
     public static Touch getInstance() {
@@ -71,6 +77,18 @@ public class Touch {
             mConn.setListener(mConnectionListener);
         }
         mConn.connect();
+    }
+
+    public void close() {
+        mConn.close();
+    }
+
+    public void ensureAuthChecked(Handler handler) {
+        mCheckHandler = handler;
+
+        Connection checkAuth = new Connection(mAuth, "127.0.0.1", 5555);
+        checkAuth.setListener(mCheckListener);
+        checkAuth.connect();
     }
 
     public Connection getConnection() {
@@ -101,14 +119,14 @@ public class Touch {
         }
     }
 
-    public void stopRecord(){
-        if (mRecordHelper != null){
+    public void stopRecord() {
+        if (mRecordHelper != null) {
             mRecordHelper.stopRecord();
             mRecordHelper = null;
         }
     }
 
-    public boolean isRecording(){
+    public boolean isRecording() {
         return mRecordHelper != null && mRecordHelper.isRecording();
     }
 
@@ -124,7 +142,7 @@ public class Touch {
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
-                Log.e(TAG, "STDERR:" + data);
+                Log.e(TAG, "STDERR:" + new String(data));
             }
 
             @Override
@@ -155,7 +173,6 @@ public class Touch {
         @Override
         public void onConnected(Connection conn) {
             mState = STATE_CONNECTED;
-            mRetryCount = 0;
 
             if (AssetCopyHelper.isValidTouchBinary()) {
                 startTouch();
@@ -183,7 +200,7 @@ public class Touch {
             }
             if (!AssetCopyHelper.isValidCapLib()) {
                 SyncChannel capLibChannel = mConn.openSync();
-                AssetCopyHelper.pushLibCap(capLibChannel,null);
+                AssetCopyHelper.pushLibCap(capLibChannel, null);
             }
         }
 
@@ -202,7 +219,6 @@ public class Touch {
 
         @Override
         public void onAuth(Connection conn, String key) {
-            Log.e(TAG, "onAuth");
             mConn.auth();
         }
 
@@ -212,4 +228,65 @@ public class Touch {
             mState = STATE_CLOSED;
         }
     };
+
+    private Connection.ConnectionListener mCheckListener = new Connection.ConnectionListener() {
+        @Override
+        public void onConnected(Connection conn) {
+            if (mDoAuth) {
+                mDoAuth = false;
+                conn.close();
+                ensureAuthChecked(mCheckHandler);
+            } else {
+                if (Build.MANUFACTURER.equalsIgnoreCase("xiaomi")) {
+                    openUSBSafeDebug(conn);
+                } else {
+                    conn.close();
+                    mCheckHandler.obtainMessage(Constant.CHECK_AUTH_SUCCESS).sendToTarget();
+                }
+            }
+        }
+
+        @Override
+        public void onClosed(Connection conn) {
+        }
+
+        @Override
+        public void onAuth(Connection conn, String key) {
+            conn.auth();
+            mDoAuth = true;
+            mCheckHandler.obtainMessage(Constant.CHECK_AUTH).sendToTarget();
+        }
+
+        @Override
+        public void onException(Connection conn, Throwable cause) {
+            conn.close();
+        }
+    };
+
+    private void openUSBSafeDebug(final Connection connection) {
+        final StringBuilder sb = new StringBuilder();
+        ShellChannel ss = connection.openShell("groups");
+        ss.setListener(new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+                // Check whether contains input.
+                sb.append(new String(data).trim());
+                if (sb.toString().contains("input")) {
+                    connection.close();
+                    mCheckHandler.obtainMessage(Constant.CHECK_AUTH_SUCCESS).sendToTarget();
+                } else {
+                    connection.close();
+                    mCheckHandler.obtainMessage(Constant.CHECK_ADB_SAFE).sendToTarget();
+                }
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+            }
+        });
+    }
 }

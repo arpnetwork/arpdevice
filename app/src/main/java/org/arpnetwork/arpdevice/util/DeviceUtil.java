@@ -18,7 +18,6 @@ package org.arpnetwork.arpdevice.util;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.res.Configuration;
 import android.graphics.Point;
 import android.os.Build;
 import android.os.Environment;
@@ -38,6 +37,10 @@ public class DeviceUtil {
     private static final String KEY_EMUI_VERSION = "ro.build.version.emui";
     private static final String KEY_FUNTOUCH_VERSION = "ro.vivo.os.build.display.id";
     private static final String KEY_BORAD = "ro.board.platform";
+
+    public static boolean is64bit() {
+        return Build.SUPPORTED_64_BIT_ABIS.length > 0;
+    }
 
     public static String getBrand() {
         return Build.BRAND;

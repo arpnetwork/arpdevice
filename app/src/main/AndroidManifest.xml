@@ -17,7 +17,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.CheckDeviceActivity"
             android:configChanges="orientation|screenSize|screenLayout"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -25,6 +25,12 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|screenLayout"
+            android:screenOrientation="portrait">
         </activity>
 
     </application>

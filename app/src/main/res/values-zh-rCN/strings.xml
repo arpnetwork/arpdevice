@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">ARPDevice</string>
+    <string name="exit_app">再按一次退出程序</string>
+
+    <string name="check_init">设备初始化</string>
+    <string name="check_btn">设置</string>
+    <string name="check_fail_os">您的设备系统版本过低，无法成为ARP资源提供者</string>
+    <string name="check_fail_adb">您的设备尚未打开开发者选项，请点击设置按钮打开开发者选项，并打开 USB调试 开关</string>
+    <string name="check_fail_adb_safe">您的设备尚未打开%s，请点击设置按钮后打开</string>
+    <string name="check_fail_tcp">您的设备尚未处于TCP模式，请将设备连接至电脑，并按提示进行操作</string>
+    <string name="check_fail_auth">提供ARP资源需要允许USB调试。点击设置后弹框请%s，不然无法进行ARP资源提供</string>
+    <string name="check_btn_quit">退出</string>
+    <string name="check_fail_adb_exception">您的设备尚未打开开发者选项，请到手机设置中打开</string>
+    <string name="check_highlight_safe">USB调试（安全设置）</string>
+    <string name="check_highlight">打勾</string>
+    <string name="check_success">验证成功</string>
+</resources>

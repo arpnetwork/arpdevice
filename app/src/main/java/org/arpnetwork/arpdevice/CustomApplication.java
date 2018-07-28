@@ -37,7 +37,6 @@ public class CustomApplication extends Application {
         DeviceInfo.create(this);
         PreferenceManager.init(this);
         NetworkHelper.init(getApplicationContext());
-        Touch.getInstance().connect();
         DataServer.getInstance().startServer();
     }
 
@@ -61,6 +60,7 @@ public class CustomApplication extends Application {
         super.onTerminate();
 
         DataServer.getInstance().shutdown();
+        Touch.getInstance().close();
         PreferenceManager.fini();
         NetworkHelper.fini();
 

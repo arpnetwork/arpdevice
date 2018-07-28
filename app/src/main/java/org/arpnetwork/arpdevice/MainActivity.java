@@ -25,15 +25,16 @@ import android.widget.Toast;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
-import org.arpnetwork.arpdevice.opengl.GLRenderer;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 
+import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
     private int mQuality;
 
     private DeviceManager mDeviceManager;
@@ -41,11 +42,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        initViews();
 
         DataServer.getInstance().setListener(mConnectionListener);
+    }
+
+    @Override
+    protected void setContentView() {
+        setContentView(R.layout.activity_main);
     }
 
     @Override
@@ -58,13 +61,14 @@ public class MainActivity extends AppCompatActivity {
         getApplication().onTerminate();
     }
 
-    private void initViews() {
+    @Override
+    protected void initViews() {
         GLSurfaceView surfaceView = findViewById(R.id.gl_surface);
         surfaceView.setEGLContextClientVersion(1);
         surfaceView.setEGLConfigChooser(8, 8, 8, 8, 0, 0);
-        surfaceView.setRenderer(new GLRenderer(new GLRenderer.Callback() {
+        surfaceView.setRenderer(new GLSurfaceView.Renderer() {
             @Override
-            public void onSurfaceCreated(GL10 gl) {
+            public void onSurfaceCreated(GL10 gl, EGLConfig config) {
                 String glRenderer = gl.glGetString(GL10.GL_RENDERER);
 
                 DeviceInfo info = DeviceInfo.get();
@@ -77,7 +81,15 @@ public class MainActivity extends AppCompatActivity {
 
                 startDeviceService();
             }
-        }));
+
+            @Override
+            public void onSurfaceChanged(GL10 gl, int width, int height) {
+            }
+
+            @Override
+            public void onDrawFrame(GL10 gl) {
+            }
+        });
     }
 
     private void startDeviceService() {
