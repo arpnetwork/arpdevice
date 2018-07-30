@@ -30,7 +30,7 @@
             android:name=".ui.wallet.WalletImporterActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.my.MyInfoActivity"
+            android:name=".ui.my.MyActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
         <activity

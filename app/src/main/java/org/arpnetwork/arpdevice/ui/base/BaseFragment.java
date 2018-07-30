@@ -145,6 +145,7 @@ public abstract class BaseFragment extends Fragment {
         t.commit();
     }
 
-    protected void loadData() {
+    protected void runOnUiThread(Runnable action) {
+        getActivity().runOnUiThread(action);
     }
 }

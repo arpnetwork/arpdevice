@@ -33,7 +33,7 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
-import org.arpnetwork.arpdevice.ui.my.MyInfoActivity;
+import org.arpnetwork.arpdevice.ui.my.MyActivity;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
 import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.arpnetwork.arpdevice.util.UIHelper;
@@ -125,7 +125,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
         if (!WalletManager.getInstance().walletExist()) {
             intent.setClass(this, WalletImporterActivity.class);
         } else {
-            intent.setClass(this, MyInfoActivity.class);
+            intent.setClass(this, MyActivity.class);
         }
         startActivity(intent);
         finish();

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/content_padding"
+    android:paddingRight="@dimen/content_padding"
+    android:paddingTop="@dimen/content_padding">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_corner_bg"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/layout_wallet"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:text="@string/my_wallet" />
+
+            <TextView
+                android:id="@+id/tv_wallet_name"
+                style="@style/MyItemText" />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+
+        <View style="@style/Divider" />
+
+        <LinearLayout
+            android:id="@+id/layout_miner"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:text="@string/bind_miner" />
+
+            <TextView
+                android:id="@+id/tv_miner_name"
+                style="@style/MyItemText" />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+
+        <View style="@style/Divider" />
+
+        <LinearLayout
+            android:id="@+id/layout_order_price"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:text="@string/order_price" />
+
+            <TextView
+                android:id="@+id/tv_order_price"
+                style="@style/MyItemText" />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+
+        <View style="@style/Divider" />
+
+        <LinearLayout
+            android:id="@+id/layout_order_details"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:layout_weight="1"
+                android:text="@string/order_details" />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_order"
+        style="@style/Button"
+        android:layout_marginTop="25dp"
+        android:text="@string/start_ordering" />
+
+    <android.opengl.GLSurfaceView
+        android:id="@+id/gl_surface"
+        android:layout_width="1px"
+        android:layout_height="1px"
+        android:background="@color/window_background_light_gray" />
+
+</LinearLayout>

@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">ARPDevice</string>
     <string name="exit_app">再按一次退出程序</string>
+    <string name="ok">确定</string>
 
     <string name="check_init">设备初始化</string>
     <string name="check_btn">设置</string>
@@ -30,9 +31,17 @@
     <string name="import_success">导入成功</string>
     <string name="import_failed">导入失败</string>
 
-    <!-- 我的信息 -->
-    <string name="my_info">我的信息</string>
+    !-- 我的 -->
+    <string name="my">我的</string>
     <string name="my_wallet">我的钱包</string>
+    <string name="bind_miner">绑定矿工</string>
+    <string name="order_price">设置接单价格</string>
+    <string name="order_details">订单明细</string>
+    <string name="start_ordering">开始接单</string>
+    <string name="order_price_message">接单价格越低越容易接到单，默认为之前一段时间的平均接单价</string>
+    <string name="order_price_format">%dARP/小时</string>
+    <string name="slow">慢</string>
+    <string name="fast">快</string>
 
     <!-- 我的钱包 -->
     <string name="ARP_balance">ARP金额</string>

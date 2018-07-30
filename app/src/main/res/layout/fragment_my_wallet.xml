@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/wallet_content_padding"
-    android:paddingRight="@dimen/wallet_content_padding"
-    android:paddingTop="@dimen/wallet_content_padding">
+    android:paddingLeft="@dimen/content_padding"
+    android:paddingRight="@dimen/content_padding"
+    android:paddingTop="@dimen/content_padding">
 
     <LinearLayout
         android:id="@+id/layout_container"
@@ -16,7 +16,7 @@
 
         <LinearLayout
             android:id="@+id/layout_private_key"
-            style="@style/WalletEditTextLayout">
+            style="@style/ItemLayout">
 
             <TextView
                 style="@style/MyWalletTitleLabel"
@@ -27,11 +27,11 @@
                 style="@style/MyWalletInfoLabel" />
         </LinearLayout>
 
-        <View style="@style/WalletDivider" />
+        <View style="@style/Divider" />
 
         <LinearLayout
             android:id="@+id/layout_wallet_name"
-            style="@style/WalletEditTextLayout">
+            style="@style/ItemLayout">
 
             <TextView
                 style="@style/MyWalletTitleLabel"
@@ -43,11 +43,11 @@
                 android:text="@string/loading_balance" />
         </LinearLayout>
 
-        <View style="@style/WalletDivider" />
+        <View style="@style/Divider" />
 
         <LinearLayout
             android:id="@+id/layout_password"
-            style="@style/WalletEditTextLayout">
+            style="@style/ItemLayout">
 
             <TextView
                 style="@style/MyWalletTitleLabel"

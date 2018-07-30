@@ -3,9 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/wallet_content_padding"
-    android:paddingRight="@dimen/wallet_content_padding"
-    android:paddingTop="@dimen/wallet_content_padding">
+    android:paddingLeft="@dimen/content_padding"
+    android:paddingRight="@dimen/content_padding"
+    android:paddingTop="@dimen/content_padding">
 
     <LinearLayout
         android:id="@+id/layout_container"
@@ -16,7 +16,7 @@
 
         <LinearLayout
             android:id="@+id/layout_private_key"
-            style="@style/WalletEditTextLayout"
+            style="@style/ItemLayout"
             android:layout_height="80dp">
 
             <TextView
@@ -28,11 +28,11 @@
                 style="@style/WalletEditText" />
         </LinearLayout>
 
-        <View style="@style/WalletDivider" />
+        <View style="@style/Divider" />
 
         <LinearLayout
             android:id="@+id/layout_wallet_name"
-            style="@style/WalletEditTextLayout">
+            style="@style/ItemLayout">
 
             <TextView
                 style="@style/WalletLabel"
@@ -44,11 +44,11 @@
                 android:singleLine="true" />
         </LinearLayout>
 
-        <View style="@style/WalletDivider" />
+        <View style="@style/Divider" />
 
         <LinearLayout
             android:id="@+id/layout_password"
-            style="@style/WalletEditTextLayout">
+            style="@style/ItemLayout">
 
             <TextView
                 style="@style/WalletLabel"
@@ -61,11 +61,11 @@
                 android:singleLine="true" />
         </LinearLayout>
 
-        <View style="@style/WalletDivider" />
+        <View style="@style/Divider" />
 
         <LinearLayout
             android:id="@+id/layout_confirm_password"
-            style="@style/WalletEditTextLayout">
+            style="@style/ItemLayout">
 
             <TextView
                 style="@style/WalletLabel"
@@ -81,13 +81,7 @@
 
     <Button
         android:id="@+id/btn_import"
-        android:layout_width="86dp"
-        android:layout_height="40dp"
-        android:layout_gravity="center_horizontal"
+        style="@style/Button"
         android:layout_marginTop="25dp"
-        android:background="@drawable/btn_bg"
-        android:gravity="center"
-        android:text="@string/start_to_import"
-        android:textColor="@android:color/white"
-        android:textSize="15dp" />
+        android:text="@string/start_to_import" />
 </LinearLayout>

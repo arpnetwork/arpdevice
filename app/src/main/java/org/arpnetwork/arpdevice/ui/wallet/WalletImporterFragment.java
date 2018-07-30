@@ -27,7 +27,7 @@ import android.widget.EditText;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
-import org.arpnetwork.arpdevice.ui.my.MyInfoActivity;
+import org.arpnetwork.arpdevice.ui.my.MyActivity;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.crypto.WalletUtils;
 
@@ -119,7 +119,7 @@ public class WalletImporterFragment extends BaseFragment {
     }
 
     private void intentToMyInfo() {
-        Intent intent = new Intent(getActivity(), MyInfoActivity.class);
+        Intent intent = new Intent(getActivity(), MyActivity.class);
         startActivity(intent);
         finish();
     }
