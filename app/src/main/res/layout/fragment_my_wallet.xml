@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/wallet_content_padding"
+    android:paddingRight="@dimen/wallet_content_padding"
+    android:paddingTop="@dimen/wallet_content_padding">
+
+    <LinearLayout
+        android:id="@+id/layout_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round_corner_bg"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/layout_private_key"
+            style="@style/WalletEditTextLayout">
+
+            <TextView
+                style="@style/MyWalletTitleLabel"
+                android:text="@string/wallet_name" />
+
+            <TextView
+                android:id="@+id/tv_name"
+                style="@style/MyWalletInfoLabel" />
+        </LinearLayout>
+
+        <View style="@style/WalletDivider" />
+
+        <LinearLayout
+            android:id="@+id/layout_wallet_name"
+            style="@style/WalletEditTextLayout">
+
+            <TextView
+                style="@style/MyWalletTitleLabel"
+                android:text="@string/ARP_balance" />
+
+            <TextView
+                android:id="@+id/tv_arp_balance"
+                style="@style/MyWalletInfoLabel"
+                android:text="@string/loading_balance" />
+        </LinearLayout>
+
+        <View style="@style/WalletDivider" />
+
+        <LinearLayout
+            android:id="@+id/layout_password"
+            style="@style/WalletEditTextLayout">
+
+            <TextView
+                style="@style/MyWalletTitleLabel"
+                android:text="@string/ETH_balance" />
+
+            <TextView
+                android:id="@+id/tv_eth_balance"
+                style="@style/MyWalletInfoLabel"
+                android:text="@string/loading_balance" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_reset"
+        android:layout_width="86dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="25dp"
+        android:background="@drawable/btn_bg"
+        android:gravity="center"
+        android:text="@string/reset_wallet"
+        android:textColor="@android:color/white"
+        android:textSize="15dp" />
+</LinearLayout>

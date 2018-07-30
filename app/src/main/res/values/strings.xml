@@ -32,4 +32,11 @@
 
     <!-- my info -->
     <string name="my_info">My info</string>
+    <string name="my_wallet">My wallet</string>
+
+    <!-- my wallet -->
+    <string name="ARP_balance">ARP account</string>
+    <string name="ETH_balance">ETH account</string>
+    <string name="loading_balance">loading</string>
+    <string name="reset_wallet">Reset wallet</string>
 </resources>

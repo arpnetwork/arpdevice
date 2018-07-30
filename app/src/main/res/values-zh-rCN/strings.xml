@@ -32,4 +32,11 @@
 
     <!-- 我的信息 -->
     <string name="my_info">我的信息</string>
+    <string name="my_wallet">我的钱包</string>
+
+    <!-- 我的钱包 -->
+    <string name="ARP_balance">ARP金额</string>
+    <string name="ETH_balance">ETH金额</string>
+    <string name="loading_balance">正在加载</string>
+    <string name="reset_wallet">更换钱包</string>
 </resources>
