@@ -123,7 +123,7 @@ public class BaseActivity extends AppCompatActivity {
         mToolbar = toolbar;
     }
 
-    protected Toolbar getToolbar() {
+    public Toolbar getToolbar() {
         return mToolbar;
     }
 

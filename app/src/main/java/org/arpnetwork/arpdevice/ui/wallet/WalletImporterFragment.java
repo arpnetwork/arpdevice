@@ -43,6 +43,7 @@ public class WalletImporterFragment extends BaseFragment {
         super.onCreate(savedInstanceState);
 
         setTitle(R.string.import_wallet);
+        hideNavIcon();
     }
 
     @Override

@@ -14,10 +14,10 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/white"
+            android:background="@color/window_background_light_gray"
             android:popupTheme="@style/Theme.AppCompat.Light.DarkActionBar"
             android:theme="@style/Toolbar"
-            app:navigationIcon="@mipmap/nav_back" >
+            app:navigationIcon="@mipmap/nav_back">
 
             <TextView
                 android:id="@+id/tv_title"
@@ -31,7 +31,7 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1px"
+            android:layout_height="2px"
             android:background="@color/title_divider" />
     </LinearLayout>
 

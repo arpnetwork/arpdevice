@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="action_bar_height">48dp</dimen>
-    <dimen name="corner_radius">15dp</dimen>
-    <dimen name="content_padding">25dp</dimen>
+    <dimen name="corner_radius">8dp</dimen>
+    <dimen name="content_padding">26dp</dimen>
     <dimen name="wallet_label_width">78dp</dimen>
 
     <!-- font -->

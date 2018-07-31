@@ -60,9 +60,11 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         setTitle(R.string.my);
+        hideNavIcon();
+
         DataServer.getInstance().setListener(mConnectionListener);
         int orderPrice = PreferenceManager.getInstance().getInt(ORDER_PRICE);
-        mOrderPrice = orderPrice;
+        mOrderPrice = orderPrice >= 0 ? orderPrice : 1;
     }
 
     @Override
@@ -92,9 +94,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         walletName.setText(WalletManager.getInstance().getWallet().getName());
 
         mOrderPriceView = (TextView) findViewById(R.id.tv_order_price);
-        if (mOrderPrice > 0) {
-            mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
-        }
+        mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
 
         LinearLayout walletLayout = (LinearLayout) findViewById(R.id.layout_wallet);
         LinearLayout minerLayout = (LinearLayout) findViewById(R.id.layout_miner);
@@ -159,8 +159,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private void showOrderPriceDialog() {
-        final int min = 2;
-        final int max = 20;
+        final int min = 0;
+        final int max = 100;
         int defaultValue = mOrderPrice;
         int value = (defaultValue - min) * 100 / (max - min);
 
