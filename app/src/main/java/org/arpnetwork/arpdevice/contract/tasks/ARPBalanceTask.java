@@ -51,8 +51,12 @@ public class ARPBalanceTask extends AsyncTask<String, String, BigDecimal> {
         Uint balance = null;
         try {
             balance = arpGetBalance(address);
-        } catch (ExecutionException e) {
-        } catch (InterruptedException e) {
+        } catch (ExecutionException ignored) {
+        } catch (InterruptedException ignored) {
+        }
+
+        if (balance == null) {
+            return null;
         }
 
         return Convert.fromWei(balance.getValue().toString(), Convert.Unit.ETHER);
@@ -68,7 +72,8 @@ public class ARPBalanceTask extends AsyncTask<String, String, BigDecimal> {
     public static Uint arpGetBalance(String address) throws ExecutionException, InterruptedException {
         Function function = new Function("balanceOf",
                 Arrays.<Type>asList(new Address(address)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {}));
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
+                }));
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = BalanceAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(address, CONTRACT_ADDRESS, encodedFunction),

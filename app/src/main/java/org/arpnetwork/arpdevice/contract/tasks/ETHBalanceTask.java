@@ -40,7 +40,12 @@ public class ETHBalanceTask extends AsyncTask<String, String, BigDecimal> {
         try {
             balance = BalanceAPI.getWeb3J().ethGetBalance(
                     address, DefaultBlockParameterName.LATEST).send();
-        } catch (IOException e) {
+        } catch (IOException ignored) {
+        } catch (RuntimeException ignored) {
+        }
+
+        if (balance == null) {
+            return null;
         }
 
         return Convert.fromWei(balance.getBalance().toString(), Convert.Unit.ETHER);

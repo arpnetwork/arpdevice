@@ -16,6 +16,8 @@
 
 package org.arpnetwork.arpdevice.ui.my.mywallet;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -35,6 +37,7 @@ import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import java.math.BigDecimal;
 
 public class MyWalletFragment extends BaseFragment {
+    private boolean alertShown = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -62,7 +65,7 @@ public class MyWalletFragment extends BaseFragment {
         BalanceAPI.getArpBalance(myWallet.getPublicKey(), new OnValueResult() {
             @Override
             public void onValueResult(BigDecimal result) {
-                arpBalanceText.setText(String.format("%.4f", result));
+                setBalance(result, arpBalanceText);
             }
         });
 
@@ -70,7 +73,7 @@ public class MyWalletFragment extends BaseFragment {
         BalanceAPI.getEtherBalance(myWallet.getPublicKey(), new OnValueResult() {
             @Override
             public void onValueResult(BigDecimal result) {
-                ethBalanceText.setText(String.format("%.4f", result));
+                setBalance(result, ethBalanceText);
             }
         });
 
@@ -87,5 +90,29 @@ public class MyWalletFragment extends BaseFragment {
         Intent intent = new Intent(getActivity(), WalletImporterActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void setBalance(BigDecimal balance, TextView textView) {
+        if (balance == null) {
+            showErrorAlertDialog();
+        } else {
+            textView.setText(String.format("%.4f", balance));
+        }
+    }
+
+    private void showErrorAlertDialog() {
+        if (!alertShown) {
+            alertShown = true;
+            new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.get_balance_error_msg)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .setCancelable(false)
+                    .show();
+        }
     }
 }

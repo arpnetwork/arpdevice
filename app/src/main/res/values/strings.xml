@@ -48,4 +48,5 @@
     <string name="ETH_balance">ETH account</string>
     <string name="loading_balance">loading</string>
     <string name="reset_wallet">Reset wallet</string>
+    <string name="get_balance_error_msg">Error occurred when getting balance</string>
 </resources>
