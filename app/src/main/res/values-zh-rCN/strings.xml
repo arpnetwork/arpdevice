@@ -50,6 +50,7 @@
     <string name="get_balance_error_msg">获取金额失败</string>
 
     <!-- 绑定矿工 -->
+    <string name="bind_miner_error_balance_insufficient">账户余额不足以支撑绑定矿工请求</string>
     <string name="bind_miner">绑定矿工</string>
     <string name="bind_hint">绑定矿工，他会为您撮合订单</string>
     <string name="bind_success">绑定成功</string>

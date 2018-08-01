@@ -50,6 +50,7 @@
     <string name="get_balance_error_msg">Error occurred when getting balance</string>
 
     <!-- bind miner -->
+    <string name="bind_miner_error_balance_insufficient">Balance insufficient for binding miner.</string>
     <string name="bind_miner">Bind miner</string>
     <string name="bind_hint">Bind miner,he will make a match</string>
     <string name="bind_success">bind success</string>

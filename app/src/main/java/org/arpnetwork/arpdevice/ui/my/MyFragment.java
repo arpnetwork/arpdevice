@@ -205,15 +205,19 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 Intent intent = new Intent(getActivity(), MyWalletActivity.class);
                 startActivity(intent);
                 break;
+
             case R.id.layout_miner:
                 Intent miner = new Intent(getActivity(), BindMinerActivity.class);
                 startActivity(miner);
                 break;
+
             case R.id.layout_order_price:
                 showOrderPriceDialog();
                 break;
+
             case R.id.layout_order_details:
                 break;
+
             case R.id.btn_order:
                 break;
         }

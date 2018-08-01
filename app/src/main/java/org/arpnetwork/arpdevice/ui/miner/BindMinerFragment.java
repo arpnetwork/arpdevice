@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.ui.miner;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -29,14 +30,21 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.contract.BalanceAPI;
+import org.arpnetwork.arpdevice.contract.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BindMinerFragment extends BaseFragment {
     private static final String TAG = "BindMinerFragment";
+
+    private static final int LOCK_ARP = 500;
+
     private ListView mMinerList;
     private MinerAdapter mAdapter;
 
@@ -68,7 +76,7 @@ public class BindMinerFragment extends BaseFragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (!mAdapter.isChecked(position)) {
-
+                    // TODO: show gas price dialog
                 }
             }
         });
@@ -200,5 +208,38 @@ public class BindMinerFragment extends BaseFragment {
             TextView subTitle;
             TextView bindState;
         }
+    }
+
+    private void checkBalance(final double gasPrice) {
+        // check balance before binding miner
+        final String address = WalletManager.getInstance().getWallet().getPublicKey();
+        BalanceAPI.getEtherBalance(address, new OnValueResult() {
+            @Override
+            public void onValueResult(BigDecimal result) {
+                if (result.doubleValue() < gasPrice) {
+                    showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
+                } else {
+                    BalanceAPI.getArpBalance(address, new OnValueResult() {
+                        @Override
+                        public void onValueResult(BigDecimal result) {
+                            if (result.doubleValue() < LOCK_ARP) {
+                                showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
+                            } else {
+                                // TODO: bind miner
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void showErrorAlertDialog(String title, String message) {
+        new AlertDialog.Builder(getContext())
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(R.string.ok, null)
+                .setCancelable(false)
+                .show();
     }
 }
