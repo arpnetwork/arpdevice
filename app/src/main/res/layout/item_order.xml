@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="@dimen/content_padding"
+    android:paddingRight="@dimen/content_padding">
+
+    <View
+        android:id="@+id/divider"
+        style="@style/Divider" />
+
+    <LinearLayout
+        android:id="@+id/layout_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/content_padding_bottom"
+        android:paddingLeft="@dimen/content_padding"
+        android:paddingRight="@dimen/content_padding"
+        android:paddingTop="@dimen/content_padding_top">
+
+        <TextView
+            android:id="@+id/tv_order_date"
+            style="@style/MyItemLabel" />
+
+        <TextView
+            android:id="@+id/tv_order_income"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="#838383"
+            android:textSize="11sp" />
+    </LinearLayout>
+</LinearLayout>

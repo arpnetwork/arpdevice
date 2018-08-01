@@ -39,8 +39,8 @@
     <string name="start_ordering">开始接单</string>
     <string name="order_price_message">接单价格越低越容易接到单，默认为之前一段时间的平均接单价</string>
     <string name="order_price_format">%dARP/小时</string>
-    <string name="slow">慢</string>
-    <string name="fast">快</string>
+    <string name="low">低</string>
+    <string name="high">高</string>
 
     <!-- 我的钱包 -->
     <string name="ARP_balance">ARP金额</string>
@@ -60,4 +60,10 @@
     <string name="miner_load">负载</string>
     <string name="miner_bandwidth">带宽</string>
 
+    <!-- 订单明细 -->
+    <string name="total_income">总收入：%.2fARP</string>
+    <string name="today_income">今日收入：%.2fARP</string>
+    <string name="order_income_format">收入：%.2fARP，%s，%s</string>
+    <string name="packing">正在打包</string>
+    <string name="arrived">已到账</string>
 </resources>

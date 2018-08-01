@@ -39,6 +39,7 @@ import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
+import org.arpnetwork.arpdevice.ui.order.OrderDetailsActivity;
 import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
@@ -49,6 +50,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class MyFragment extends BaseFragment implements View.OnClickListener {
     private static final String ORDER_PRICE = "order_price";
+    private static final int DEFAULT_ORDER_PRICE = 1;
 
     private TextView mOrderPriceView;
     private int mQuality;
@@ -65,7 +67,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
 
         DataServer.getInstance().setListener(mConnectionListener);
         int orderPrice = PreferenceManager.getInstance().getInt(ORDER_PRICE);
-        mOrderPrice = orderPrice >= 0 ? orderPrice : 1;
+        mOrderPrice = orderPrice >= 0 ? orderPrice : DEFAULT_ORDER_PRICE;
     }
 
     @Override
@@ -198,12 +200,16 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 .show();
     }
 
+    private void startActivity(Class<?> cls) {
+        Intent intent = new Intent(getActivity(), cls);
+        startActivity(intent);
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.layout_wallet:
-                Intent intent = new Intent(getActivity(), MyWalletActivity.class);
-                startActivity(intent);
+                startActivity(MyWalletActivity.class);
                 break;
 
             case R.id.layout_miner:
@@ -216,6 +222,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.layout_order_details:
+                startActivity(OrderDetailsActivity.class);
                 break;
 
             case R.id.btn_order:

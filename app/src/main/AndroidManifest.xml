@@ -39,6 +39,9 @@
         <activity
             android:name=".ui.miner.BindMinerActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.order.OrderDetailsActivity"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

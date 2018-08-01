@@ -3,6 +3,9 @@
     <dimen name="activity_horizontal_margin">26dp</dimen>
     <dimen name="action_bar_height">48dp</dimen>
     <dimen name="corner_radius">8dp</dimen>
+    <dimen name="content_padding">26dp</dimen>
+    <dimen name="content_padding_top">15dp</dimen>
+    <dimen name="content_padding_bottom">15dp</dimen>
     <dimen name="wallet_label_width">78dp</dimen>
 
     <!-- font -->

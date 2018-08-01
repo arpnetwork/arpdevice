@@ -39,8 +39,8 @@
     <string name="start_ordering">Start ordering</string>
     <string name="order_price_message">The lower the order price, the easier it is to receive the order. The default is the average price of the previous period.</string>
     <string name="order_price_format">%dARP/h</string>
-    <string name="slow">Slow</string>
-    <string name="fast">Fast</string>
+    <string name="low">Low</string>
+    <string name="high">High</string>
 
     <!-- my wallet -->
     <string name="ARP_balance">ARP account</string>
@@ -60,4 +60,10 @@
     <string name="miner_load">load</string>
     <string name="miner_bandwidth">bandwidth</string>
 
+    <!-- order -->
+    <string name="total_income">Total income: %.2fARP</string>
+    <string name="today_income">Today income: %.2fARP</string>
+    <string name="order_income_format">Income: %.2fARP, %s, %s</string>
+    <string name="packing">Packing</string>
+    <string name="arrived">Arrived</string>
 </resources>
