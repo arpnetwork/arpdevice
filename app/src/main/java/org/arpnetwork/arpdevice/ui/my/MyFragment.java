@@ -37,6 +37,7 @@ import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
+import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
@@ -205,6 +206,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 startActivity(intent);
                 break;
             case R.id.layout_miner:
+                Intent miner = new Intent(getActivity(), BindMinerActivity.class);
+                startActivity(miner);
                 break;
             case R.id.layout_order_price:
                 showOrderPriceDialog();

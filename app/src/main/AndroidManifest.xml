@@ -36,6 +36,9 @@
         <activity
             android:name=".ui.my.mywallet.MyWalletActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.miner.BindMinerActivity"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>
