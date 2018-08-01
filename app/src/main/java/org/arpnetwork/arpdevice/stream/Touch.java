@@ -80,7 +80,9 @@ public class Touch {
     }
 
     public void close() {
-        mConn.close();
+        if (mConn != null) {
+            mConn.close();
+        }
     }
 
     public void ensureAuthChecked(Handler handler) {

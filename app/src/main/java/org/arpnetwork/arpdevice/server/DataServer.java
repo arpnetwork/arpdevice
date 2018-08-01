@@ -108,7 +108,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void shutdown() {
-        mDeviceManager.setOnClientRequestListener(null);
+        if (mDeviceManager != null) {
+            mDeviceManager.setOnClientRequestListener(null);
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -118,6 +120,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void onClientDisconnected() {
+        Log.d(TAG,"onClientDisconnected");
         stop();
     }
 
