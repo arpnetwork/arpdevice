@@ -34,7 +34,6 @@
     <!-- my -->
     <string name="my">My</string>
     <string name="my_wallet">My wallet</string>
-    <string name="bind_miner">Bind miner</string>
     <string name="order_price">Order price</string>
     <string name="order_details">Order details</string>
     <string name="start_ordering">Start ordering</string>
@@ -49,4 +48,15 @@
     <string name="loading_balance">loading</string>
     <string name="reset_wallet">Reset wallet</string>
     <string name="get_balance_error_msg">Error occurred when getting balance</string>
+
+    <!-- bind miner -->
+    <string name="bind_miner">Bind miner</string>
+    <string name="bind_hint">Bind miner,he will make a match</string>
+    <string name="bind_success">bind success</string>
+    <string name="bind_message">Bind miner cost ether</string>
+    <string name="bind_eth_format">%dether about%d¥</string>
+    <string name="bind">Bind</string>
+    <string name="miner_load">load</string>
+    <string name="miner_bandwidth">bandwidth</string>
+
 </resources>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="10dp"
+    android:paddingTop="10dp">
+
+    <LinearLayout
+        android:id="@+id/layout_left"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:paddingLeft="23dp">
+
+        <TextView
+            android:id="@+id/tv_miner_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/maintitle_text_color"
+            android:textSize="@dimen/maintitle_text_size" />
+
+        <TextView
+            android:id="@+id/tv_miner_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/subtitle_text_color"
+            android:textSize="@dimen/subtitle_text_size" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_miner_state"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerInParent="true"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:textColor="@color/colorPrimary"
+        android:textSize="@dimen/subtitle_text_size"
+        android:visibility="invisible" />
+
+</RelativeLayout>

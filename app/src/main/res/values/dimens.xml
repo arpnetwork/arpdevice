@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <dimen name="activity_horizontal_margin">26dp</dimen>
     <dimen name="action_bar_height">48dp</dimen>
     <dimen name="corner_radius">8dp</dimen>
-    <dimen name="content_padding">26dp</dimen>
     <dimen name="wallet_label_width">78dp</dimen>
 
     <!-- font -->
     <dimen name="maintitle_text_size">16sp</dimen>
+    <dimen name="subtitle_text_size">12sp</dimen>
 </resources>

@@ -36,7 +36,7 @@
         <item name="actionMenuTextColor">@color/colorPrimary</item>
     </style>
 
-    <style name="Dialog" parent="android:style/Theme.Dialog">
+    <style name="Dialog" parent="Theme.AppCompat.Light.Dialog">
         <item name="android:background">@android:color/transparent</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
