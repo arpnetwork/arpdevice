@@ -27,6 +27,9 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 
 public class OrderDetailsFragment extends BaseFragment {
+    private OrderDetailsAdapter mAdapter;
+    private OrderDetailsHeader mHeaderView;
+    private boolean mLoading;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,6 +48,7 @@ public class OrderDetailsFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
+        loadData();
     }
 
     @Override
@@ -57,13 +61,42 @@ public class OrderDetailsFragment extends BaseFragment {
         footerView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.content_padding)));
         footerView.setBackgroundResource(R.color.window_background_light_gray);
 
-        OrderDetailsHeader headerView = new OrderDetailsHeader(getContext());
-        headerView.setVisibility(View.GONE);
+        mHeaderView = new OrderDetailsHeader(getContext());
+        mHeaderView.setVisibility(View.GONE);
 
-        OrderDetailsAdapter adapter = new OrderDetailsAdapter(getContext());
+        mAdapter = new OrderDetailsAdapter(getContext());
         ListView listView = (ListView) findViewById(R.id.listview);
-        listView.addHeaderView(headerView);
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            private boolean mToBottom;
+
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                if (scrollState == SCROLL_STATE_IDLE && mToBottom) {
+                    loadData();
+                }
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                mToBottom = false;
+                if (totalItemCount > 0 && firstVisibleItem + visibleItemCount == totalItemCount) {
+                    mToBottom = true;
+                }
+            }
+        });
+        listView.addHeaderView(mHeaderView);
         listView.addFooterView(footerView);
-        listView.setAdapter(adapter);
+        listView.setAdapter(mAdapter);
+    }
+
+    private void loadData() {
+        if (mLoading) {
+            return;
+        }
+
+        mLoading = true;
+        //FIXME: load data from ethereum network
+
+        mLoading = false;
     }
 }
