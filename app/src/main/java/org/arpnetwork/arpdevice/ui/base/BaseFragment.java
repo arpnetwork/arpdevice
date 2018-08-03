@@ -16,29 +16,17 @@
 
 package org.arpnetwork.arpdevice.ui.base;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import org.arpnetwork.arpdevice.R;
-
 public abstract class BaseFragment extends Fragment {
-    private FragmentActivity mContext;
     private ProgressDialog mProgressDialog;
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-
-        mContext = (FragmentActivity) activity;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -138,19 +126,24 @@ public abstract class BaseFragment extends Fragment {
         }
     }
 
+    protected void startActivity(Class<?> cls) {
+        startActivity(cls, null);
+    }
+
+    protected void startActivity(Class<?> cls, Bundle bundle) {
+        Intent intent = new Intent(getActivity(), cls);
+        if (bundle != null) {
+            intent.putExtras(bundle);
+        }
+        startActivity(intent);
+    }
+
     protected void finish() {
         if (getFragmentManager().getBackStackEntryCount() > 0) {
             getFragmentManager().popBackStack();
         } else {
             getActivity().finish();
         }
-    }
-
-    protected void setContentFragment(Class<? extends BaseFragment> fragmentClass, Bundle arguments) {
-        Fragment fragment = Fragment.instantiate(mContext, fragmentClass.getName(), arguments);
-        FragmentTransaction t = mContext.getSupportFragmentManager().beginTransaction();
-        t.replace(R.id.content_frame, fragment);
-        t.commit();
     }
 
     protected void runOnUiThread(Runnable action) {

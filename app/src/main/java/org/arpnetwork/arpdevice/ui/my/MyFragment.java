@@ -16,8 +16,8 @@
 
 package org.arpnetwork.arpdevice.ui.my;
 
+import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
@@ -28,22 +28,19 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
-import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
-import org.arpnetwork.arpdevice.server.DataServer;
-import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
-import org.arpnetwork.arpdevice.ui.order.OrderDetailsActivity;
+import org.arpnetwork.arpdevice.ui.order.details.OrderDetailsActivity;
+import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
-import org.arpnetwork.arpdevice.util.UIHelper;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -53,10 +50,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     private static final int DEFAULT_ORDER_PRICE = 1;
 
     private TextView mOrderPriceView;
-    private int mQuality;
     private int mOrderPrice;
-
-    private DeviceManager mDeviceManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,7 +59,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         setTitle(R.string.my);
         hideNavIcon();
 
-        DataServer.getInstance().setListener(mConnectionListener);
         int orderPrice = PreferenceManager.getInstance().getInt(ORDER_PRICE);
         mOrderPrice = orderPrice >= 0 ? orderPrice : DEFAULT_ORDER_PRICE;
     }
@@ -86,9 +79,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public void onDestroy() {
         super.onDestroy();
 
-        if (mDeviceManager != null) {
-            mDeviceManager.close();
-        }
         getActivity().getApplication().onTerminate();
     }
 
@@ -126,8 +116,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 if (type == ConnectivityManager.TYPE_MOBILE) {
                     info.telNetType = NetworkHelper.getTelephonyNetworkType(getActivity().getApplicationContext());
                 }
-
-                startDeviceService();
             }
 
             @Override
@@ -140,30 +128,9 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         });
     }
 
-    private void startDeviceService() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mDeviceManager = new DeviceManager();
-                mDeviceManager.setOnErrorListener(mOnErrorListener);
-                mDeviceManager.connect();
-                DataServer.getInstance().setDeviceManager(mDeviceManager);
-            }
-        });
-    }
-
-    private void startRecordIfNeeded() {
-        if (Touch.getInstance().isRecording()) return;
-        Touch.getInstance().startRecord(mQuality);
-    }
-
-    private void stopRecord() {
-        Touch.getInstance().stopRecord();
-    }
-
     private void showOrderPriceDialog() {
-        final int min = 0;
-        final int max = 100;
+        final int min = Config.ORDER_PRICE_LOW;
+        final int max = Config.ORDER_PRICE_HIGH;
         int defaultValue = mOrderPrice;
         int value = (defaultValue - min) * 100 / (max - min);
 
@@ -200,9 +167,16 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 .show();
     }
 
-    private void startActivity(Class<?> cls) {
-        Intent intent = new Intent(getActivity(), cls);
-        startActivity(intent);
+    private void showNoBindingDialog() {
+        new AlertDialog.Builder(getContext())
+                .setMessage(R.string.no_bind_miner)
+                .setPositiveButton(R.string.ok, null)
+                .create()
+                .show();
+    }
+
+    private boolean isBindingMiner() {
+        return true;
     }
 
     @Override
@@ -213,8 +187,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.layout_miner:
-                Intent miner = new Intent(getActivity(), BindMinerActivity.class);
-                startActivity(miner);
+                startActivity(BindMinerActivity.class);
                 break;
 
             case R.id.layout_order_price:
@@ -226,45 +199,12 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_order:
+                if (isBindingMiner()) {
+                    startActivity(ReceiveOrderActivity.class);
+                } else {
+                    showNoBindingDialog();
+                }
                 break;
         }
     }
-
-    private DataServer.ConnectionListener mConnectionListener = new DataServer.ConnectionListener() {
-        @Override
-        public void onConnected() {
-        }
-
-        @Override
-        public void onClosed() {
-            stopRecord();
-        }
-
-        @Override
-        public void onRecordStart(int quality) {
-            mQuality = quality;
-            startRecordIfNeeded();
-        }
-
-        @Override
-        public void onRecordStop() {
-            stopRecord();
-        }
-
-        @Override
-        public void onException(Throwable cause) {
-        }
-    };
-
-    private DeviceManager.OnErrorListener mOnErrorListener = new DeviceManager.OnErrorListener() {
-        @Override
-        public void onError(int code, final String msg) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    UIHelper.showToast(getContext(), msg, Toast.LENGTH_SHORT);
-                }
-            });
-        }
-    };
 }

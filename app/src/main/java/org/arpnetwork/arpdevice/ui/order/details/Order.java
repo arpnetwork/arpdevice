@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.order;
+package org.arpnetwork.arpdevice.ui.order.details;
 
-import java.util.List;
+public class Order {
+    public static final int STATE_PACKING = 0;
+    public static final int STATE_ARRIVED = 1;
 
-public class OrderData {
-    public float totalIncome;
-    public float todayIncome;
-    public List<Order> orderList;
+    public float income;
+    public int state;
+    public long time;
+    public String miner;
 }

@@ -20,7 +20,6 @@ import android.app.Application;
 import android.content.Context;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
-import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
@@ -34,10 +33,9 @@ public class CustomApplication extends Application {
 
         sInstance = this;
 
-        DeviceInfo.create(this);
+        DeviceInfo.init(this);
         PreferenceManager.init(this);
         NetworkHelper.init(getApplicationContext());
-        DataServer.getInstance().startServer();
     }
 
     @Override
@@ -59,7 +57,6 @@ public class CustomApplication extends Application {
     public void onTerminate() {
         super.onTerminate();
 
-        DataServer.getInstance().shutdown();
         Touch.getInstance().close();
         PreferenceManager.fini();
         NetworkHelper.fini();

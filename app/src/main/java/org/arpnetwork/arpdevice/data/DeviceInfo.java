@@ -51,24 +51,26 @@ public class DeviceInfo {
 
     private static DeviceInfo sInstance;
 
-    public static void create(Context context) {
-        DeviceInfo info = new DeviceInfo();
-        info.ver = Config.PROTOCOL_VERSION;
-        info.id = DeviceUtil.getUUID();
-        info.port = DataServer.PORT;
-        info.brand = DeviceUtil.getBrand();
-        info.model = DeviceUtil.getModel();
-        info.imsi = DeviceUtil.getIMSI(context);
-        info.cpu = DeviceUtil.getCpu();
-        info.gpu = "";
-        info.ram = DeviceUtil.getMemoryTotal(context);
-        info.storage = DeviceUtil.getExternalDiskAvailable(context);
-        info.resolution = DeviceUtil.getResolutionStr(context);
-        info.osVer = DeviceUtil.getAndroidVersion();
-        info.systemVer = DeviceUtil.getSysUIVersion();
-        info.connNetType = -1;
-        info.telNetType = 0;
-        sInstance = info;
+    public static void init(Context context) {
+        if (sInstance == null) {
+            DeviceInfo info = new DeviceInfo();
+            info.ver = Config.PROTOCOL_VERSION;
+            info.id = DeviceUtil.getUUID();
+            info.port = DataServer.PORT;
+            info.brand = DeviceUtil.getBrand();
+            info.model = DeviceUtil.getModel();
+            info.imsi = DeviceUtil.getIMSI(context);
+            info.cpu = DeviceUtil.getCpu();
+            info.gpu = "";
+            info.ram = DeviceUtil.getMemoryTotal(context);
+            info.storage = DeviceUtil.getExternalDiskAvailable(context);
+            info.resolution = DeviceUtil.getResolutionStr(context);
+            info.osVer = DeviceUtil.getAndroidVersion();
+            info.systemVer = DeviceUtil.getSysUIVersion();
+            info.connNetType = -1;
+            info.telNetType = 0;
+            sInstance = info;
+        }
     }
 
     public static DeviceInfo get() {

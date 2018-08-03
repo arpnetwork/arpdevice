@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.config;
+package org.arpnetwork.arpdevice.ui.order.receive;
 
-public class Config {
-    public static final boolean DEBUG = false;
+import android.os.Bundle;
 
-    public static final String PROTOCOL_VERSION = "1.0";
+import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 
-    public static final int ORDER_PRICE_LOW = 0;
-    public static final int ORDER_PRICE_HIGH = 100;
+public class ReceiveOrderActivity extends BaseActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentFragment(ReceiveOrderFragment.class);
+    }
 }

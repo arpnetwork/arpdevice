@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.order;
+package org.arpnetwork.arpdevice.ui.order.details;
 
-public class Order {
-    public static final int STATE_PACKING = 0;
-    public static final int STATE_ARRIVED = 1;
+import android.os.Bundle;
 
-    public float income;
-    public int state;
-    public long time;
-    public String miner;
+import org.arpnetwork.arpdevice.ui.base.BaseActivity;
+
+public class OrderDetailsActivity extends BaseActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentFragment(OrderDetailsFragment.class);
+    }
 }

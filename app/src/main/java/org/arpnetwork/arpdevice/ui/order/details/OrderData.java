@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.order;
+package org.arpnetwork.arpdevice.ui.order.details;
 
-import android.os.Bundle;
+import java.util.List;
 
-import org.arpnetwork.arpdevice.ui.base.BaseActivity;
-
-public class OrderDetailsActivity extends BaseActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        setContentFragment(OrderDetailsFragment.class);
-    }
+public class OrderData {
+    public float totalIncome;
+    public float todayIncome;
+    public List<Order> orderList;
 }

@@ -2,6 +2,7 @@
     <string name="app_name">ARPDevice</string>
     <string name="exit_app">再按一次退出程序</string>
     <string name="ok">确定</string>
+    <string name="cancel">取消</string>
 
     <string name="check_init">设备初始化</string>
     <string name="check_btn">设置</string>
@@ -41,6 +42,7 @@
     <string name="order_price_format">%dARP/小时</string>
     <string name="low">低</string>
     <string name="high">高</string>
+    <string name="no_bind_miner">未绑定矿工</string>
 
     <!-- 我的钱包 -->
     <string name="ARP_balance">ARP金额</string>
@@ -66,4 +68,10 @@
     <string name="order_income_format">收入：%.2fARP，%s，%s</string>
     <string name="packing">正在打包</string>
     <string name="arrived">已到账</string>
+
+    <!-- 接单 -->
+    <string name="receive_order">开始接单</string>
+    <string name="receive_order_tips">接到单后请勿触碰屏幕，否则将会退出接到的订单，影响您的收入和他人体验</string>
+    <string name="exit_order">退出接单</string>
+    <string name="confirm_to_exit">确定退出接单?</string>
 </resources>

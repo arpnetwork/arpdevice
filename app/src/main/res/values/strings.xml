@@ -2,6 +2,7 @@
     <string name="app_name">ARPDevice</string>
     <string name="exit_app">press again to exit</string>
     <string name="ok">Confirm</string>
+    <string name="cancel">Cancel</string>
 
     <string name="check_init">Device is initializing</string>
     <string name="check_btn">setting</string>
@@ -41,6 +42,7 @@
     <string name="order_price_format">%dARP/h</string>
     <string name="low">Low</string>
     <string name="high">High</string>
+    <string name="no_bind_miner">No bind miner</string>
 
     <!-- my wallet -->
     <string name="ARP_balance">ARP account</string>
@@ -66,4 +68,10 @@
     <string name="order_income_format">Income: %.2fARP, %s, %s</string>
     <string name="packing">Packing</string>
     <string name="arrived">Arrived</string>
+
+    <!-- receive order -->
+    <string name="receive_order">Receive order</string>
+    <string name="receive_order_tips">Do not touch the screen after receiving the order, otherwise you will withdraw from the order, affecting your income and other people\'s experience.</string>
+    <string name="exit_order">Exit order</string>
+    <string name="confirm_to_exit">Confirm to exit receiving order?</string>
 </resources>

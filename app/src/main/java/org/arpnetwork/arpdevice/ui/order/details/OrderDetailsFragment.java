@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.order;
+package org.arpnetwork.arpdevice.ui.order.details;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="60dp">
+
+    <TextView
+        style="@style/MyItemLabel"
+        android:layout_above="@+id/btn_exit"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="30dp"
+        android:text="@string/receive_order_tips" />
+
+    <Button
+        android:id="@id/btn_exit"
+        style="@style/Button"
+        android:layout_centerInParent="true"
+        android:text="@string/exit_order" />
+</RelativeLayout>
