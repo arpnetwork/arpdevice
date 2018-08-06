@@ -17,28 +17,57 @@
 package org.arpnetwork.arpdevice.ui.miner;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.SeekBar;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.contracts.ARPRegistry;
+import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
+import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
+import org.arpnetwork.arpdevice.ui.bean.GasInfo;
+import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
+import org.arpnetwork.arpdevice.util.OKHttpUtils;
+import org.arpnetwork.arpdevice.util.SimpleCallback;
+import org.arpnetwork.arpdevice.util.UIHelper;
+import org.arpnetwork.arpdevice.util.Util;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.web3j.crypto.Credentials;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tuples.generated.Tuple3;
+import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
 
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class BindMinerFragment extends BaseFragment {
     private static final String TAG = "BindMinerFragment";
@@ -47,12 +76,21 @@ public class BindMinerFragment extends BaseFragment {
 
     private ListView mMinerList;
     private MinerAdapter mAdapter;
+    private OKHttpUtils mOkHttpUtils;
+
+    private int mClickPosition;
+    private GasInfo mGasInfo;
+    private BigDecimal mGasPriceGWei;
+    private Dialog mShowPriceDialog;
+    private Dialog mInputPasswdDialog;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setTitle(R.string.bind_miner);
+
+        mOkHttpUtils = new OKHttpUtils();
     }
 
     @Override
@@ -62,8 +100,6 @@ public class BindMinerFragment extends BaseFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
         initViews();
         loadData();
     }
@@ -76,147 +112,87 @@ public class BindMinerFragment extends BaseFragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (!mAdapter.isChecked(position)) {
-                    // TODO: show gas price dialog
+                    mClickPosition = position;
+                    loadGasInfo();
                 }
             }
         });
     }
 
-    protected void loadData() {
-        List<Miner> datas = new ArrayList<>();
-        mAdapter.setData(datas);
+    private void loadData() {
+        List<Miner> miners = BindMinerHelper.getMinerList();
+        for (int i = 0; i < miners.size(); i++) {
+            Miner miner = miners.get(i);
+            String url = "http://" + Util.longToIp(miner.ip.longValue()) + ":" + miner.port.intValue();
+            Log.d(TAG, "miner url = " + url);
+            loadMinerLoadInfo(i, url);
+        }
+        mAdapter.setData(miners);
+        loadBindState();
     }
 
-    interface Callback {
-        void onResult(String result, int index);
-    }
-
-    private static class MinerLoadTask extends AsyncTask<String, Void, String> {
-        private Callback func;
-        private int index;
-
-        public MinerLoadTask(int index, Callback func) {
-            this.func = func;
-            this.index = index;
-        }
-
-        @Override
-        protected String doInBackground(String... addresses) {
-            String address = addresses[0];
-            return address;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (!isCancelled() && func != null && !TextUtils.isEmpty(result)) {
-                func.onResult(result, index);
+    private void loadBindState() {
+        try {
+            String address = WalletManager.getInstance().getWallet().getPublicKey();
+            Tuple3<String, BigInteger, BigInteger> binder = BindMinerHelper.devices(address);
+            if (!TextUtils.isEmpty(binder.getValue1())) {
+                mAdapter.updateBindState(binder.getValue1());
             }
+        } catch (ExecutionException e) {
+        } catch (InterruptedException e) {
         }
     }
 
-    private static final class MinerAdapter extends BaseAdapter {
-        private Context mContext;
-        private List<Miner> mitems;
-        private final LayoutInflater mInflater;
-        private int mCheckedIndex = -1;
-
-        public MinerAdapter(Context context) {
-            mContext = context;
-
-            mInflater = LayoutInflater.from(context);
-            mitems = new ArrayList<Miner>();
-        }
-
-        @Override
-        public int getCount() {
-            return mitems == null ? 0 : mitems.size();
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public Miner getItem(int position) {
-            return mitems.get(position);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            Miner item = mitems.get(position);
-            String info = item.country + "，" + mContext.getString(R.string.miner_load) + item.load +
-                    "，" + mContext.getString(R.string.miner_bandwidth) + item.bandwidth;
-            ViewHolder viewHolder;
-            if (convertView == null) {
-                convertView = mInflater.inflate(R.layout.item_bind_miner, null);
-
-                viewHolder = new ViewHolder();
-                viewHolder.mainTitle = (TextView) convertView
-                        .findViewById(R.id.tv_miner_name);
-                viewHolder.subTitle = (TextView) convertView
-                        .findViewById(R.id.tv_miner_info);
-                viewHolder.bindState = (TextView) convertView
-                        .findViewById(R.id.tv_miner_state);
-
-                convertView.setTag(viewHolder);
-            } else {
-                viewHolder = (ViewHolder) convertView.getTag();
+    private void loadMinerLoadInfo(final int index, final String url) {
+        mOkHttpUtils.get(url, new SimpleCallback<String>() {
+            @Override
+            public void onFailure(Request request, Exception e) {
             }
 
-            viewHolder.mainTitle.setText(item.name);
-            viewHolder.subTitle.setText(info);
-            if (item.binded || mCheckedIndex == position) {
-                viewHolder.bindState.setVisibility(View.VISIBLE);
-                viewHolder.bindState.setText(mContext.getString(R.string.bind_success));
-            } else {
-                viewHolder.bindState.setVisibility(View.GONE);
+            @Override
+            public void onSuccess(Response response, String result) {
+                try {
+                    JSONObject jsonObject = new JSONObject(result); // {"load":"70%"}
+                    String load = jsonObject.optString("load");
+                    mAdapter.updateLoad(index, load);
+                } catch (JSONException ignored) {
+                }
             }
 
-            return convertView;
-        }
-
-        public void setData(List<Miner> datas) {
-            if (datas != null && datas.size() > 0) {
-                mitems.addAll(datas);
-
-                notifyDataSetChanged();
+            @Override
+            public void onError(Response response, int code, Exception e) {
             }
-        }
-
-        public void checkItem(int index) {
-            if (index >= 0) {
-                mCheckedIndex = index;
-
-                notifyDataSetChanged();
-            }
-        }
-
-        public boolean isChecked(int index) {
-            return mCheckedIndex >= 0 && mCheckedIndex == index;
-        }
-
-        public void updateLoad(int index, String load) {
-            Miner miner = mitems.get(index);
-            miner.load = load;
-
-            notifyDataSetChanged();
-        }
-
-        private static final class ViewHolder {
-            TextView mainTitle;
-            TextView subTitle;
-            TextView bindState;
-        }
+        });
     }
 
-    private void checkBalance(final double gasPrice) {
+    private void loadGasInfo() {
+        mOkHttpUtils.get(Constant.API_URL, new SimpleCallback<GasInfoResponse>() {
+            @Override
+            public void onFailure(Request request, Exception e) {
+                if (getActivity() != null) {
+                    UIHelper.showToast(getActivity(), getString(R.string.load_gas_failed));
+                }
+            }
+
+            @Override
+            public void onSuccess(Response response, GasInfoResponse result) {
+                mGasInfo = result.data;
+                checkBalance(Util.getEthCost(result.data.getGasPriceGwei(), result.data.getGasLimit()).doubleValue());
+            }
+
+            @Override
+            public void onError(Response response, int code, Exception e) {
+            }
+        });
+    }
+
+    private void checkBalance(final double ethCost) {
         // check balance before binding miner
         final String address = WalletManager.getInstance().getWallet().getPublicKey();
         BalanceAPI.getEtherBalance(address, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
-                if (result.doubleValue() < gasPrice) {
+                if (result.doubleValue() < ethCost) {
                     showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
                 } else {
                     BalanceAPI.getArpBalance(address, new OnValueResult<BigDecimal>() {
@@ -225,7 +201,7 @@ public class BindMinerFragment extends BaseFragment {
                             if (result.doubleValue() < LOCK_ARP) {
                                 showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
                             } else {
-                                // TODO: bind miner
+                                showPayEthDialog(mGasInfo);
                             }
                         }
                     });
@@ -241,5 +217,171 @@ public class BindMinerFragment extends BaseFragment {
                 .setPositiveButton(R.string.ok, null)
                 .setCancelable(false)
                 .show();
+    }
+
+    private void showPayEthDialog(final GasInfo data) {
+        if (mShowPriceDialog != null && mShowPriceDialog.isShowing()) return;
+
+        Miner minerInfo = mAdapter.getItem(mClickPosition);
+        final BigDecimal min = data.getGasPriceGwei();
+        final BigDecimal max = (data.getGasPriceGwei().multiply(new BigDecimal("100")));
+        BigDecimal defaultValue = data.getGasPriceGwei();
+        mGasPriceGWei = data.getGasPriceGwei();
+
+        final BigDecimal mEthSpend = Util.getEthCost(data.getGasPriceGwei(), data.getGasLimit());
+        double yuan = Util.getYuanCost(defaultValue, data.getGasLimit(), data.getEthToYuanRate());
+
+        final SeekBarDialog.Builder builder = new SeekBarDialog.Builder(getContext());
+        builder.setTitle(minerInfo.name)
+                .setMessage(getString(R.string.bind_message))
+                .setSeekValue(0, String.format(getString(R.string.bind_eth_format), mEthSpend, yuan))
+                .setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        if (fromUser) {
+                            // min + progress * (max - min) / 100;
+                            BigDecimal multiply = new BigDecimal(progress).multiply(max.subtract(min));
+                            BigDecimal divide = multiply.divide(new BigDecimal("100"));
+                            mGasPriceGWei = min.add(divide);
+                            BigDecimal mEthSpend = Util.getEthCost(mGasPriceGWei, data.getGasLimit());
+                            double yuan = Util.getYuanCost(mGasPriceGWei, data.getGasLimit(), data.getEthToYuanRate());
+                            builder.setSeekValue(progress, String.format(getString(R.string.bind_eth_format), mEthSpend, yuan));
+                        }
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                    }
+                })
+                .setButton(getString(R.string.bind), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        showInputPasswdDialog();
+                    }
+                });
+        mShowPriceDialog = builder.create();
+        mShowPriceDialog.show();
+    }
+
+    private void showInputPasswdDialog() {
+        if (mInputPasswdDialog != null && mInputPasswdDialog.isShowing()) return;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setMessage(R.string.bind_passwd_tip);
+        LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
+        View view = layoutInflater.inflate(R.layout.layout_input_passwd, null);
+        builder.setView(view);
+
+        final EditText edPasswd = (EditText) view.findViewById(R.id.ed_passwd);
+        edPasswd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                edPasswd.setFocusable(true);
+                edPasswd.setFocusableInTouchMode(true);
+                edPasswd.requestFocus();
+                InputMethodManager inputManager = (InputMethodManager) edPasswd
+                        .getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.showSoftInput(edPasswd, 0);
+            }
+        });
+        final Button btnOk = (Button) view.findViewById(R.id.btn_ok);
+        btnOk.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String passwd = edPasswd.getText().toString().trim();
+                if (TextUtils.isEmpty(passwd)) {
+                    UIHelper.showToast(getActivity(), getString(R.string.bind_passwd_tip));
+                } else {
+                    final Credentials credentials = WalletManager.getInstance().loadCredentials(passwd);
+                    if (credentials == null) {
+                        UIHelper.showToast(getActivity(), getString(R.string.bind_passwd_error));
+                    } else {
+                        mInputPasswdDialog.dismiss();
+                        BindTask readTask = new BindTask(passwd);
+                        readTask.execute(mAdapter.getItem(mClickPosition).address);
+
+
+                    }
+                }
+            }
+        });
+        mInputPasswdDialog = builder.create();
+        mInputPasswdDialog.show();
+    }
+
+    private BigInteger getGasPrice() {
+        BigDecimal gas = Convert.toWei(mGasPriceGWei, Convert.Unit.GWEI);
+        return gas.toBigInteger();
+    }
+
+    private boolean bindDevice(String address, Credentials credentials) {
+        boolean success = false;
+        ARPRegistry registry = ARPRegistry.load(BindMinerHelper.CONTRACT_ADDRESS, BalanceAPI.getWeb3J(),
+                credentials, getGasPrice(), mGasInfo.getGasLimit());
+        try {
+            TransactionReceipt bindDeviceReceipt = registry.bindDevice(address).send();
+            success = isStatusOK(bindDeviceReceipt.getStatus());
+        } catch (Exception e) {
+        }
+        return success;
+    }
+
+    public boolean isStatusOK(String status) {
+        if (null == status) {
+            return true;
+        }
+        BigInteger statusQuantity = Numeric.decodeQuantity(status);
+        return BigInteger.ONE.equals(statusQuantity);
+    }
+
+    private class BindTask extends AsyncTask<String, String, Boolean> {
+        private Credentials credentials;
+        private ProgressDialog progressDialog;
+
+        public BindTask(String password) {
+            credentials = WalletManager.getInstance().loadCredentials(password);
+            progressDialog = new ProgressDialog(getActivity());
+        }
+
+        @Override
+        protected void onPreExecute() {
+            progressDialog.setMessage(getString(R.string.bind_handle));
+            progressDialog.setCanceledOnTouchOutside(false);
+            progressDialog.setCancelable(false);
+            progressDialog.show();
+        }
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            boolean result = false;
+            final String address = params[0];
+
+            String hexData = ARPContract.getTransactionHexData(BindMinerHelper.CONTRACT_ADDRESS,
+                    credentials, getGasPrice(), new BigInteger("400000"));
+            try {
+                BalanceAPI.getWeb3J().ethSendRawTransaction(hexData).send();
+                result = bindDevice(address, credentials);
+            } catch (IOException e) {
+                result = false;
+            }
+
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result) {
+            super.onPostExecute(result);
+            progressDialog.dismiss();
+            if (result) {
+                mAdapter.checkItem(mClickPosition);
+                UIHelper.showToast(getActivity(), getString(R.string.bind_success));
+            } else {
+                UIHelper.showToast(getActivity(), getString(R.string.bind_failed));
+            }
+        }
     }
 }

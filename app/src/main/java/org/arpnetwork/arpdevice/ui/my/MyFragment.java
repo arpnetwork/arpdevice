@@ -31,6 +31,7 @@ import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
@@ -176,7 +177,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private boolean isBindingMiner() {
-        return true;
+        return BindMinerHelper.isBinded(WalletManager.getInstance().getWallet().getPublicKey());
     }
 
     @Override

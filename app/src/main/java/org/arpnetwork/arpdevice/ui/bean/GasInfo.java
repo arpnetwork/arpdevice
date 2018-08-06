@@ -14,16 +14,25 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.config;
+package org.arpnetwork.arpdevice.ui.bean;
 
-public class Constant {
-    public static final String API_URL = "http://dev.arpnetwork.org:8545";
+import java.math.BigDecimal;
+import java.math.BigInteger;
 
-    public static final int CHECK_DEFAULT = -1;
-    public static final int CHECK_OS = 1;
-    public static final int CHECK_ADB = 2;
-    public static final int CHECK_TCP = 3;
-    public static final int CHECK_AUTH = 4;
-    public static final int CHECK_ADB_SAFE = 5;
-    public static final int CHECK_AUTH_SUCCESS = 6;
+public class GasInfo {
+    private String gasPriceGwei;
+    private String gasLimit;
+    private String ethToYuanRate;
+
+    public BigDecimal getGasPriceGwei() {
+        return new BigDecimal(gasPriceGwei);
+    }
+
+    public BigInteger getGasLimit() {
+        return new BigInteger(gasLimit);
+    }
+
+    public BigDecimal getEthToYuanRate() {
+        return new BigDecimal(ethToYuanRate);
+    }
 }

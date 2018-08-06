@@ -20,6 +20,7 @@ import android.content.res.AssetManager;
 
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
+import org.web3j.utils.Convert;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -127,4 +129,30 @@ public class Util {
         }
         return sb.toString();
     }
+
+    public static BigDecimal getEthCost(BigDecimal gasPriceGwei,BigInteger gasUsed) {
+        BigDecimal gasUsedDecimal = new BigDecimal(gasUsed);
+        BigDecimal bUsed = gasPriceGwei.multiply(gasUsedDecimal);
+        return Convert.fromWei(bUsed.toString(), Convert.Unit.GWEI);
+    }
+
+    public static double getYuanCost(BigDecimal gasPriceGwei,BigInteger gasUsed, BigDecimal ethToYuanRate) {
+        BigDecimal getEthCost = getEthCost(gasPriceGwei, gasUsed);
+        BigDecimal result = getEthCost.multiply(ethToYuanRate)
+                .setScale(2, BigDecimal.ROUND_HALF_UP);
+        return result.doubleValue();
+    }
+
+    public static String longToIp(long ip) {
+        return ((ip >> 24) & 0xFF) +
+                "." + ((ip >> 16) & 0xFF) +
+                "." + ((ip >> 8) & 0xFF) +
+                "." + (ip & 0xFF);
+    }
+
+    public static long ipToLong(String strIp) {
+        String[] ip = strIp.split("\\.");
+        return (Long.parseLong(ip[0]) << 24) + (Long.parseLong(ip[1]) << 16) + (Long.parseLong(ip[2]) << 8) + Long.parseLong(ip[3]);
+    }
+
 }

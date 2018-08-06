@@ -55,12 +55,17 @@
     <string name="bind_miner_error_balance_insufficient">Balance insufficient for binding miner.</string>
     <string name="bind_miner">Bind miner</string>
     <string name="bind_hint">Bind miner,he will make a match</string>
-    <string name="bind_success">bind success</string>
-    <string name="bind_message">Bind miner cost ether</string>
-    <string name="bind_eth_format">%dether about%d¥</string>
+    <string name="bind_success">Bind success</string>
+    <string name="bind_failed">Bind miner failed,please try again</string>
+    <string name="bind_message">Bind miner need at least 500 ARPs to pay ethereum gas</string>
+    <string name="bind_eth_format">%s ether about%.2f¥</string>
     <string name="bind">Bind</string>
-    <string name="miner_load">load</string>
-    <string name="miner_bandwidth">bandwidth</string>
+    <string name="miner_load">,load</string>
+    <string name="miner_bandwidth">,bandwidth</string>
+    <string name="load_gas_failed">Load gas failed,please try again.</string>
+    <string name="bind_passwd_tip">Please input wallet password</string>
+    <string name="bind_passwd_error">wallet password error,please try again</string>
+    <string name="bind_handle">Binding is in process,please wait</string>
 
     <!-- order -->
     <string name="total_income">Total income: %.2fARP</string>
@@ -74,4 +79,5 @@
     <string name="receive_order_tips">Do not touch the screen after receiving the order, otherwise you will withdraw from the order, affecting your income and other people\'s experience.</string>
     <string name="exit_order">Exit order</string>
     <string name="confirm_to_exit">Confirm to exit receiving order?</string>
+
 </resources>

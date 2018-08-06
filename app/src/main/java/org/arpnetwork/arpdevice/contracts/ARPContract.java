@@ -1,7 +1,7 @@
 package org.arpnetwork.arpdevice.contracts;
 
-import org.arpnetwork.arpdevice.contracts.tasks.ARPApproveTask;
-import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -12,6 +12,7 @@ import org.web3j.abi.datatypes.Uint;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.tx.Contract;
+import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -36,8 +37,11 @@ public class ARPContract extends Contract {
         return encodedFunction;
     }
 
-    public static void approveARP(String password, String gasPrice, OnValueResult onResult) {
-        ARPApproveTask arpApproveTask = new ARPApproveTask(onResult);
-        arpApproveTask.execute(password, gasPrice);
+    public static String getTransactionHexData(String address, Credentials credentials,
+            BigInteger gasPrice, BigInteger gasLimit) {
+        ARPContract contract = ARPContract.load(BalanceAPI.getWeb3J(), credentials, gasPrice, gasLimit);
+        String hexData = VerifyAPI.getRawTransaction(gasPrice, gasLimit, ARPContract.CONTRACT_ADDRESS,
+                contract.getApproveFunctionData(address, new BigInteger(Convert.toWei("1000", Convert.Unit.ETHER).toString())), credentials);
+        return hexData;
     }
 }
