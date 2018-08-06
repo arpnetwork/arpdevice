@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.contract;
+package org.arpnetwork.arpdevice.contracts.api;
 
 import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.spongycastle.util.encoders.Hex;

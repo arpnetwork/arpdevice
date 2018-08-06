@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.contract.tasks;
+package org.arpnetwork.arpdevice.contracts.tasks;
 
 import android.os.AsyncTask;
 
-import org.arpnetwork.arpdevice.contract.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -37,11 +37,11 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class ARPBalanceTask extends AsyncTask<String, String, BigDecimal> {
-    public static final String CONTRACT_ADDRESS = "0xbeb6fdf4ef6ceb975157be43cbe0047b248a8922";
+    public static final String CONTRACT_ADDRESS = "0x8d39dd6b431bfb065b51fea07b7ee75bef0b53f8";
 
-    private OnValueResult onResult;
+    private OnValueResult<BigDecimal> onResult;
 
-    public ARPBalanceTask(OnValueResult onValueResult) {
+    public ARPBalanceTask(OnValueResult<BigDecimal> onValueResult) {
         onResult = onValueResult;
     }
 

@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.contract.tasks;
+package org.arpnetwork.arpdevice.contracts.tasks;
 
-import java.math.BigDecimal;
-
-public interface OnValueResult {
-    void onValueResult(BigDecimal result);
+public interface OnValueResult<T> {
+    void onValueResult(T result);
 }

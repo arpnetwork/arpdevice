@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.contract.tasks;
+package org.arpnetwork.arpdevice.contracts.tasks;
 
 import android.os.AsyncTask;
 
-import org.arpnetwork.arpdevice.contract.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.utils.Convert;
@@ -27,9 +27,9 @@ import java.io.IOException;
 import java.math.BigDecimal;
 
 public class ETHBalanceTask extends AsyncTask<String, String, BigDecimal> {
-    private OnValueResult onResult;
+    private OnValueResult<BigDecimal> onResult;
 
-    public ETHBalanceTask (OnValueResult onValueResult) {
+    public ETHBalanceTask (OnValueResult<BigDecimal> onValueResult) {
         onResult = onValueResult;
     }
 
