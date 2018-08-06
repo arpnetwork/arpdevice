@@ -36,9 +36,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class ARPBalanceTask extends AsyncTask<String, String, BigDecimal> {
-    public static final String CONTRACT_ADDRESS = "0x8d39dd6b431bfb065b51fea07b7ee75bef0b53f8";
+import static org.arpnetwork.arpdevice.contracts.ARPContract.CONTRACT_ADDRESS;
 
+public class ARPBalanceTask extends AsyncTask<String, String, BigDecimal> {
     private OnValueResult<BigDecimal> onResult;
 
     public ARPBalanceTask(OnValueResult<BigDecimal> onValueResult) {

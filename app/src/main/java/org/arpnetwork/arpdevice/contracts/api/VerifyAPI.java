@@ -20,8 +20,14 @@ import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
+import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.Sign;
+import org.web3j.crypto.TransactionEncoder;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.utils.Numeric;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SignatureException;
@@ -77,6 +83,38 @@ public class VerifyAPI {
         BigInteger key = Sign.signedMessageToKey(bytes, getSignatureDataFromByte(signatureDataBytes));
 
         return Keys.getAddress(key);
+    }
+
+    /**
+     * Get row transaction string by params
+     *
+     * @param gasPrice
+     * @param gasLimit
+     * @param contractAddress
+     * @param data
+     * @param credentials
+     * @return
+     */
+    public static String getRawTransaction(BigInteger gasPrice, BigInteger gasLimit,
+            String contractAddress, String data, Credentials credentials) {
+        BigInteger nonce = getTransactionCount(credentials.getAddress());
+        RawTransaction rawTransaction  = RawTransaction.createTransaction(
+                nonce, gasPrice, gasLimit, contractAddress, data);
+
+        byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+        String hexValue = Numeric.toHexString(signedMessage);
+        return hexValue;
+    }
+
+    private static BigInteger getTransactionCount(String address) {
+        EthGetTransactionCount transactionCount = new EthGetTransactionCount();
+        try {
+            transactionCount = BalanceAPI.getWeb3J()
+                    .ethGetTransactionCount(address, DefaultBlockParameterName.PENDING).send();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return transactionCount.getTransactionCount();
     }
 
     private static Sign.SignatureData getSignatureDataFromByte(byte[] bytesBinary) {
