@@ -16,13 +16,5 @@
 
 package org.arpnetwork.arpdevice.data;
 
-import com.google.gson.annotations.SerializedName;
-
-public class Speed {
-    @SerializedName("dl_speed")
-    public int dlSpeed;
-
-    public Speed(int speed) {
-        this.dlSpeed = speed;
-    }
+public class VerifyResponse extends Response<VerifyData> {
 }

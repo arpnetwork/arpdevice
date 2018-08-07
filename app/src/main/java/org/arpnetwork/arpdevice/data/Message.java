@@ -52,7 +52,7 @@ public class Message {
     }
 
     public int getDataLen() {
-        return mData != null ? mData.capacity() : 0;
+        return mData != null ? mData.readableBytes() : 0;
     }
 
     public String toJson() {

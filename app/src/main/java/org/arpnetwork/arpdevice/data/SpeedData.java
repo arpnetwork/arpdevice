@@ -16,14 +16,13 @@
 
 package org.arpnetwork.arpdevice.data;
 
-import org.web3j.crypto.Hash;
-import org.web3j.utils.Numeric;
+import org.arpnetwork.arpdevice.util.Util;
 
 public class SpeedData {
     private String hash;
 
     public SpeedData(byte[] data) {
-        this.hash = Numeric.toHexString(Hash.sha3(data));
+        this.hash = Util.md5(data);
     }
 
     public String getHash() {

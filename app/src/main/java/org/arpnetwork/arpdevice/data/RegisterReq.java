@@ -19,7 +19,7 @@ package org.arpnetwork.arpdevice.data;
 public class RegisterReq extends Req<DeviceInfo> {
 
     public RegisterReq() {
-        this.id = 1;
+        this.id = 3;
         this.data = DeviceInfo.get();
     }
 }

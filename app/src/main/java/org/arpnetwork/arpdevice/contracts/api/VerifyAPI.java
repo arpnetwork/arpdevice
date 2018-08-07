@@ -55,9 +55,23 @@ public class VerifyAPI {
      * @return
      */
     public static String sign(String signatureContent, String password) {
-        byte[] message = toSignatureByte(signatureContent);
         Credentials credentials = WalletManager.getInstance().loadCredentials(password);
-        if (credentials == null) return null;
+        return sign(signatureContent, credentials);
+    }
+
+    /**
+     * Sign random data with credentials
+     *
+     * @param signatureContent
+     * @param credentials
+     * @return
+     */
+    public static String sign(String signatureContent, Credentials credentials) {
+        if (credentials == null) {
+            return null;
+        }
+
+        byte[] message = toSignatureByte(signatureContent);
         Sign.SignatureData signatureData = Sign.signMessage(
                 message, credentials.getEcKeyPair());
 
@@ -68,12 +82,13 @@ public class VerifyAPI {
      * Get address with sign content and signature data string
      *
      * @param signatureContent
-     * @param signatureDataBytes
+     * @param signatureData
      * @return
      * @throws SignatureException
      */
-    public static String getSignatureAddress(String signatureContent, byte[] signatureDataBytes) throws SignatureException {
+    public static String getSignatureAddress(String signatureContent, String signatureData) throws SignatureException {
         byte[] bytes = toSignatureByte(signatureContent);
+        byte[] signatureDataBytes = Hex.decode(signatureData);
         BigInteger key = Sign.signedMessageToKey(bytes, getSignatureDataFromByte(signatureDataBytes));
 
         return Keys.getAddress(key);

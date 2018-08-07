@@ -34,8 +34,10 @@ public class WalletManager {
     private static WalletManager sInstance;
 
     private Wallet mWallet;
+    private Credentials mCredentials;
 
-    private WalletManager() {
+    public interface Callback {
+        void onCompleted(boolean success);
     }
 
     public static WalletManager getInstance() {
@@ -61,11 +63,11 @@ public class WalletManager {
             @Override
             public void run() {
                 try {
-                    Credentials credentials = Credentials.create(mWallet.getPrivateKey());
-                    mWallet.setPublicKey(credentials.getAddress());
+                    mCredentials = Credentials.create(mWallet.getPrivateKey());
+                    mWallet.setPublicKey(mCredentials.getAddress());
                     mWallet.save();
 
-                    String fileName = WalletUtils.generateWalletFile(password, credentials.getEcKeyPair(), destDir, false);
+                    String fileName = WalletUtils.generateWalletFile(password, mCredentials.getEcKeyPair(), destDir, false);
                     PreferenceManager.getInstance().putString(PRIVATE_KEY_PATH, new File(destDir, fileName).getAbsolutePath());
 
                     if (callback != null) {
@@ -97,16 +99,20 @@ public class WalletManager {
         return false;
     }
 
+    public Credentials getCredentials() {
+        return mCredentials;
+    }
+
     public Credentials loadCredentials(String password) {
         String path = PreferenceManager.getInstance().getString(PRIVATE_KEY_PATH);
         try {
-            return WalletUtils.loadCredentials(password, new File(path));
+            mCredentials = WalletUtils.loadCredentials(password, new File(path));
+            return mCredentials;
         } catch (Exception e) {
         }
         return null;
     }
 
-    public interface Callback {
-        void onCompleted(boolean success);
+    private WalletManager() {
     }
 }

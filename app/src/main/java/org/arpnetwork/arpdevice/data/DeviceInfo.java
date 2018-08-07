@@ -26,7 +26,6 @@ import org.arpnetwork.arpdevice.util.DeviceUtil;
 
 public class DeviceInfo {
     public String ver;
-    public String id;
     public int port;
     public String brand;
     public String model;
@@ -43,11 +42,11 @@ public class DeviceInfo {
     @SerializedName("system_ver")
     public String systemVer;
 
-    @SerializedName("conn_net_type")
-    public int connNetType;
+    @SerializedName("connectivity")
+    public int connectivity;
 
-    @SerializedName("tel_net_type")
-    public int telNetType;
+    @SerializedName("telephony")
+    public int telephony;
 
     private static DeviceInfo sInstance;
 
@@ -55,7 +54,6 @@ public class DeviceInfo {
         if (sInstance == null) {
             DeviceInfo info = new DeviceInfo();
             info.ver = Config.PROTOCOL_VERSION;
-            info.id = DeviceUtil.getUUID();
             info.port = DataServer.PORT;
             info.brand = DeviceUtil.getBrand();
             info.model = DeviceUtil.getModel();
@@ -67,8 +65,8 @@ public class DeviceInfo {
             info.resolution = DeviceUtil.getResolutionStr(context);
             info.osVer = DeviceUtil.getAndroidVersion();
             info.systemVer = DeviceUtil.getSysUIVersion();
-            info.connNetType = -1;
-            info.telNetType = 0;
+            info.connectivity = -1;
+            info.telephony = 0;
             sInstance = info;
         }
     }

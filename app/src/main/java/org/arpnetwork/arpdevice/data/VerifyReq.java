@@ -16,10 +16,10 @@
 
 package org.arpnetwork.arpdevice.data;
 
-public class UploadSpeedReq extends Req<Speed> {
+public class VerifyReq extends Req<VerifyData> {
 
-    public UploadSpeedReq(int speed) {
-        this.id = 7;
-        this.data = new Speed(speed);
+    public VerifyReq(VerifyData data) {
+        this.id = 1;
+        this.data = data;
     }
 }

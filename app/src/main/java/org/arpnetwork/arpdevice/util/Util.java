@@ -80,12 +80,27 @@ public class Util {
         }
     }
 
+    public static String md5(byte[] data) {
+        String md5 = null;
+        if (data != null) {
+            try {
+                MessageDigest digest = MessageDigest.getInstance("MD5");
+                digest.update(data, 0, data.length);
+
+                BigInteger bigInt = new BigInteger(1, digest.digest());
+                md5 = bigInt.toString(16);
+            } catch (NoSuchAlgorithmException ignored) {
+            }
+        }
+        return md5;
+    }
+
     public static String md5(File file) {
         String md5 = null;
         MessageDigest digest = null;
         if (file != null && file.isFile()) {
             FileInputStream in = null;
-            byte buffer[] = new byte[1024];
+            byte buffer[] = new byte[1024 * 1024];
             int len = 0;
             try {
                 digest = MessageDigest.getInstance("MD5");
@@ -108,9 +123,7 @@ public class Util {
                 } catch (IOException ignored) {
                 }
             }
-
         }
-
         return md5;
     }
 
@@ -130,13 +143,13 @@ public class Util {
         return sb.toString();
     }
 
-    public static BigDecimal getEthCost(BigDecimal gasPriceGwei,BigInteger gasUsed) {
+    public static BigDecimal getEthCost(BigDecimal gasPriceGwei, BigInteger gasUsed) {
         BigDecimal gasUsedDecimal = new BigDecimal(gasUsed);
         BigDecimal bUsed = gasPriceGwei.multiply(gasUsedDecimal);
         return Convert.fromWei(bUsed.toString(), Convert.Unit.GWEI);
     }
 
-    public static double getYuanCost(BigDecimal gasPriceGwei,BigInteger gasUsed, BigDecimal ethToYuanRate) {
+    public static double getYuanCost(BigDecimal gasPriceGwei, BigInteger gasUsed, BigDecimal ethToYuanRate) {
         BigDecimal getEthCost = getEthCost(gasPriceGwei, gasUsed);
         BigDecimal result = getEthCost.multiply(ethToYuanRate)
                 .setScale(2, BigDecimal.ROUND_HALF_UP);

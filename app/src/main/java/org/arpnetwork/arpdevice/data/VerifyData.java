@@ -16,9 +16,20 @@
 
 package org.arpnetwork.arpdevice.data;
 
-public class NotifyReq extends Req<Void> {
+public class VerifyData {
+    private String salt;
+    private String sign;
 
-    public NotifyReq(int id) {
-        this.id = id;
+    public VerifyData(String salt, String sign) {
+        this.salt = salt;
+        this.sign = sign;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public String getSign() {
+        return sign;
     }
 }
