@@ -27,8 +27,6 @@ import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 public class TransactionAPI {
 
@@ -50,9 +48,9 @@ public class TransactionAPI {
         return hexValue;
     }
 
-    public static BigInteger getTransactionGasLimit(Transaction transaction) throws ExecutionException, InterruptedException {
-        Future<EthEstimateGas> gas = BalanceAPI.getWeb3J().ethEstimateGas(transaction).sendAsync();
-        return gas.get().getAmountUsed();
+    public static BigInteger getTransactionGasLimit(Transaction transaction) throws IOException {
+        EthEstimateGas gas = BalanceAPI.getWeb3J().ethEstimateGas(transaction).send();
+        return gas.getAmountUsed();
     }
 
     private static BigInteger getTransactionCount(String address) {

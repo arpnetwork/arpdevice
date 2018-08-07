@@ -64,8 +64,7 @@ public class ARPContract extends Contract {
         BigInteger value = new BigInteger(Convert.toWei("50000", Convert.Unit.ETHER).toString());
         String data = getApproveFunctionData(spenderAddress, value);
 
-        Transaction approveTransaction = new Transaction(ownerAddress, new BigInteger("0"),
-                new BigInteger("10000000"), new BigInteger("10000000"), CONTRACT_ADDRESS, new BigInteger("0"), data);
+        Transaction approveTransaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
 
         TransactionGasEstimateTask gasEstimateTask = new TransactionGasEstimateTask(approveTransaction, onValueResult);
         gasEstimateTask.execute();

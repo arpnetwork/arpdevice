@@ -21,8 +21,8 @@ import android.os.AsyncTask;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.web3j.protocol.core.methods.request.Transaction;
 
+import java.io.IOException;
 import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
 
 public class TransactionGasEstimateTask extends AsyncTask<String, String, BigInteger> {
     private Transaction mTransaction;
@@ -38,8 +38,7 @@ public class TransactionGasEstimateTask extends AsyncTask<String, String, BigInt
         BigInteger gas = new BigInteger("0");
         try {
             gas = TransactionAPI.getTransactionGasLimit(mTransaction);
-        } catch (ExecutionException ignore) {
-        } catch (InterruptedException ignore) {
+        } catch (IOException ignore) {
         }
 
         return gas;
