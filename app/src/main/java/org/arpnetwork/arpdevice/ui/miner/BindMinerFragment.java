@@ -271,7 +271,7 @@ public class BindMinerFragment extends BaseFragment {
         if (mInputPasswdDialog != null && mInputPasswdDialog.isShowing()) return;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setMessage(R.string.bind_passwd_tip);
+        builder.setMessage(R.string.input_passwd_tip);
         LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
         View view = layoutInflater.inflate(R.layout.layout_input_passwd, null);
         builder.setView(view);
@@ -294,11 +294,11 @@ public class BindMinerFragment extends BaseFragment {
             public void onClick(View v) {
                 String passwd = edPasswd.getText().toString().trim();
                 if (TextUtils.isEmpty(passwd)) {
-                    UIHelper.showToast(getActivity(), getString(R.string.bind_passwd_tip));
+                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
                 } else {
                     final Credentials credentials = WalletManager.getInstance().loadCredentials(passwd);
                     if (credentials == null) {
-                        UIHelper.showToast(getActivity(), getString(R.string.bind_passwd_error));
+                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                     } else {
                         mInputPasswdDialog.dismiss();
                         BindTask readTask = new BindTask(passwd);

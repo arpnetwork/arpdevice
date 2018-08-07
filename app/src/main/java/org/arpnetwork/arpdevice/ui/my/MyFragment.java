@@ -21,11 +21,10 @@ import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -33,6 +32,7 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
+import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
@@ -42,6 +42,8 @@ import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.arpnetwork.arpdevice.util.UIHelper;
+import org.web3j.crypto.Credentials;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -90,17 +92,11 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         mOrderPriceView = (TextView) findViewById(R.id.tv_order_price);
         mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
 
-        LinearLayout walletLayout = (LinearLayout) findViewById(R.id.layout_wallet);
-        LinearLayout minerLayout = (LinearLayout) findViewById(R.id.layout_miner);
-        LinearLayout priceLayout = (LinearLayout) findViewById(R.id.layout_order_price);
-        LinearLayout detailsLayout = (LinearLayout) findViewById(R.id.layout_order_details);
-        walletLayout.setOnClickListener(this);
-        minerLayout.setOnClickListener(this);
-        priceLayout.setOnClickListener(this);
-        detailsLayout.setOnClickListener(this);
-
-        Button btnOrder = (Button) findViewById(R.id.btn_order);
-        btnOrder.setOnClickListener(this);
+        findViewById(R.id.layout_wallet).setOnClickListener(this);
+        findViewById(R.id.layout_miner).setOnClickListener(this);
+        findViewById(R.id.layout_order_price).setOnClickListener(this);
+        findViewById(R.id.layout_order_details).setOnClickListener(this);
+        findViewById(R.id.btn_order).setOnClickListener(this);
 
         GLSurfaceView surfaceView = (GLSurfaceView) findViewById(R.id.gl_surface);
         surfaceView.setEGLContextClientVersion(1);
@@ -113,9 +109,9 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 DeviceInfo info = DeviceInfo.get();
                 info.gpu = glRenderer;
                 int type = NetworkHelper.getInstance().getNetworkType();
-                info.connNetType = type;
+                info.connectivity = type;
                 if (type == ConnectivityManager.TYPE_MOBILE) {
-                    info.telNetType = NetworkHelper.getTelephonyNetworkType(getActivity().getApplicationContext());
+                    info.telephony = NetworkHelper.getTelephonyNetworkType(getActivity().getApplicationContext());
                 }
             }
 
@@ -176,6 +172,39 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 .show();
     }
 
+    private void showPasswordDialog() {
+        final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
+        builder.setOnClickListener(new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                final String password = builder.getPassword();
+                if (TextUtils.isEmpty(password)) {
+                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
+                } else {
+                    showProgressBar("", false);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            final Credentials credentials = WalletManager.getInstance().loadCredentials(password);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgressBar();
+                                    if (credentials == null) {
+                                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                    } else {
+                                        startActivity(ReceiveOrderActivity.class);
+                                    }
+                                }
+                            });
+                        }
+                    }).start();
+                }
+            }
+        });
+        builder.create().show();
+    }
+
     private boolean isBindingMiner() {
         return BindMinerHelper.getBinded(WalletManager.getInstance().getWallet().getPublicKey()) != null;
     }
@@ -201,7 +230,11 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
 
             case R.id.btn_order:
                 if (isBindingMiner()) {
-                    startActivity(ReceiveOrderActivity.class);
+                    if (WalletManager.getInstance().getCredentials() == null) {
+                        showPasswordDialog();
+                    } else {
+                        startActivity(ReceiveOrderActivity.class);
+                    }
                 } else {
                     showNoBindingDialog();
                 }

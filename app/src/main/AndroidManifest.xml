@@ -46,5 +46,4 @@
             android:name=".ui.order.receive.ReceiveOrderActivity"
             android:screenOrientation="portrait" />
     </application>
-
 </manifest>

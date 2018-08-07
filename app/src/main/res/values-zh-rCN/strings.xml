@@ -4,6 +4,10 @@
     <string name="ok">确定</string>
     <string name="cancel">取消</string>
 
+    <!-- 对话框 -->
+    <string name="input_passwd_tip">请输入钱包密码</string>
+    <string name="input_passwd_error">钱包密码输入错误，请重新输入</string>
+
     <string name="check_init">设备初始化</string>
     <string name="check_btn">设置</string>
     <string name="check_fail_os">您的设备系统版本过低，无法成为ARP资源提供者</string>
@@ -63,8 +67,6 @@
     <string name="miner_load">，负载</string>
     <string name="miner_bandwidth">，带宽</string>
     <string name="load_gas_failed">加载gas价格失败，请重试</string>
-    <string name="bind_passwd_tip">请输入钱包密码</string>
-    <string name="bind_passwd_error">钱包密码输入错误，请重新输入</string>
     <string name="bind_handle">绑定矿工正在处理中，请稍后</string>
 
     <!-- 订单明细 -->
