@@ -2,6 +2,8 @@ package org.arpnetwork.arpdevice.contracts;
 
 import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.contracts.tasks.ARPAllowanceTask;
+import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -14,11 +16,12 @@ import org.web3j.protocol.Web3j;
 import org.web3j.tx.Contract;
 import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
 public class ARPContract extends Contract {
-    public static final String CONTRACT_ADDRESS = "0x8d39dd6b431bfb065b51fea07b7ee75bef0b53f8";
+    public static final String CONTRACT_ADDRESS = "0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922";
 
     private ARPContract(Web3j web3j, Credentials credentials,
             BigInteger gasPrice, BigInteger gasLimit) {
@@ -43,5 +46,10 @@ public class ARPContract extends Contract {
         String hexData = VerifyAPI.getRawTransaction(gasPrice, gasLimit, ARPContract.CONTRACT_ADDRESS,
                 contract.getApproveFunctionData(address, new BigInteger(Convert.toWei("1000", Convert.Unit.ETHER).toString())), credentials);
         return hexData;
+    }
+
+    public static void allowanceARP(String owner, String spender, OnValueResult<BigDecimal> onResult) {
+        ARPAllowanceTask arpAllowanceTask = new ARPAllowanceTask(onResult);
+        arpAllowanceTask.execute(owner, spender);
     }
 }
