@@ -65,6 +65,8 @@ public class ARPRegistry extends Contract {
 
     public static final String FUNC_UNREGISTER = "unregister";
 
+    public static final String FUNC_UPDATE = "update";
+
     public static final String FUNC_BINDDEVICE = "bindDevice";
 
     public static final String FUNC_UNBINDDEVICE = "unbindDevice";
@@ -81,6 +83,11 @@ public class ARPRegistry extends Contract {
     ;
 
     public static final Event UNREGISTERED_EVENT = new Event("Unregistered",
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
+    ;
+
+    public static final Event UPDATED_EVENT = new Event("Updated",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
@@ -266,6 +273,37 @@ public class ARPRegistry extends Contract {
         return unregisteredEventObservable(filter);
     }
 
+    public List<UpdatedEventResponse> getUpdatedEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(UPDATED_EVENT, transactionReceipt);
+        ArrayList<UpdatedEventResponse> responses = new ArrayList<UpdatedEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            UpdatedEventResponse typedResponse = new UpdatedEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public Observable<UpdatedEventResponse> updatedEventObservable(EthFilter filter) {
+        return web3j.ethLogObservable(filter).map(new Func1<Log, UpdatedEventResponse>() {
+            @Override
+            public UpdatedEventResponse call(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(UPDATED_EVENT, log);
+                UpdatedEventResponse typedResponse = new UpdatedEventResponse();
+                typedResponse.log = log;
+                typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
+                return typedResponse;
+            }
+        });
+    }
+
+    public Observable<UpdatedEventResponse> updatedEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(UPDATED_EVENT));
+        return updatedEventObservable(filter);
+    }
+
     public List<DeviceBoundEventResponse> getDeviceBoundEvents(TransactionReceipt transactionReceipt) {
         List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(DEVICEBOUND_EVENT, transactionReceipt);
         ArrayList<DeviceBoundEventResponse> responses = new ArrayList<DeviceBoundEventResponse>(valueList.size());
@@ -384,6 +422,17 @@ public class ARPRegistry extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
+    public RemoteCall<TransactionReceipt> update(BigInteger _ip, BigInteger _port, BigInteger _capacity, BigInteger _amount) {
+        final Function function = new Function(
+                FUNC_UPDATE, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint32(_ip), 
+                new org.web3j.abi.datatypes.generated.Uint16(_port), 
+                new org.web3j.abi.datatypes.generated.Uint256(_capacity), 
+                new org.web3j.abi.datatypes.generated.Uint256(_amount)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
     public RemoteCall<TransactionReceipt> bindDevice(String _server) {
         final Function function = new Function(
                 FUNC_BINDDEVICE, 
@@ -451,6 +500,12 @@ public class ARPRegistry extends Contract {
     }
 
     public static class UnregisteredEventResponse {
+        public Log log;
+
+        public String server;
+    }
+
+    public static class UpdatedEventResponse {
         public Log log;
 
         public String server;

@@ -44,7 +44,7 @@ public class ARPContract extends Contract {
             BigInteger gasPrice, BigInteger gasLimit) {
         ARPContract contract = ARPContract.load(BalanceAPI.getWeb3J(), credentials, gasPrice, gasLimit);
         String hexData = VerifyAPI.getRawTransaction(gasPrice, gasLimit, ARPContract.CONTRACT_ADDRESS,
-                contract.getApproveFunctionData(address, new BigInteger(Convert.toWei("1000", Convert.Unit.ETHER).toString())), credentials);
+                contract.getApproveFunctionData(address, new BigInteger(Convert.toWei("500", Convert.Unit.ETHER).toString())), credentials);
         return hexData;
     }
 

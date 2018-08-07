@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class BindMinerHelper {
-    public static final String CONTRACT_ADDRESS = "0xe1c62093f55e8d7a86198dd8186e6de414b3fae4";
+    public static final String CONTRACT_ADDRESS = "0x1da6a02e57159f8c2ff8565514c02eaf85f162ba";
 
     public static List<Miner> getMinerList() {
         List<Miner> list = new ArrayList<Miner>();
@@ -98,20 +98,24 @@ public class BindMinerHelper {
                 (BigInteger) someTypes.get(6).getValue());
     }
 
-    public static boolean isBinded(String address) {
-        boolean binded = false;
+    public static Miner getBinded(String address) {
+        Miner miner = null;
         try {
             Tuple3<String, BigInteger, BigInteger> binder = devices(address);
-            if (!TextUtils.isEmpty(binder.getValue1())) {
-                binded = true;
+            if (!TextUtils.isEmpty(binder.getValue1()) && !binder.getValue1().
+                    equals("0x0000000000000000000000000000000000000000")) {
+                miner = new Miner();
+                miner.address = binder.getValue1();
+                miner.amount = binder.getValue2();
+                miner.expired = binder.getValue3();
             }
         } catch (ExecutionException e) {
         } catch (InterruptedException e) {
         }
-        return binded;
+        return miner;
     }
 
-    // check my address has bind miner.
+    // Check my address has bind miner.
     public static Tuple3<String, BigInteger, BigInteger> devices(String address) throws ExecutionException, InterruptedException {
         final Function function = new Function(ARPRegistry.FUNC_DEVICES,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(address)),

@@ -177,7 +177,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private boolean isBindingMiner() {
-        return BindMinerHelper.isBinded(WalletManager.getInstance().getWallet().getPublicKey());
+        return BindMinerHelper.getBinded(WalletManager.getInstance().getWallet().getPublicKey()) != null;
     }
 
     @Override
