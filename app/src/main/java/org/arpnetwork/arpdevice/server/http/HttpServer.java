@@ -26,7 +26,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 public class HttpServer {
     private int mPort;
     private Dispatcher mDispatcher;
-    private ChannelFuture mChannelFuture;
 
     public HttpServer(int port, Dispatcher dispatcher) {
         if (dispatcher == null) {
@@ -47,17 +46,11 @@ public class HttpServer {
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            mChannelFuture = b.bind(mPort).sync();
+            ChannelFuture f = b.bind(mPort).sync();
+            f.channel().closeFuture().sync();
         } finally {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
-        }
-    }
-
-    public void stop() {
-        try {
-            mChannelFuture.channel().closeFuture().sync();
-        } catch (Exception e) {
         }
     }
 }

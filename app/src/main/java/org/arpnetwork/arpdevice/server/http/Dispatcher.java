@@ -16,8 +16,6 @@
 
 package org.arpnetwork.arpdevice.server.http;
 
-import io.netty.handler.codec.http.HttpMethod;
-
 public abstract class Dispatcher {
     private static final String TAG = Dispatcher.class.getSimpleName();
 
@@ -29,16 +27,8 @@ public abstract class Dispatcher {
         response.setContent(request.getContent());
         response.setContentType("text/json;charset=utf-8");
 
-        if (request.getMethod() == HttpMethod.GET) {
-            onGet(request, response);
-        }
-
-        if (request.getMethod() == HttpMethod.POST) {
-            onPost(request, response);
-        }
+        doRequest(request, response);
     }
 
-    protected abstract void onGet(Request request, Response response);
-
-    protected abstract void onPost(Request request, Response response);
+    protected abstract void doRequest(Request request, Response response);
 }

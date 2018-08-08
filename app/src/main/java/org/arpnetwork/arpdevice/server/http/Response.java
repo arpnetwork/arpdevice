@@ -16,7 +16,7 @@
 
 package org.arpnetwork.arpdevice.server.http;
 
-class Response {
+public class Response {
     private int status;
     private String content;
     private String contentType;

@@ -18,7 +18,7 @@ package org.arpnetwork.arpdevice.server.http;
 
 import io.netty.handler.codec.http.HttpMethod;
 
-class Request {
+public class Request {
     private String uri;
     private String content;
     private HttpMethod method;

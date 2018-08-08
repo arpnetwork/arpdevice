@@ -138,7 +138,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onConnected(NettyConnection conn) {
-        Log.d(TAG, "onConnected");
         mReceiveDisconnect = false;
         if (mDeviceManager == null || !mDeviceManager.isRegistered()) {
             stop();
@@ -206,7 +205,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void processProtocolPacket(String protocolJson) {
-        Log.d(TAG, "processProtocolPacket. json = " + protocolJson);
         Req req = mGson.fromJson(protocolJson, Req.class);
         switch (req.id) {
             case ProtocolPacket.CONNECT_REQ:

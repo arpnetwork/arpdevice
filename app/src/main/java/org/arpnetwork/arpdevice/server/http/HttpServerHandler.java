@@ -16,6 +16,13 @@
 
 package org.arpnetwork.arpdevice.server.http;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -28,6 +35,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
+import io.netty.handler.codec.http.QueryStringDecoder;
 
 class HttpServerHandler extends ChannelInboundHandlerAdapter {
     private static final String TAG = HttpServerHandler.class.getSimpleName();
@@ -47,16 +55,6 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        super.channelActive(ctx);
-    }
-
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        super.channelInactive(ctx);
-    }
-
-    @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         if (msg instanceof HttpRequest) {
             HttpRequest httpRequest = (HttpRequest) msg;
@@ -65,16 +63,23 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (msg instanceof HttpContent) {
-            HttpContent httpContent = (HttpContent) msg;
-            ByteBuf content = httpContent.content();
-            byte[] data = new byte[content.readableBytes()];
-            content.readBytes(data);
-            content.release();
-
             Request request = new Request();
             request.setMethod(mMethod);
             request.setUri(mUri);
-            request.setContent(new String(data));
+
+            if (mMethod == HttpMethod.GET) {
+                request.setContent(getRequestParams(mUri));
+            }
+
+            if (mMethod == HttpMethod.POST) {
+                HttpContent httpContent = (HttpContent) msg;
+                ByteBuf content = httpContent.content();
+                byte[] data = new byte[content.readableBytes()];
+                content.readBytes(data);
+                content.release();
+
+                request.setContent(new String(data));
+            }
 
             Response response = new Response();
 
@@ -91,12 +96,24 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+    public void channelReadComplete(ChannelHandlerContext ctx) {
         ctx.flush();
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         ctx.close();
+    }
+
+    private String getRequestParams(String uri) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        QueryStringDecoder decoder = new QueryStringDecoder(uri);
+        Map<String, List<String>> params = decoder.parameters();
+        Iterator<Map.Entry<String, List<String>>> iterator = params.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, List<String>> entry = iterator.next();
+            jsonObject.put(entry.getKey(), entry.getValue().get(0));
+        }
+        return jsonObject.toString();
     }
 }
