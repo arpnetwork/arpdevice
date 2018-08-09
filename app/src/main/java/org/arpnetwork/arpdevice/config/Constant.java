@@ -26,4 +26,16 @@ public class Constant {
     public static final int CHECK_AUTH = 4;
     public static final int CHECK_ADB_SAFE = 5;
     public static final int CHECK_AUTH_SUCCESS = 6;
+
+    // Defines a custom Intent action
+    public static final String BROADCAST_ACTION = "org.arpnetwork.arpdevice.BROADCAST";
+    // Defines the key for the status "extra" in an Intent
+    public static final String EXTENDED_DATA_STATUS = "org.arpnetwork.arpdevice.STATUS";
+
+    public static final String KEY_OP = "op_type";
+    public static final String KEY_PASSWD = "passwd";
+    public static final String KEY_ADDRESS = "address";
+    public static final String KEY_GASPRICE = "gas_price";
+    public static final String KEY_GASLIMIT = "gas_limit";
+
 }

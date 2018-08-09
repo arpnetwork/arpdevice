@@ -60,14 +60,21 @@
     <string name="bind_miner">绑定矿工</string>
     <string name="bind_hint">绑定矿工，他会为您撮合订单</string>
     <string name="bind_success">绑定成功</string>
+    <string name="bind_running">正在绑定</string>
     <string name="bind_failed">绑定矿工失败，请重试</string>
     <string name="bind_message">绑定矿工需要账户余额至少500个ARP并支付以太坊油费</string>
     <string name="bind_eth_format">%s ether 约为%.2f元人民币</string>
-    <string name="bind">绑定</string>
+    <string name="bind_btn_bind">绑定</string>
+    <string name="bind_btn_quit">退出</string>
+    <string name="bind_btn_approve">预授权</string>
     <string name="miner_load">，负载</string>
     <string name="miner_bandwidth">，带宽</string>
     <string name="load_gas_failed">加载gas价格失败，请重试</string>
     <string name="bind_handle">绑定矿工正在处理中，请稍后</string>
+    <string name="bind_approve_message">需要预授权5000个ARP才能绑定矿工（预授权不扣ARP但需要支付以太坊油费）</string>
+    <string name="bind_approving">正在预授权，请耐心等待</string>
+    <string name="bind_approve_success">授权成功</string>
+    <string name="bind_approve_failed">授权失败，请重试</string>
 
     <!-- 订单明细 -->
     <string name="total_income">总收入：%.2fARP</string>

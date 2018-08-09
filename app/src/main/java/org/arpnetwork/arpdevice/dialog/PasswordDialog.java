@@ -66,7 +66,6 @@ public class PasswordDialog extends Dialog {
             mPasswordView = layout.findViewById(R.id.et_password);
             layout.findViewById(R.id.btn_ok).setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    dialog.dismiss();
                     if (mButtonListener != null) {
                         mButtonListener.onClick(dialog, 0);
                     }

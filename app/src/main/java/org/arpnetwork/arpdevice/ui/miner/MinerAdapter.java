@@ -28,19 +28,21 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 final class MinerAdapter extends BaseAdapter {
     private Context mContext;
     private List<Miner> mitems;
     private final LayoutInflater mInflater;
-    private int mCheckedIndex = -1;
+    private HashMap<String, Integer> mStateMap;
 
     public MinerAdapter(Context context) {
         mContext = context;
 
         mInflater = LayoutInflater.from(context);
         mitems = new ArrayList<Miner>();
+        mStateMap = new HashMap<String, Integer>();
     }
 
     @Override
@@ -82,13 +84,23 @@ final class MinerAdapter extends BaseAdapter {
 
         viewHolder.mainTitle.setText(item.name);
         viewHolder.subTitle.setText(info);
-        if (mCheckedIndex == position) {
+        if (mStateMap.containsKey(item.address)) {
             viewHolder.bindState.setVisibility(View.VISIBLE);
-            viewHolder.bindState.setText(mContext.getString(R.string.bind_success));
+            int state = mStateMap.get(item.address);
+            switch (state) {
+                case StateHolder.STATE_BIND_RUNNING:
+                    viewHolder.bindState.setText(mContext.getString(R.string.bind_running));
+                    break;
+                case StateHolder.STATE_BIND_SUCCESS:
+                    viewHolder.bindState.setText(mContext.getString(R.string.bind_success));
+                    break;
+                case StateHolder.STATE_BIND_FAILED:
+                    viewHolder.bindState.setText(mContext.getString(R.string.bind_failed));
+                    break;
+            }
         } else {
             viewHolder.bindState.setVisibility(View.GONE);
         }
-
         return convertView;
     }
 
@@ -100,18 +112,6 @@ final class MinerAdapter extends BaseAdapter {
         }
     }
 
-    public void checkItem(int index) {
-        if (index >= 0) {
-            mCheckedIndex = index;
-
-            notifyDataSetChanged();
-        }
-    }
-
-    public boolean isChecked(int index) {
-        return mCheckedIndex >= 0 && mCheckedIndex == index;
-    }
-
     public void updateLoad(int index, String load) {
         Miner miner = mitems.get(index);
         miner.load = load;
@@ -119,11 +119,20 @@ final class MinerAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void updateBindState(String address) {
-        for (int i = 0;i<mitems.size();i++) {
+    public boolean isBinded(int index) {
+        if (index < 0 || index >= mitems.size()) {
+            return false;
+        }
+        Miner miner = mitems.get(index);
+        return mStateMap.get(miner.address) != null
+                && mStateMap.get(miner.address) == StateHolder.STATE_BIND_SUCCESS;
+    }
+
+    public void updateBindState(String address, int state) {
+        for (int i = 0; i < mitems.size(); i++) {
             Miner miner = mitems.get(i);
             if (miner.address.equals(address)) {
-                mCheckedIndex = i;
+                mStateMap.put(address, state);
 
                 notifyDataSetChanged();
                 break;

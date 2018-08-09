@@ -60,14 +60,21 @@
     <string name="bind_miner">Bind miner</string>
     <string name="bind_hint">Bind miner,he will make a match</string>
     <string name="bind_success">Bind success</string>
+    <string name="bind_running">Bind is in process</string>
     <string name="bind_failed">Bind miner failed,please try again</string>
     <string name="bind_message">Bind miner need at least 500 ARPs to pay ethereum gas</string>
     <string name="bind_eth_format">%s ether about%.2f¥</string>
-    <string name="bind">Bind</string>
+    <string name="bind_btn_bind">Bind</string>
+    <string name="bind_btn_quit">Quit</string>
+    <string name="bind_btn_approve">Approve</string>
     <string name="miner_load">,load</string>
     <string name="miner_bandwidth">,bandwidth</string>
     <string name="load_gas_failed">Load gas failed,please try again.</string>
     <string name="bind_handle">Binding is in process,please wait</string>
+    <string name="bind_approve_message">Approve need 5000 ARPs to bind miner(Approve doesn\'t cost ARP but cost eth gas）</string>
+    <string name="bind_approving">Approve is in process,please wait</string>
+    <string name="bind_approve_success">Approve success</string>
+    <string name="bind_approve_failed">Approve failed,please try again.</string>
 
     <!-- order -->
     <string name="total_income">Total income: %.2fARP</string>

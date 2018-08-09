@@ -5,8 +5,8 @@ import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.ARPAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
-import org.arpnetwork.arpdevice.contracts.tasks.TransactionGasEstimateTask;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
@@ -26,6 +26,7 @@ import java.util.Arrays;
 
 public class ARPContract extends Contract {
     public static final String CONTRACT_ADDRESS = "0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922";
+    public static final String APPROVE_ARP_NUMBER = "5000";
 
     private ARPContract(Web3j web3j, Credentials credentials,
             BigInteger gasPrice, BigInteger gasLimit) {
@@ -58,15 +59,12 @@ public class ARPContract extends Contract {
         arpAllowanceTask.execute(owner, spender);
     }
 
-    public static void getApproveEstimateGas(OnValueResult<BigInteger> onValueResult) {
+    public static Transaction getApproveEstimateGasTrans() {
         String ownerAddress = Wallet.get().getPublicKey();
         String spenderAddress = BindMinerHelper.CONTRACT_ADDRESS;
         BigInteger value = new BigInteger(Convert.toWei("50000", Convert.Unit.ETHER).toString());
         String data = getApproveFunctionData(spenderAddress, value);
 
-        Transaction approveTransaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
-
-        TransactionGasEstimateTask gasEstimateTask = new TransactionGasEstimateTask(approveTransaction, onValueResult);
-        gasEstimateTask.execute();
+        return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
     }
 }

@@ -45,9 +45,11 @@ public class SeekBarDialog extends Dialog {
         private String mMessage;
         private int mProgress;
         private String mSeekValueText;
-        private CharSequence mButtonText;
         private SeekBar.OnSeekBarChangeListener mOnSeekBarChangeListener;
-        private OnClickListener mButtonListener;
+        private CharSequence mPositiveButtonText;
+        private OnClickListener mPositiveButtonListener;
+        private CharSequence mNegativeButtonText;
+        private OnClickListener mNegativeButtonListener;
 
         public Builder(Context context) {
             this.mContext = context;
@@ -77,9 +79,15 @@ public class SeekBarDialog extends Dialog {
             return this;
         }
 
-        public Builder setButton(CharSequence text, OnClickListener listener) {
-            mButtonText = text;
-            mButtonListener = listener;
+        public Builder setPositiveButton(CharSequence text, OnClickListener listener) {
+            mPositiveButtonText = text;
+            mPositiveButtonListener = listener;
+            return this;
+        }
+
+        public Builder setNegativeButton(CharSequence text, final OnClickListener listener) {
+            mNegativeButtonText = text;
+            mNegativeButtonListener = listener;
             return this;
         }
 
@@ -106,13 +114,27 @@ public class SeekBarDialog extends Dialog {
             seekBar.setProgress(mProgress);
             seekBar.setOnSeekBarChangeListener(mOnSeekBarChangeListener);
 
-            if (mButtonText != null) {
-                ((Button) layout.findViewById(R.id.btn_ok)).setText(mButtonText);
+            if (mNegativeButtonText != null) {
+                ((TextView) layout.findViewById(R.id.btn_cancel)).setText(mNegativeButtonText);
+                layout.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        if (mNegativeButtonListener != null) {
+                            mNegativeButtonListener.onClick(dialog, 0);
+                        }
+                    }
+                });
+            } else {
+                layout.findViewById(R.id.btn_cancel).setVisibility(View.GONE);
+            }
+
+            if (mPositiveButtonText != null) {
+                ((Button) layout.findViewById(R.id.btn_ok)).setText(mPositiveButtonText);
                 layout.findViewById(R.id.btn_ok).setOnClickListener(new View.OnClickListener() {
                     public void onClick(View v) {
                         dialog.dismiss();
-                        if (mButtonListener != null) {
-                            mButtonListener.onClick(dialog, 0);
+                        if (mPositiveButtonListener != null) {
+                            mPositiveButtonListener.onClick(dialog, 1);
                         }
                     }
                 });

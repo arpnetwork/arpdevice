@@ -35,7 +35,7 @@ public class TransactionGasEstimateTask extends AsyncTask<String, String, BigInt
 
     @Override
     protected BigInteger doInBackground(String... param) {
-        BigInteger gas = new BigInteger("0");
+        BigInteger gas = BigInteger.ZERO;
         try {
             gas = TransactionAPI.getTransactionGasLimit(mTransaction);
         } catch (IOException ignore) {

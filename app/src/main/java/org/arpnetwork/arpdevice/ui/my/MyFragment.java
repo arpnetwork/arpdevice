@@ -153,7 +153,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                     public void onStopTrackingTouch(SeekBar seekBar) {
                     }
                 })
-                .setButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
@@ -181,6 +181,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 if (TextUtils.isEmpty(password)) {
                     UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
                 } else {
+                    dialog.dismiss();
                     showProgressBar("", false);
                     new Thread(new Runnable() {
                         @Override
