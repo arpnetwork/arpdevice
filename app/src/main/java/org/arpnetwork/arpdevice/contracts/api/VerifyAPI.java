@@ -16,7 +16,7 @@
 
 package org.arpnetwork.arpdevice.contracts.api;
 
-import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
@@ -55,7 +55,7 @@ public class VerifyAPI {
      * @return
      */
     public static String sign(String signatureContent, String password) {
-        Credentials credentials = WalletManager.getInstance().loadCredentials(password);
+        Credentials credentials = Wallet.get().loadCredentials(password);
         return sign(signatureContent, credentials);
     }
 

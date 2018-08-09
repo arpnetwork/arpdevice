@@ -39,11 +39,11 @@ import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.order.details.OrderDetailsActivity;
 import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
-import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.UIHelper;
-import org.web3j.crypto.Credentials;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -87,7 +87,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
 
     private void initViews() {
         TextView walletName = (TextView) findViewById(R.id.tv_wallet_name);
-        walletName.setText(WalletManager.getInstance().getWallet().getName());
+        walletName.setText(Wallet.get().getName());
 
         mOrderPriceView = (TextView) findViewById(R.id.tv_order_price);
         mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
@@ -185,12 +185,12 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            final Credentials credentials = WalletManager.getInstance().loadCredentials(password);
+                            SignUtil.generateSigner(password);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     hideProgressBar();
-                                    if (credentials == null) {
+                                    if (!SignUtil.signerExists()) {
                                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                     } else {
                                         startActivity(ReceiveOrderActivity.class);
@@ -206,7 +206,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private boolean isBindingMiner() {
-        return BindMinerHelper.getBinded(WalletManager.getInstance().getWallet().getPublicKey()) != null;
+        return BindMinerHelper.getBinded(Wallet.get().getPublicKey()) != null;
     }
 
     @Override
@@ -230,7 +230,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
 
             case R.id.btn_order:
                 if (isBindingMiner()) {
-                    if (WalletManager.getInstance().getCredentials() == null) {
+                    if (!SignUtil.signerExists()) {
                         showPasswordDialog();
                     } else {
                         startActivity(ReceiveOrderActivity.class);

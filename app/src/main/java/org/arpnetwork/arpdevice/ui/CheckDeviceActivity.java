@@ -34,8 +34,8 @@ import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.my.MyActivity;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
-import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 public class CheckDeviceActivity extends BaseActivity implements Handler.Callback {
@@ -122,7 +122,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
         Touch.getInstance().connect();
 
         Intent intent = new Intent();
-        if (!WalletManager.getInstance().walletExist()) {
+        if (!Wallet.exists()) {
             intent.setClass(this, WalletImporterActivity.class);
         } else {
             intent.setClass(this, MyActivity.class);

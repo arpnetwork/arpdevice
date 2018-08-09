@@ -32,7 +32,6 @@ import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
-import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
 
 import java.math.BigDecimal;
 
@@ -58,7 +57,7 @@ public class MyWalletFragment extends BaseFragment {
 
     private void initViews() {
         TextView nameText = (TextView) findViewById(R.id.tv_name);
-        Wallet myWallet = WalletManager.getInstance().getWallet();
+        Wallet myWallet = Wallet.get();
         nameText.setText(myWallet.getName());
 
         final TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);

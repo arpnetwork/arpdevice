@@ -47,7 +47,7 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.GasInfo;
 import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
@@ -133,7 +133,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private void loadBindState() {
         try {
-            String address = WalletManager.getInstance().getWallet().getPublicKey();
+            String address = Wallet.get().getPublicKey();
             Tuple3<String, BigInteger, BigInteger> binder = BindMinerHelper.devices(address);
             if (!TextUtils.isEmpty(binder.getValue1())) {
                 mAdapter.updateBindState(binder.getValue1());
@@ -188,7 +188,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private void checkBalance(final double ethCost) {
         // check balance before binding miner
-        final String address = WalletManager.getInstance().getWallet().getPublicKey();
+        final String address = Wallet.get().getPublicKey();
         BalanceAPI.getEtherBalance(address, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
@@ -296,7 +296,7 @@ public class BindMinerFragment extends BaseFragment {
                 if (TextUtils.isEmpty(passwd)) {
                     UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
                 } else {
-                    final Credentials credentials = WalletManager.getInstance().loadCredentials(passwd);
+                    final Credentials credentials = Wallet.loadCredentials(passwd);
                     if (credentials == null) {
                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                     } else {
@@ -343,7 +343,7 @@ public class BindMinerFragment extends BaseFragment {
         private ProgressDialog progressDialog;
 
         public BindTask(String password) {
-            credentials = WalletManager.getInstance().loadCredentials(password);
+            credentials = Wallet.loadCredentials(password);
             progressDialog = new ProgressDialog(getActivity());
         }
 

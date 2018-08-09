@@ -34,7 +34,8 @@ import org.arpnetwork.arpdevice.data.VerifyData;
 import org.arpnetwork.arpdevice.data.VerifyReq;
 import org.arpnetwork.arpdevice.data.VerifyResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.wallet.WalletManager;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
 
@@ -159,7 +160,7 @@ public class DeviceManager implements DeviceConnection.Listener {
                         String sign = res.data.getSign();
                         try {
                             String addr = VerifyAPI.getSignatureAddress(mVerifyData.getSalt(), sign);
-                            Miner miner = BindMinerHelper.getBinded(WalletManager.getInstance().getWallet().getPublicKey());
+                            Miner miner = BindMinerHelper.getBinded(Wallet.get().getPublicKey());
                             if (miner != null && Numeric.cleanHexPrefix(miner.address).equalsIgnoreCase(addr)) {
                                 register();
                                 return;
@@ -229,7 +230,7 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     private void verify() {
         String salt = Util.getRandomString(32);
-        String sign = VerifyAPI.sign(salt, WalletManager.getInstance().getCredentials());
+        String sign = SignUtil.sign(salt);
         mVerifyData = new VerifyData(salt, sign);
         send(new VerifyReq(mVerifyData));
     }

@@ -16,7 +16,6 @@
 
 package org.arpnetwork.arpdevice.ui.wallet;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -100,7 +99,7 @@ public class WalletImporterFragment extends BaseFragment {
 
         if (checkInputs(privateKey, walletName, password, confirmedPassword)) {
             showProgressBar(getString(R.string.importing), false);
-            WalletManager.getInstance().importWallet(getContext(), new Wallet(walletName, privateKey), password, new WalletManager.Callback() {
+            Wallet.importWallet(getContext(), walletName, privateKey, password, new Wallet.Callback() {
                 @Override
                 public void onCompleted(final boolean success) {
                     getActivity().runOnUiThread(new Runnable() {
@@ -110,19 +109,14 @@ public class WalletImporterFragment extends BaseFragment {
                             int resId = success ? R.string.import_success : R.string.import_failed;
                             UIHelper.showToast(getContext(), resId);
                             if (success) {
-                                intentToMyInfo();
+                                startActivity(MyActivity.class);
+                                finish();
                             }
                         }
                     });
                 }
             });
         }
-    }
-
-    private void intentToMyInfo() {
-        Intent intent = new Intent(getActivity(), MyActivity.class);
-        startActivity(intent);
-        finish();
     }
 
     private View.OnClickListener mOnClickImportListener = new View.OnClickListener() {
