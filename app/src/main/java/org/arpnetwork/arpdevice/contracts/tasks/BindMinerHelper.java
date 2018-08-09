@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class BindMinerHelper {
-    public static final String CONTRACT_ADDRESS = "0x1da6a02e57159f8c2ff8565514c02eaf85f162ba";
+    public static final String CONTRACT_ADDRESS = "0xa3159b314777e6529bca4ca2000c6e6456496589";
 
     public static List<Miner> getMinerList() {
         List<Miner> list = new ArrayList<Miner>();
