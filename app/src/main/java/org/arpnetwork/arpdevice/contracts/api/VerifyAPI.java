@@ -71,7 +71,7 @@ public class VerifyAPI {
             return null;
         }
 
-        byte[] message = toSignatureByte(signatureContent);
+        byte[] message = signatureContent.getBytes();
         Sign.SignatureData signatureData = Sign.signMessage(
                 message, credentials.getEcKeyPair());
 
@@ -87,7 +87,7 @@ public class VerifyAPI {
      * @throws SignatureException
      */
     public static String getSignatureAddress(String signatureContent, String signatureData) throws SignatureException {
-        byte[] bytes = toSignatureByte(signatureContent);
+        byte[] bytes = signatureContent.getBytes();
         byte[] signatureDataBytes = Hex.decode(signatureData);
         BigInteger key = Sign.signedMessageToKey(bytes, getSignatureDataFromByte(signatureDataBytes));
 
@@ -105,16 +105,6 @@ public class VerifyAPI {
         byte v = buffer.get(64);
 
         return new Sign.SignatureData(v, r, s);
-    }
-
-    private static byte[] toSignatureByte(String signatureContent) {
-        String string = "Ethereum Signed Message:\n" + signatureContent.length() + signatureContent;
-        byte[] stringBytes = string.getBytes();
-        byte[] bytes = new byte[stringBytes.length + 1];
-        bytes[0] = 0x19;
-        System.arraycopy(stringBytes, 0, bytes, 1, stringBytes.length);
-
-        return bytes;
     }
 
     private static String toSignatureString(Sign.SignatureData signatureData) {
