@@ -16,7 +16,10 @@
 
 package org.arpnetwork.arpdevice.util;
 
+import android.content.Context;
+
 import org.arpnetwork.adb.SyncChannel;
+import org.arpnetwork.arpdevice.R;
 import org.web3j.utils.Convert;
 
 import java.io.File;
@@ -159,6 +162,27 @@ public class Util {
     public static long ipToLong(String strIp) {
         String[] ip = strIp.split("\\.");
         return (Long.parseLong(ip[0]) << 24) + (Long.parseLong(ip[1]) << 16) + (Long.parseLong(ip[2]) << 8) + Long.parseLong(ip[3]);
+    }
+
+    public static String getDurationString(Context context, long duration) {
+        final long second = 1000;
+        final long minute = 60 * second;
+        final long hour = 60 * minute;
+
+        String showTime = "";
+        if (duration >= minute) {
+            if (duration >= hour) {
+                int durationHour = (int) (duration / hour);
+                showTime = context.getResources().getQuantityString(R.plurals.duration_hour, durationHour, durationHour) + " ";
+            }
+            int durationMinute = (int) ((duration % hour) / minute);
+            showTime = showTime + context.getResources().getQuantityString(R.plurals.duration_minute, durationMinute, durationMinute) + " ";
+        } else {
+            int durationSecond = (int) (duration / second);
+            showTime = context.getResources().getQuantityString(R.plurals.duration_second, durationSecond, durationSecond);
+        }
+
+        return showTime;
     }
 
 }

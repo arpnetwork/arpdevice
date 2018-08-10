@@ -26,21 +26,21 @@ import android.widget.ListView;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 
-public class OrderDetailsFragment extends BaseFragment {
-    private OrderDetailsAdapter mAdapter;
-    private OrderDetailsHeader mHeaderView;
+public class MyEarningFragment extends BaseFragment {
+    private MyEarningAdapter mAdapter;
+    private MyEarningHeader mHeaderView;
     private boolean mLoading;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setTitle(R.string.order_details);
+        setTitle(R.string.my_earnings);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_order_details, container, false);
+        return inflater.inflate(R.layout.fragment_my_earning, container, false);
     }
 
     @Override
@@ -61,10 +61,10 @@ public class OrderDetailsFragment extends BaseFragment {
         footerView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.content_padding)));
         footerView.setBackgroundResource(R.color.window_background_light_gray);
 
-        mHeaderView = new OrderDetailsHeader(getContext());
+        mHeaderView = new MyEarningHeader(getContext());
         mHeaderView.setVisibility(View.GONE);
 
-        mAdapter = new OrderDetailsAdapter(getContext());
+        mAdapter = new MyEarningAdapter(getContext());
         ListView listView = (ListView) findViewById(R.id.listview);
         listView.setOnScrollListener(new AbsListView.OnScrollListener() {
             private boolean mToBottom;

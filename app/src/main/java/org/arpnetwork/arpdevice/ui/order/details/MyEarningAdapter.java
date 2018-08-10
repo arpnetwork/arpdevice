@@ -24,22 +24,22 @@ import android.widget.BaseAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderDetailsAdapter extends BaseAdapter {
+public class MyEarningAdapter extends BaseAdapter {
     private Context mContext;
-    private List<Order> mList;
+    private List<Earning> mList;
 
-    public OrderDetailsAdapter(Context context) {
+    public MyEarningAdapter(Context context) {
         mContext = context;
-        mList = new ArrayList<Order>();
+        mList = new ArrayList<Earning>();
     }
 
-    public void setData(List<Order> list) {
+    public void setData(List<Earning> list) {
         mList.clear();
         mList.addAll(list);
         notifyDataSetChanged();
     }
 
-    public void addData(List<Order> list) {
+    public void addData(List<Earning> list) {
         mList.addAll(list);
         notifyDataSetChanged();
     }
@@ -50,7 +50,7 @@ public class OrderDetailsAdapter extends BaseAdapter {
     }
 
     @Override
-    public Order getItem(int position) {
+    public Earning getItem(int position) {
         return mList.get(position);
     }
 
@@ -61,11 +61,11 @@ public class OrderDetailsAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        OrderDetailsItem item;
+        EarningDetailsItem item;
         if (convertView == null) {
-            item = new OrderDetailsItem(mContext);
+            item = new EarningDetailsItem(mContext);
         } else {
-            item = (OrderDetailsItem) convertView;
+            item = (EarningDetailsItem) convertView;
         }
         item.setData(getItem(position));
         item.setFirstOrLastItem(position == 0, position == getCount() - 1);

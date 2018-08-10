@@ -40,7 +40,7 @@
             android:name=".ui.miner.BindMinerActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.order.details.OrderDetailsActivity"
+            android:name=".ui.order.details.MyEarningActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.order.receive.ReceiveOrderActivity"

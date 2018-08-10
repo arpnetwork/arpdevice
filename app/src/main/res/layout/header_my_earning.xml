@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingBottom="20dp"
+    android:paddingBottom="15dp"
     android:paddingLeft="@dimen/content_padding"
     android:paddingRight="@dimen/content_padding"
     android:paddingTop="@dimen/content_padding">
@@ -11,7 +11,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/round_corner_bg"
+        android:background="@drawable/round_corner_bg_green"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="23dp">
@@ -24,23 +24,37 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_totol_income"
-                style="@style/MyItemLabel"
-                android:text="@string/total_income" />
+                android:id="@+id/tv_unexchanged"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:text="@string/exchange" />
 
             <TextView
-                android:id="@+id/tv_today_income"
+                android:id="@+id/tv_exchanged"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
-                android:text="@string/today_income"
-                android:textColor="@color/gray"
+                android:text="@string/unexchanged"
+                android:textColor="@android:color/white"
                 android:textSize="11sp" />
         </LinearLayout>
 
-        <ImageView
+        <Button
+            android:id="@+id/btn_exchange"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/logo" />
+            android:layout_height="40dp"
+            android:background="@drawable/btn_bg_white"
+            android:textAllCaps="false"
+            android:text="@string/exchange"
+            android:textColor="@color/colorPrimary"/>
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/exchanged_records"
+        android:layout_marginTop="30dp"
+        android:textColor="#838383"
+        android:textSize="11sp" />
 </LinearLayout>

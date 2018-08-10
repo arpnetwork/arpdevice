@@ -18,8 +18,8 @@ package org.arpnetwork.arpdevice.ui.order.details;
 
 import java.util.List;
 
-public class OrderData {
-    public float totalIncome;
-    public float todayIncome;
-    public List<Order> orderList;
+public class EarningData {
+    public float unexchanged;
+    public float exchanged;
+    public List<Earning> earningList;
 }

@@ -22,11 +22,11 @@
         android:paddingTop="@dimen/content_padding_top">
 
         <TextView
-            android:id="@+id/tv_order_date"
+            android:id="@+id/tv_earning_date"
             style="@style/MyItemLabel" />
 
         <TextView
-            android:id="@+id/tv_order_income"
+            android:id="@+id/tv_earning_income"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"

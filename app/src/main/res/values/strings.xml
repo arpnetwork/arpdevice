@@ -40,7 +40,7 @@
     <string name="my">My</string>
     <string name="my_wallet">My wallet</string>
     <string name="order_price">Order price</string>
-    <string name="order_details">Order details</string>
+    <string name="my_earnings">My Earnings</string>
     <string name="start_ordering">Start ordering</string>
     <string name="order_price_message">The lower the order price, the easier it is to receive the order. The default is the average price of the previous period.</string>
     <string name="order_price_format">%dARP/h</string>
@@ -76,12 +76,24 @@
     <string name="bind_approve_success">Approve success</string>
     <string name="bind_approve_failed">Approve failed,please try again.</string>
 
-    <!-- order -->
-    <string name="total_income">Total income: %.2fARP</string>
-    <string name="today_income">Today income: %.2fARP</string>
-    <string name="order_income_format">Income: %.2fARP, %s, %s</string>
-    <string name="packing">Packing</string>
-    <string name="arrived">Arrived</string>
+    <!-- my earning -->
+    <string name="exchange">Exchange</string>
+    <string name="exchanged">Exchanged:%.2f ARP</string>
+    <string name="unexchanged">Unexchanged:%.2f ARP</string>
+    <string name="exchanged_records">Exchanged records</string>
+    <string name="earning_detail_format">Earnings:%.2fARP, Order Amount:%d\nService Duration:%s</string>
+    <plurals name="duration_hour">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <plurals name="duration_minute">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="duration_second">
+        <item quantity="one">%d second</item>
+        <item quantity="other">%d seconds</item>
+    </plurals>
 
     <!-- receive order -->
     <string name="receive_order">Receive order</string>

@@ -40,7 +40,7 @@
     <string name="my">我的</string>
     <string name="my_wallet">我的钱包</string>
     <string name="order_price">设置接单价格</string>
-    <string name="order_details">订单明细</string>
+    <string name="my_earnings">我的收入</string>
     <string name="start_ordering">开始接单</string>
     <string name="order_price_message">接单价格越低越容易接到单，默认为之前一段时间的平均接单价</string>
     <string name="order_price_format">%dARP/小时</string>
@@ -76,12 +76,21 @@
     <string name="bind_approve_success">授权成功</string>
     <string name="bind_approve_failed">授权失败，请重试</string>
 
-    <!-- 订单明细 -->
-    <string name="total_income">总收入：%.2fARP</string>
-    <string name="today_income">今日收入：%.2fARP</string>
-    <string name="order_income_format">收入：%.2fARP，%s，%s</string>
-    <string name="packing">正在打包</string>
-    <string name="arrived">已到账</string>
+    <!-- 我的收入 -->
+    <string name="exchange">去兑换</string>
+    <string name="exchanged">已兑换：%.2f ARP</string>
+    <string name="unexchanged">未兑换：%.2f ARP</string>
+    <string name="exchanged_records">兑换记录</string>
+    <string name="earning_detail_format">收入：%.2fARP，接单数：%d\n服务时间：%s</string>
+    <plurals name="duration_hour">
+        <item quantity="other">%d 小时</item>
+    </plurals>
+    <plurals name="duration_minute">
+        <item quantity="other">%d 分钟</item>
+    </plurals>
+    <plurals name="duration_second">
+        <item quantity="other">%d 秒</item>
+    </plurals>
 
     <!-- 接单 -->
     <string name="receive_order">开始接单</string>

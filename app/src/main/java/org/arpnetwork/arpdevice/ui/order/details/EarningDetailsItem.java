@@ -25,43 +25,44 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.util.Util;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class OrderDetailsItem extends LinearLayout {
+public class EarningDetailsItem extends LinearLayout {
     private TextView mDateView;
     private TextView mIncomeView;
     private View mDivider;
     private LinearLayout mItemLayout;
 
-    public OrderDetailsItem(Context context) {
+    public EarningDetailsItem(Context context) {
         super(context);
 
         init();
     }
 
-    public OrderDetailsItem(Context context, AttributeSet attr) {
+    public EarningDetailsItem(Context context, AttributeSet attr) {
         super(context, attr);
 
         init();
     }
 
     private void init() {
-        LayoutInflater.from(getContext()).inflate(R.layout.item_order, this, true);
+        LayoutInflater.from(getContext()).inflate(R.layout.item_earning, this, true);
 
-        mDateView = findViewById(R.id.tv_order_date);
-        mIncomeView = findViewById(R.id.tv_order_income);
+        mDateView = findViewById(R.id.tv_earning_date);
+        mIncomeView = findViewById(R.id.tv_earning_income);
         mDivider = findViewById(R.id.divider);
         mItemLayout = findViewById(R.id.layout_item);
     }
 
-    public void setData(Order order) {
+    public void setData(Earning earning) {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
-        mDateView.setText(format.format(new Date(order.time)));
-        String state = order.state == Order.STATE_ARRIVED ? getResources().getString(R.string.arrived) : getResources().getString(R.string.packing);
-        mIncomeView.setText(String.format(getResources().getString(R.string.order_income_format), order.income, order.miner, state));
+        mDateView.setText(format.format(new Date(earning.time)));
+        String duration = Util.getDurationString(getContext(), earning.duration);
+        mIncomeView.setText(String.format(getResources().getString(R.string.earning_detail_format), earning.earning, earning.count, duration));
     }
 
     public void setFirstOrLastItem(boolean firstItem, boolean lastItem) {

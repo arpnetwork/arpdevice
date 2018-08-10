@@ -16,16 +16,9 @@
 
 package org.arpnetwork.arpdevice.ui.order.details;
 
-import android.os.Bundle;
-
-import org.arpnetwork.arpdevice.ui.base.BaseActivity;
-
-public class OrderDetailsActivity extends BaseActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        setContentFragment(OrderDetailsFragment.class);
-    }
+public class Earning {
+    public float earning;
+    public int count;
+    public long time;
+    public long duration;
 }

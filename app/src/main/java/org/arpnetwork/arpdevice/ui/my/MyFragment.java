@@ -38,7 +38,7 @@ import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
-import org.arpnetwork.arpdevice.ui.order.details.OrderDetailsActivity;
+import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
@@ -226,7 +226,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.layout_order_details:
-                startActivity(OrderDetailsActivity.class);
+                startActivity(MyEarningActivity.class);
                 break;
 
             case R.id.btn_order:

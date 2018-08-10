@@ -19,36 +19,43 @@ package org.arpnetwork.arpdevice.ui.order.details;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 
-public class OrderDetailsHeader extends LinearLayout {
-    private TextView mTotalIncome;
-    private TextView mTodayIncome;
+public class MyEarningHeader extends LinearLayout {
+    private TextView mUnexchanged;
+    private TextView mExchanged;
+    private Button mExchangeBtn;
 
-    public OrderDetailsHeader(Context context) {
+    public MyEarningHeader(Context context) {
         super(context);
 
         init();
     }
 
-    public OrderDetailsHeader(Context context, AttributeSet attr) {
+    public MyEarningHeader(Context context, AttributeSet attr) {
         super(context, attr);
 
         init();
     }
 
     private void init() {
-        LayoutInflater.from(getContext()).inflate(R.layout.header_order_details, this, true);
+        LayoutInflater.from(getContext()).inflate(R.layout.header_my_earning, this, true);
 
-        mTotalIncome = findViewById(R.id.tv_totol_income);
-        mTodayIncome = findViewById(R.id.tv_today_income);
+        mUnexchanged = findViewById(R.id.tv_unexchanged);
+        mExchanged = findViewById(R.id.tv_exchanged);
+        mExchangeBtn = findViewById(R.id.btn_exchange);
+        mExchangeBtn.setEnabled(false);
     }
 
-    public void setData(OrderData data) {
-        mTotalIncome.setText(String.format(getResources().getString(R.string.total_income), data.totalIncome));
-        mTodayIncome.setText(String.format(getResources().getString(R.string.today_income), data.todayIncome));
+    public void setData(EarningData data) {
+        mUnexchanged.setText(String.format(getResources().getString(R.string.unexchanged), data.unexchanged));
+        mExchanged.setText(String.format(getResources().getString(R.string.exchanged), data.exchanged));
+        if (data.unexchanged > 0) {
+            mExchangeBtn.setEnabled(true);
+        }
     }
 }

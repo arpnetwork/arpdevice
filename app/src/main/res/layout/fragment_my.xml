@@ -71,7 +71,7 @@
             <TextView
                 style="@style/MyItemLabel"
                 android:layout_weight="1"
-                android:text="@string/order_details" />
+                android:text="@string/my_earnings" />
 
             <ImageView style="@style/Arrow" />
         </LinearLayout>
