@@ -26,7 +26,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,7 +74,7 @@ public class BindMinerFragment extends BaseFragment {
 
     public static final int OPERATION_APPROVE = 1;
     public static final int OPERATION_BIND = 2;
-    public static final int OPERATION_UNBOUND = 3;
+    public static final int OPERATION_UNBIND = 3;
 
     private static final int LOCK_ARP = 500;
 
@@ -86,7 +85,7 @@ public class BindMinerFragment extends BaseFragment {
     private TextView mApproveTextView;
     private OKHttpUtils mOkHttpUtils;
 
-    private Miner mBindMiner;
+    private Miner mBoundMiner;
     private String mApprovedPasswd; // If passwd for approve first then bind does't need.
     private boolean mNeedApprove;
 
@@ -163,9 +162,9 @@ public class BindMinerFragment extends BaseFragment {
                 if (StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING) != null) {
                     return;
                 }
-                if (!mAdapter.isBinded(position)) {
+                if (!mAdapter.isBound(position)) {
                     mClickPosition = position;
-                    if (mBindMiner != null || StateHolder.getTaskByState(StateHolder.STATE_BIND_SUCCESS) != null) {
+                    if (mBoundMiner != null || StateHolder.getTaskByState(StateHolder.STATE_BIND_SUCCESS) != null) {
                         // TODO: change bind unbound.
                         // unbound success  then loadGasInfo();
                     } else {
@@ -193,9 +192,9 @@ public class BindMinerFragment extends BaseFragment {
 
     private void loadBindState() {
         String address = Wallet.get().getPublicKey();
-        Miner miner = BindMinerHelper.getBinded(address);
+        Miner miner = BindMinerHelper.getBound(address);
         if (miner != null) {
-            mBindMiner = miner;
+            mBoundMiner = miner;
             loadData();
         } else {
             loadAllowance();
@@ -228,8 +227,8 @@ public class BindMinerFragment extends BaseFragment {
             loadMinerLoadInfo(i, url);
         }
         mAdapter.setData(miners);
-        if (mBindMiner != null) {
-            mAdapter.updateBindState(mBindMiner.address, StateHolder.STATE_BIND_SUCCESS);
+        if (mBoundMiner != null) {
+            mAdapter.updateBindState(mBoundMiner.address, StateHolder.STATE_BIND_SUCCESS);
         }
     }
 

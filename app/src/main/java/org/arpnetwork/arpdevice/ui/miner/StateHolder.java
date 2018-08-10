@@ -27,9 +27,9 @@ public class StateHolder {
     public static final int STATE_BIND_SUCCESS = 5;
     public static final int STATE_BIND_FAILED = 6;
 
-    public static final int STATE_UNBOUND_RUNNING = 7;
-    public static final int STATE_UNBOUND_SUCCESS = 8;
-    public static final int STATE_UNBOUND_FAILED = 9;
+    public static final int STATE_UNBIND_RUNNING = 7;
+    public static final int STATE_UNBIND_SUCCESS = 8;
+    public static final int STATE_UNBIND_FAILED = 9;
 
     private static ConcurrentHashMap<TaskInfo, Integer> sTaskStateMap = new ConcurrentHashMap<>(1);
 

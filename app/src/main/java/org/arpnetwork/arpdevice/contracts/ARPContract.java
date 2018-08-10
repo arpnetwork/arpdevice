@@ -1,6 +1,5 @@
 package org.arpnetwork.arpdevice.contracts;
 
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.ARPAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
@@ -48,9 +47,8 @@ public class ARPContract extends Contract {
 
     public static String getTransactionHexData(String address, Credentials credentials,
             BigInteger gasPrice, BigInteger gasLimit) {
-        ARPContract contract = ARPContract.load(BalanceAPI.getWeb3J(), credentials, gasPrice, gasLimit);
         String hexData = TransactionAPI.getRawTransaction(gasPrice, gasLimit, CONTRACT_ADDRESS,
-                contract.getApproveFunctionData(address, new BigInteger(Convert.toWei("500", Convert.Unit.ETHER).toString())), credentials);
+                getApproveFunctionData(address, new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString())), credentials);
         return hexData;
     }
 
@@ -62,7 +60,7 @@ public class ARPContract extends Contract {
     public static Transaction getApproveEstimateGasTrans() {
         String ownerAddress = Wallet.get().getPublicKey();
         String spenderAddress = BindMinerHelper.CONTRACT_ADDRESS;
-        BigInteger value = new BigInteger(Convert.toWei("50000", Convert.Unit.ETHER).toString());
+        BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
         String data = getApproveFunctionData(spenderAddress, value);
 
         return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);

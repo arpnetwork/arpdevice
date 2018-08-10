@@ -98,7 +98,7 @@ public class BindMinerHelper {
                 (BigInteger) someTypes.get(6).getValue());
     }
 
-    public static Miner getBinded(String address) {
+    public static Miner getBound(String address) {
         Miner miner = null;
         try {
             Tuple3<String, BigInteger, BigInteger> binder = devices(address);

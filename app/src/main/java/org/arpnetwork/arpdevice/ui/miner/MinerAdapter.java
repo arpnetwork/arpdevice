@@ -119,7 +119,7 @@ final class MinerAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public boolean isBinded(int index) {
+    public boolean isBound(int index) {
         if (index < 0 || index >= mitems.size()) {
             return false;
         }

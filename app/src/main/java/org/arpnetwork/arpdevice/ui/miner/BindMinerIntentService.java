@@ -40,16 +40,16 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_APPROVE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_BIND;
-import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_UNBOUND;
+import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_UNBIND;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_FAILED;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_SUCCESS;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_RUNNING;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BIND_FAILED;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BIND_RUNNING;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BIND_SUCCESS;
-import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_UNBOUND_FAILED;
-import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_UNBOUND_RUNNING;
-import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_UNBOUND_SUCCESS;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_UNBIND_FAILED;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_UNBIND_RUNNING;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_UNBIND_SUCCESS;
 
 public class BindMinerIntentService extends IntentService {
     private static final String TAG = "BindMinerIntentService";
@@ -66,14 +66,14 @@ public class BindMinerIntentService extends IntentService {
         String gasPrice = intent.getExtras().getString(KEY_GASPRICE);
         String gasLimit = intent.getExtras().getString(KEY_GASLIMIT);
 
-        if (type == OPERATION_UNBOUND) {
-            mBroadcaster.broadcastWithState(STATE_UNBOUND_RUNNING, type, null);
+        if (type == OPERATION_UNBIND) {
+            mBroadcaster.broadcastWithState(STATE_UNBIND_RUNNING, type, null);
             boolean result = unbindDevice(Wallet.loadCredentials(password),
                     new BigInteger(gasPrice), new BigInteger(gasLimit));
             if (result) {
-                mBroadcaster.broadcastWithState(STATE_UNBOUND_SUCCESS, type, null);
+                mBroadcaster.broadcastWithState(STATE_UNBIND_SUCCESS, type, null);
             } else {
-                mBroadcaster.broadcastWithState(STATE_UNBOUND_FAILED, type, null);
+                mBroadcaster.broadcastWithState(STATE_UNBIND_FAILED, type, null);
             }
         } else if (type == OPERATION_BIND) {
             String address = intent.getExtras().getString(KEY_ADDRESS);
@@ -105,7 +105,7 @@ public class BindMinerIntentService extends IntentService {
         try {
             gasLimit = TransactionAPI.getTransactionGasLimit(ARPContract.getApproveEstimateGasTrans());
         } catch (IOException e) {
-            gasLimit = new BigInteger("40000");
+            gasLimit = new BigInteger("400000");
         }
         String hexData = ARPContract.getTransactionHexData(BindMinerHelper.CONTRACT_ADDRESS,
                 credentials, gasPrice, gasLimit);

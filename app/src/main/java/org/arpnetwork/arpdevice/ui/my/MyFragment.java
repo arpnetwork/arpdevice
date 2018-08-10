@@ -206,8 +206,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         builder.create().show();
     }
 
-    private boolean isBindingMiner() {
-        return BindMinerHelper.getBinded(Wallet.get().getPublicKey()) != null;
+    private boolean isMinerBound() {
+        return BindMinerHelper.getBound(Wallet.get().getPublicKey()) != null;
     }
 
     @Override
@@ -230,7 +230,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_order:
-                if (isBindingMiner()) {
+                if (isMinerBound()) {
                     if (!SignUtil.signerExists()) {
                         showPasswordDialog();
                     } else {

@@ -160,7 +160,7 @@ public class DeviceManager implements DeviceConnection.Listener {
                         String sign = res.data.getSign();
                         try {
                             String addr = VerifyAPI.getSignatureAddress(mVerifyData.getSalt(), sign);
-                            Miner miner = BindMinerHelper.getBinded(Wallet.get().getPublicKey());
+                            Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
                             if (miner != null && Numeric.cleanHexPrefix(miner.address).equalsIgnoreCase(addr)) {
                                 register();
                                 return;
