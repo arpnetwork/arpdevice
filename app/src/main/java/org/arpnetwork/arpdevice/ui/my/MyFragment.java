@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
@@ -49,9 +50,6 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class MyFragment extends BaseFragment implements View.OnClickListener {
-    private static final String ORDER_PRICE = "order_price";
-    private static final int DEFAULT_ORDER_PRICE = 1;
-
     private TextView mOrderPriceView;
     private int mOrderPrice;
 
@@ -62,8 +60,9 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         setTitle(R.string.my);
         hideNavIcon();
 
-        int orderPrice = PreferenceManager.getInstance().getInt(ORDER_PRICE);
-        mOrderPrice = orderPrice >= 0 ? orderPrice : DEFAULT_ORDER_PRICE;
+        int orderPrice = PreferenceManager.getInstance().getInt(Constant.ORDER_PRICE);
+        mOrderPrice = orderPrice >= 0 ? orderPrice : Config.ORDER_PRICE_DEFAULT;
+        DeviceInfo.get().setPrice(mOrderPrice);
     }
 
     @Override
@@ -141,7 +140,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                         if (fromUser) {
                             int value = min + progress * (max - min) / 100;
                             builder.setSeekValue(progress, String.format(getString(R.string.order_price_format), value));
-                            mOrderPrice = value;
                         }
                     }
 
@@ -156,8 +154,10 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
+                        int value = min + builder.getProgress() * (max - min) / 100;
+                        mOrderPrice = value;
                         mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
-                        PreferenceManager.getInstance().putInt(ORDER_PRICE, mOrderPrice);
+                        DeviceInfo.get().setPrice(mOrderPrice);
                     }
                 })
                 .create()

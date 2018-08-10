@@ -38,4 +38,5 @@ public class Constant {
     public static final String KEY_GASPRICE = "gas_price";
     public static final String KEY_GASLIMIT = "gas_limit";
 
+    public static final String ORDER_PRICE = "order_price";
 }

@@ -21,8 +21,13 @@ import android.content.Context;
 import com.google.gson.annotations.SerializedName;
 
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
+import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.web3j.utils.Convert;
+
+import java.math.BigInteger;
 
 public class DeviceInfo {
     public String ver;
@@ -35,6 +40,7 @@ public class DeviceInfo {
     public long ram;
     public long storage;
     public String resolution;
+    public BigInteger price;
 
     @SerializedName("os_ver")
     public String osVer;
@@ -67,11 +73,17 @@ public class DeviceInfo {
             info.systemVer = DeviceUtil.getSysUIVersion();
             info.connectivity = -1;
             info.telephony = 0;
+            info.price = new BigInteger("0");
             sInstance = info;
         }
     }
 
     public static DeviceInfo get() {
         return sInstance;
+    }
+
+    public void setPrice(int price) {
+        this.price = Convert.toWei(String.valueOf(price), Convert.Unit.ETHER).toBigInteger();
+        PreferenceManager.getInstance().putInt(Constant.ORDER_PRICE, price);
     }
 }

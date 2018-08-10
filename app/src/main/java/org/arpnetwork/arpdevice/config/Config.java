@@ -23,4 +23,5 @@ public class Config {
 
     public static final int ORDER_PRICE_LOW = 0;
     public static final int ORDER_PRICE_HIGH = 100;
+    public static final int ORDER_PRICE_DEFAULT = 1;
 }

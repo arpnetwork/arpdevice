@@ -74,6 +74,10 @@ public class SeekBarDialog extends Dialog {
             return this;
         }
 
+        public int getProgress() {
+            return mProgress;
+        }
+
         public Builder setOnSeekBarChangeListener(SeekBar.OnSeekBarChangeListener listener) {
             mOnSeekBarChangeListener = listener;
             return this;
@@ -85,7 +89,7 @@ public class SeekBarDialog extends Dialog {
             return this;
         }
 
-        public Builder setNegativeButton(CharSequence text, final OnClickListener listener) {
+        public Builder setNegativeButton(CharSequence text, OnClickListener listener) {
             mNegativeButtonText = text;
             mNegativeButtonListener = listener;
             return this;
