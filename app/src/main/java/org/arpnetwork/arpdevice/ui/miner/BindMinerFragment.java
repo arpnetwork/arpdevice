@@ -86,7 +86,7 @@ public class BindMinerFragment extends BaseFragment {
     private OKHttpUtils mOkHttpUtils;
 
     private Miner mBoundMiner;
-    private String mApprovedPasswd; // If passwd for approve first then bind does't need.
+    private PasswordCaller mPassword; // If wrapper for approve first then bind does't need.
     private boolean mNeedApprove;
 
     private int mClickPosition;
@@ -407,9 +407,10 @@ public class BindMinerFragment extends BaseFragment {
                 .setPositiveButton(getString(R.string.bind_btn_bind), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        if (mApprovedPasswd != null) {
+                        if (mPassword != null) {
+                            String password = mPassword.get();
                             dialog.dismiss();
-                            startBindService(mApprovedPasswd, OPERATION_BIND);
+                            startBindService(password, OPERATION_BIND);
                         } else {
                             showInputPasswdDialog(OPERATION_BIND);
                         }
@@ -442,7 +443,9 @@ public class BindMinerFragment extends BaseFragment {
                     } else {
                         dialog.dismiss();
                         if (opType == OPERATION_APPROVE) {
-                            mApprovedPasswd = passwd;
+                            PasswordCallee callee = new PasswordCallee(passwd);
+                            mPassword = new PasswordCaller(callee.getCallbackReference());
+
                             startApproveService(passwd, OPERATION_APPROVE);
                         } else if (opType == OPERATION_BIND) {
                             startBindService(passwd, OPERATION_BIND);
@@ -499,18 +502,18 @@ public class BindMinerFragment extends BaseFragment {
 
                 case StateHolder.STATE_APPROVE_FAILED:
                     showApproveView(R.string.bind_approve_failed);
-                    mApprovedPasswd = null;
+                    mPassword = null;
                     break;
 
                 case StateHolder.STATE_BIND_RUNNING:
-                    mApprovedPasswd = null;
+                    mPassword = null;
 
                     TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
                     mAdapter.updateBindState(task.address, StateHolder.STATE_BIND_RUNNING);
                     break;
 
                 case StateHolder.STATE_BIND_SUCCESS:
-                    mApprovedPasswd = null;
+                    mPassword = null;
                     UIHelper.showToast(getActivity(), getString(R.string.bind_success));
 
                     TaskInfo taskSuccess = StateHolder.getTaskByState(StateHolder.STATE_BIND_SUCCESS);
@@ -529,4 +532,42 @@ public class BindMinerFragment extends BaseFragment {
             }
         }
     }
+
+    private interface PasswordWrapper {
+        String get();
+    }
+
+    private class PasswordCallee {
+        private String password;
+
+        private PasswordCallee(String passwd) {
+            this.password = passwd;
+        }
+
+        private String get() {
+            return password;
+        }
+
+        private PasswordWrapper getCallbackReference() {
+            return new PasswordWrapper() {
+                @Override
+                public String get() {
+                    return PasswordCallee.this.get();
+                }
+            };
+        }
+    }
+
+    private class PasswordCaller {
+        private PasswordWrapper callbackReference;
+
+        private PasswordCaller(PasswordWrapper cbh) {
+            callbackReference = cbh;
+        }
+
+        private String get() {
+            return callbackReference.get();
+        }
+    }
+
 }
