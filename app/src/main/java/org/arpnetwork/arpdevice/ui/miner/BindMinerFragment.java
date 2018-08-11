@@ -36,6 +36,7 @@ import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
+import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.config.Constant;
@@ -203,7 +204,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private void loadAllowance() {
         String owner = Wallet.get().getPublicKey();
-        String spender = BindMinerHelper.CONTRACT_ADDRESS;
+        String spender = ARPRegistry.CONTRACT_ADDRESS;
         ARPContract.allowanceARP(owner, spender, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {

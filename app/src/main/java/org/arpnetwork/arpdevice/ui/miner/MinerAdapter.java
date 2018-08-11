@@ -82,7 +82,7 @@ final class MinerAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        viewHolder.mainTitle.setText(item.name);
+        viewHolder.mainTitle.setText(item.address);
         viewHolder.subTitle.setText(info);
         if (mStateMap.containsKey(item.address)) {
             viewHolder.bindState.setVisibility(View.VISIBLE);

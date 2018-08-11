@@ -42,6 +42,7 @@ import rx.functions.Func1;
  * <p>Generated with web3j version 3.5.0.
  */
 public class ARPRegistry extends Contract {
+    public static final String CONTRACT_ADDRESS = "0xa3159b314777e6529bca4ca2000c6e6456496589";
     private static final String BINARY = null;
 
     public static final String FUNC_SERVERS = "servers";

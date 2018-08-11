@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class BindMinerHelper {
-    public static final String CONTRACT_ADDRESS = "0xa3159b314777e6529bca4ca2000c6e6456496589";
 
     public static List<Miner> getMinerList() {
         List<Miner> list = new ArrayList<Miner>();
@@ -60,7 +59,7 @@ public class BindMinerHelper {
                 }));
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = BalanceAPI.getWeb3J().ethCall(
-                Transaction.createEthCallTransaction(null, CONTRACT_ADDRESS, encodedFunction),
+                Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
 
@@ -82,7 +81,7 @@ public class BindMinerHelper {
                 }));
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = BalanceAPI.getWeb3J().ethCall(
-                Transaction.createEthCallTransaction(null, CONTRACT_ADDRESS, encodedFunction),
+                Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
 
@@ -126,7 +125,7 @@ public class BindMinerHelper {
 
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = BalanceAPI.getWeb3J().ethCall(
-                Transaction.createEthCallTransaction(null, CONTRACT_ADDRESS, encodedFunction),
+                Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
 

@@ -2,7 +2,6 @@ package org.arpnetwork.arpdevice.contracts;
 
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.ARPAllowanceTask;
-import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 
@@ -59,7 +58,7 @@ public class ARPContract extends Contract {
 
     public static Transaction getApproveEstimateGasTrans() {
         String ownerAddress = Wallet.get().getPublicKey();
-        String spenderAddress = BindMinerHelper.CONTRACT_ADDRESS;
+        String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
         BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
         String data = getApproveFunctionData(spenderAddress, value);
 
