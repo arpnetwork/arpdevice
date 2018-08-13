@@ -25,6 +25,7 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -46,19 +47,19 @@ public class AssetCopyHelper {
     }
 
     public static void pushTouch(final SyncChannel ss, PushCallback listener) {
-        pushFile(ss, DIR + ARPTOUCH_FILE_NAME, ARPTOUCH_FILE_NAME, listener);
+        pushFileFromAsset(ss, DIR + ARPTOUCH_FILE_NAME, ARPTOUCH_FILE_NAME, listener);
     }
 
     public static void pushCap(final SyncChannel ss, PushCallback listener) {
-        pushFile(ss, DIR + ARPCAP_FILE_NAME, ARPCAP_FILE_NAME, listener);
+        pushFileFromAsset(ss, DIR + ARPCAP_FILE_NAME, ARPCAP_FILE_NAME, listener);
     }
 
     public static void pushLibCap(final SyncChannel ss, PushCallback listener) {
-        pushFile(ss, DIR + LIB_ARPCAP_FILE_NAME, LIB_ARPCAP_FILE_NAME, listener);
+        pushFileFromAsset(ss, DIR + LIB_ARPCAP_FILE_NAME, LIB_ARPCAP_FILE_NAME, listener);
     }
 
     public static void pushFile(final SyncChannel ss, final String destFilePath,
-            final String assetFileName, final PushCallback listener) {
+            final String srcFilePath, final PushCallback listener) {
 
         ss.setStreamListener(new Channel.ChannelListener() {
             @Override
@@ -70,7 +71,7 @@ public class AssetCopyHelper {
                 ss.send(destFilePath, SyncChannel.MODE_EXECUTABLE);
 
                 try {
-                    Util.copyFromAsset(assetFileName, ss);
+                    Util.copy(new FileInputStream(new File(srcFilePath)), ss);
                 } catch (IOException e) {
                     if (listener != null) {
                         listener.onComplete(false, e);
@@ -111,6 +112,37 @@ public class AssetCopyHelper {
 
         return success;
     }
+
+    private static void pushFileFromAsset(final SyncChannel ss, final String destFilePath,
+            final String assetFileName, final PushCallback listener) {
+
+        ss.setStreamListener(new Channel.ChannelListener() {
+            @Override
+            public void onOpened(Channel ch) {
+                if (listener != null) {
+                    listener.onStart();
+                }
+
+                ss.send(destFilePath, SyncChannel.MODE_EXECUTABLE);
+
+                try {
+                    Util.copy(CustomApplication.sInstance.getAssets().open(assetFileName), ss);
+                } catch (IOException e) {
+                    if (listener != null) {
+                        listener.onComplete(false, e);
+                    }
+                }
+            }
+
+            @Override
+            public void onClosed(Channel ch) {
+                if (listener != null) {
+                    listener.onComplete(true, null);
+                }
+            }
+        });
+    }
+
 
     private static String getMd5FromAssets(String key) {
         String md5 = "";

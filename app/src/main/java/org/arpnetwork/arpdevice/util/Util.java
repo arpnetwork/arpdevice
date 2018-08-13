@@ -16,10 +16,7 @@
 
 package org.arpnetwork.arpdevice.util;
 
-import android.content.res.AssetManager;
-
 import org.arpnetwork.adb.SyncChannel;
-import org.arpnetwork.arpdevice.CustomApplication;
 import org.web3j.utils.Convert;
 
 import java.io.File;
@@ -125,11 +122,6 @@ public class Util {
             }
         }
         return md5;
-    }
-
-    public static void copyFromAsset(String assetFileName, SyncChannel syncChannel) throws IOException {
-        AssetManager assetManager = CustomApplication.sInstance.getAssets();
-        Util.copy(assetManager.open(assetFileName), syncChannel);
     }
 
     public static String getRandomString(int length) {

@@ -18,8 +18,12 @@ package org.arpnetwork.arpdevice.device;
 
 import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
+import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.stream.AssetCopyHelper;
 import org.arpnetwork.arpdevice.stream.Touch;
+
+import java.io.File;
 
 public class Adb {
     private static final String TAG = "Adb";
@@ -35,6 +39,33 @@ public class Adb {
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
             ShellChannel ss = mConnection.openShell("dumpsys activity top | grep TASK");
             ss.setListener(listener);
+        }
+    }
+
+    public void installApp(String srcFilePath, String packageName, final ShellChannel.ShellListener listener) {
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            final String desFile = "/data/local/tmp/" + packageName;
+            if (new File(desFile).exists()) {
+                new File(desFile).delete();
+            }
+            SyncChannel ss = mConnection.openSync();
+            AssetCopyHelper.pushFile(ss, desFile, srcFilePath, new AssetCopyHelper.PushCallback() {
+                @Override
+                public void onStart() {
+                }
+
+                @Override
+                public void onComplete(boolean success, Throwable throwable) {
+                    if (success) {
+                        ShellChannel ss = mConnection.openShell("pm install  -r " + desFile);
+                        ss.setListener(listener);
+                    } else {
+                        if (listener != null) {
+                            listener.onStderr(null, null);
+                        }
+                    }
+                }
+            });
         }
     }
 
