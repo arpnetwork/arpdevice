@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.config;
+package org.arpnetwork.arpdevice.server.http.rpc;
 
-public class Config {
-    public static final boolean DEBUG = false;
-
-    public static final String PROTOCOL_VERSION = "1.0";
-
-    public static final int DATA_SERVER_PORT = 9000;
-    public static final int HTTP_SERVER_PORT = 9001;
-
-    public static final int ORDER_PRICE_LOW = 0;
-    public static final int ORDER_PRICE_HIGH = 100;
-    public static final int ORDER_PRICE_DEFAULT = 1;
+public class RPCErrorCode {
+    public static final int INVALID_REQUEST = -32600;
+    public static final int METHOD_NOT_FOUND = -32601;
+    public static final int INVALID_PARAMS = -32602;
+    public static final int INNER_ERROR = -32603;
+    public static final int INVALID_JSON = -32700;
 }

@@ -26,8 +26,11 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.device.DeviceManager;
+import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.server.DataServer;
+import org.arpnetwork.arpdevice.server.http.HttpServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
@@ -36,6 +39,8 @@ import org.arpnetwork.arpdevice.util.UIHelper;
 public class ReceiveOrderFragment extends BaseFragment {
     private int mQuality;
     private DeviceManager mDeviceManager;
+    private HttpServer mHttpServer;
+    private DefaultRPCDispatcher mDefaultRPCDispatcher;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -61,6 +66,8 @@ public class ReceiveOrderFragment extends BaseFragment {
 
     @Override
     public void onDestroy() {
+        stopDeviceService();
+
         super.onDestroy();
     }
 
@@ -71,18 +78,48 @@ public class ReceiveOrderFragment extends BaseFragment {
 
     private void startDeviceService() {
         mDeviceManager = new DeviceManager();
+        mDeviceManager.setOnDeviceAssignedListener(new DeviceManager.OnManageDeviceListener() {
+            @Override
+            public void onDeviceAssigned(String dappAddr) {
+                mDefaultRPCDispatcher.setDAppAddress(dappAddr);
+            }
+
+            @Override
+            public void onDeviceReleased() {
+                mDefaultRPCDispatcher.setDAppAddress(null);
+            }
+        });
         mDeviceManager.setOnErrorListener(mOnErrorListener);
         mDeviceManager.connect();
 
         DataServer.getInstance().setListener(mConnectionListener);
         DataServer.getInstance().setDeviceManager(mDeviceManager);
         DataServer.getInstance().startServer();
+
+        startHttpServer();
     }
 
     private void stopDeviceService() {
+        DownloadManager.getInstance().cancelAll();
+        stopHttpServer();
         DataServer.getInstance().shutdown();
         if (mDeviceManager != null) {
             mDeviceManager.close();
+        }
+    }
+
+    private void startHttpServer() {
+        try {
+            mDefaultRPCDispatcher = new DefaultRPCDispatcher(getContext());
+            mHttpServer = new HttpServer(Config.HTTP_SERVER_PORT, mDefaultRPCDispatcher);
+            mHttpServer.start();
+        } catch (Exception e) {
+        }
+    }
+
+    private void stopHttpServer() {
+        if (mHttpServer != null) {
+            mHttpServer.stop();
         }
     }
 
@@ -102,7 +139,6 @@ public class ReceiveOrderFragment extends BaseFragment {
                 .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        stopDeviceService();
                         finish();
                     }
                 })

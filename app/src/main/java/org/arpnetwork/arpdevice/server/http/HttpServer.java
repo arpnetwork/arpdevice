@@ -19,13 +19,15 @@ package org.arpnetwork.arpdevice.server.http;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
 public class HttpServer {
     private int mPort;
     private Dispatcher mDispatcher;
+    private NioEventLoopGroup mBossGroup;
+    private NioEventLoopGroup mWorkerGroup;
+    private ChannelFuture mChannelFuture;
 
     public HttpServer(int port, Dispatcher dispatcher) {
         if (dispatcher == null) {
@@ -36,21 +38,24 @@ public class HttpServer {
     }
 
     public void start() throws Exception {
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .childHandler(new HttpServerInitializer(mDispatcher))
-                    .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+        mBossGroup = new NioEventLoopGroup();
+        mWorkerGroup = new NioEventLoopGroup();
+        ServerBootstrap b = new ServerBootstrap();
+        b.group(mBossGroup, mWorkerGroup)
+                .channel(NioServerSocketChannel.class)
+                .childHandler(new HttpServerInitializer(mDispatcher))
+                .option(ChannelOption.SO_BACKLOG, 128)
+                .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-            ChannelFuture f = b.bind(mPort).sync();
-            f.channel().closeFuture().sync();
-        } finally {
-            workerGroup.shutdownGracefully();
-            bossGroup.shutdownGracefully();
+        mChannelFuture = b.bind(mPort).sync();
+    }
+
+    public void stop() {
+        try {
+            mChannelFuture.sync().channel().close().sync();
+        } catch (Exception e) {
         }
+        mWorkerGroup.shutdownGracefully();
+        mBossGroup.shutdownGracefully();
     }
 }

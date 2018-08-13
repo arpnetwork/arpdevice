@@ -24,12 +24,12 @@ public class RPCResponse {
 
     private JSONObject response;
 
-    public RPCResponse() throws JSONException {
+    public RPCResponse() {
         response = new JSONObject();
         setVersion();
     }
 
-    public void setId(int id) throws JSONException {
+    public void setId(String id) throws JSONException {
         response.put("id", id);
     }
 
@@ -41,11 +41,26 @@ public class RPCResponse {
         response.put("error", error);
     }
 
+    public void setError(int code, String id, String message) {
+        try {
+            JSONObject error = new JSONObject();
+            error.put("code", code);
+            error.put("message", message);
+
+            setId(id);
+            setError(error);
+        } catch (JSONException e) {
+        }
+    }
+
     public String getJSONString() {
         return response.toString();
     }
 
-    private void setVersion() throws JSONException {
-        response.put("jsonrpc", VERSION);
+    private void setVersion() {
+        try {
+            response.put("jsonrpc", VERSION);
+        } catch (JSONException e) {
+        }
     }
 }

@@ -16,13 +16,14 @@
 
 package org.arpnetwork.arpdevice.server.http.rpc;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class RPCRequest {
-    private int id;
+    private String id;
     private String method;
-    private JSONObject paramsObj;
+    private JSONArray paramsObj;
 
     public RPCRequest() {
     }
@@ -31,7 +32,7 @@ public class RPCRequest {
         parseJSON(json);
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
@@ -39,19 +40,33 @@ public class RPCRequest {
         return method;
     }
 
-    public boolean hasParam(String param) {
-        return paramsObj != null && paramsObj.has(param);
+    public String getString(int index) {
+        String value = null;
+        try {
+            if (paramsObj != null) {
+                value = paramsObj.getString(index);
+            }
+        } catch (JSONException e) {
+        }
+        return value;
     }
 
-    public String getParam(String param) throws JSONException {
-        return paramsObj != null ? paramsObj.getString(param) : null;
+    public int getInt(int index) {
+        int value = 0;
+        try {
+            if (paramsObj != null) {
+                value = paramsObj.getInt(index);
+            }
+        } catch (JSONException e) {
+        }
+        return value;
     }
 
     private void parseJSON(String json) throws JSONException {
         JSONObject jsonObject = new JSONObject(json);
 
         if (jsonObject.has("id")) {
-            id = jsonObject.getInt("id");
+            id = jsonObject.getString("id");
         }
 
         if (jsonObject.has("method")) {
@@ -59,7 +74,7 @@ public class RPCRequest {
         }
 
         if (jsonObject.has("params")) {
-            paramsObj = jsonObject.getJSONObject("params");
+            paramsObj = jsonObject.getJSONArray("params");
         }
     }
 }

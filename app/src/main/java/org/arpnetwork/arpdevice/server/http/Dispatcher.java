@@ -17,14 +17,12 @@
 package org.arpnetwork.arpdevice.server.http;
 
 public abstract class Dispatcher {
-    private static final String TAG = Dispatcher.class.getSimpleName();
 
     public Dispatcher() {
     }
 
     public final void service(Request request, Response response) {
         response.setStatus(200);
-        response.setContent(request.getContent());
         response.setContentType("text/json;charset=utf-8");
 
         doRequest(request, response);

@@ -46,6 +46,8 @@
             android:name=".ui.order.receive.ReceiveOrderActivity"
             android:screenOrientation="portrait" />
 
-        <service android:name=".ui.miner.BindMinerIntentService" android:exported="false"/>
+        <service
+            android:name=".ui.miner.BindMinerIntentService"
+            android:exported="false" />
     </application>
 </manifest>

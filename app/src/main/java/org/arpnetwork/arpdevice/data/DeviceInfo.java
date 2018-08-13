@@ -22,7 +22,6 @@ import com.google.gson.annotations.SerializedName;
 
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
-import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.web3j.utils.Convert;
@@ -60,7 +59,7 @@ public class DeviceInfo {
         if (sInstance == null) {
             DeviceInfo info = new DeviceInfo();
             info.ver = Config.PROTOCOL_VERSION;
-            info.port = DataServer.PORT;
+            info.port = Config.DATA_SERVER_PORT;
             info.brand = DeviceUtil.getBrand();
             info.model = DeviceUtil.getModel();
             info.imsi = DeviceUtil.getIMSI(context);

@@ -39,8 +39,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import io.netty.buffer.ByteBuf;
 
 public final class DataServer implements NettyConnection.ConnectionListener {
-    public static final int PORT = 9000;
-
     private static final String TAG = "DataServer";
     private static final boolean DEBUG = Config.DEBUG;
     private static final int HEARTBEAT_TIMEOUT = 10000;
@@ -92,7 +90,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     public void setDeviceManager(DeviceManager deviceManager) {
         mDeviceManager = deviceManager;
-        mDeviceManager.setOnClientRequestListener(mOnClientRequestListener);
     }
 
     public void startServer() {
@@ -108,9 +105,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void shutdown() {
-        if (mDeviceManager != null) {
-            mDeviceManager.setOnClientRequestListener(null);
-        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -185,7 +179,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private DataServer() {
-        mConn = new NettyConnection(this, PORT);
+        mConn = new NettyConnection(this, Config.DATA_SERVER_PORT);
         mGson = new Gson();
     }
 
@@ -218,7 +212,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 } else if (!verifySession(connectReq)) {
                     stop(); // close client.
                 } else {
-                    mTaskHelper = new TaskHelper(mHandler);
+                    mTaskHelper = new TaskHelper();
                     onConnectFirstReq(connectReq);
                     start();
                     mHandler.postDelayed(new Runnable() {
@@ -384,13 +378,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private void stopHeartbeatTimeout() {
         mHandler.removeCallbacks(mClientHeartTimeout);
     }
-
-    private DeviceManager.OnClientRequestListener mOnClientRequestListener = new DeviceManager.OnClientRequestListener() {
-        @Override
-        public void onClientRequest() {
-            mHandler.postDelayed(mConnectedTimeoutRunnable, CONNECTED_TIMEOUT);
-        }
-    };
 
     private Runnable mConnectedTimeoutRunnable = new Runnable() {
         @Override

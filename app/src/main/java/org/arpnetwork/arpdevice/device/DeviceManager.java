@@ -49,7 +49,8 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     public static final int VERIFIED = 2;
     public static final int REGISTERED = 4;
-    public static final int CLIENT_REQUEST = 6;
+    public static final int DEVICE_ASSIGNED = 6;
+    public static final int DEVICE_RELEASED = 7;
 
     private static final int MSG_SPEED = 1;
     private static final int MSG_DEVICE = 2;
@@ -63,15 +64,16 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     private VerifyData mVerifyData;
     private ByteBuf mSpeedDataBuf;
-    private String mDappAddress;
     private boolean mRegistered;
 
     private Handler mHandler = new Handler();
-    private OnClientRequestListener mOnClientRequestListener;
+    private OnManageDeviceListener mOnManageDeviceListener;
     private OnErrorListener mOnErrorListener;
 
-    public interface OnClientRequestListener {
-        void onClientRequest();
+    public interface OnManageDeviceListener {
+        void onDeviceAssigned(String dappAddr);
+
+        void onDeviceReleased();
     }
 
     public interface OnErrorListener {
@@ -83,8 +85,8 @@ public class DeviceManager implements DeviceConnection.Listener {
         mRegistered = false;
     }
 
-    public void setOnClientRequestListener(OnClientRequestListener listener) {
-        mOnClientRequestListener = listener;
+    public void setOnDeviceAssignedListener(OnManageDeviceListener listener) {
+        mOnManageDeviceListener = listener;
     }
 
     public void setOnErrorListener(OnErrorListener listener) {
@@ -179,13 +181,25 @@ public class DeviceManager implements DeviceConnection.Listener {
                 } else {
                     handleError(response.result, "Incompatible protocol");
                 }
-            } else if (response.id == CLIENT_REQUEST) {
-                UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
-                mDappAddress = res.data.address;
-
-                if (mOnClientRequestListener != null) {
-                    mOnClientRequestListener.onClientRequest();
-                }
+            } else if (response.id == DEVICE_ASSIGNED) {
+                final UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mOnManageDeviceListener != null) {
+                            mOnManageDeviceListener.onDeviceAssigned(res.data.address);
+                        }
+                    }
+                });
+            } else if (response.id == DEVICE_RELEASED) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mOnManageDeviceListener != null) {
+                            mOnManageDeviceListener.onDeviceReleased();
+                        }
+                    }
+                });
             }
         }
     }
@@ -266,7 +280,6 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     private void reset() {
         mRegistered = false;
-        mDappAddress = null;
         mHandler.removeCallbacksAndMessages(null);
     }
 }

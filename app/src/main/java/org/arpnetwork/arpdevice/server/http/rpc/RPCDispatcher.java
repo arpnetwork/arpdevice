@@ -25,13 +25,14 @@ public abstract class RPCDispatcher extends Dispatcher {
 
     @Override
     protected void doRequest(Request request, Response response) {
+        RPCResponse rpcResponse = new RPCResponse();
         try {
-            RPCResponse rpcResponse = new RPCResponse();
             doRequest(new RPCRequest(request.getContent()), rpcResponse);
-            response.setContent(rpcResponse.getJSONString());
         } catch (JSONException e) {
+            rpcResponse.setError(RPCErrorCode.INVALID_JSON, "null", "Invalid json");
         }
+        response.setContent(rpcResponse.getJSONString());
     }
 
-    protected abstract void doRequest(RPCRequest request, RPCResponse response) throws JSONException;
+    protected abstract void doRequest(RPCRequest request, RPCResponse response);
 }
