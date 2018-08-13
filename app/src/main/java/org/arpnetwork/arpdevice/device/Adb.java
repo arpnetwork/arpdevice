@@ -66,6 +66,21 @@ public class Adb {
                     }
                 }
             });
+        } else {
+            if (listener != null) {
+                listener.onStderr(null, null);
+            }
+        }
+    }
+
+    public void uninstallApp(String packageName, final ShellChannel.ShellListener listener) {
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            ShellChannel ss = mConnection.openShell("pm uninstall " + packageName);
+            ss.setListener(listener);
+        } else {
+            if (listener != null) {
+                listener.onStderr(null, null);
+            }
         }
     }
 
