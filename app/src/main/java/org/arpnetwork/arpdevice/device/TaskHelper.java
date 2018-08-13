@@ -18,7 +18,6 @@ package org.arpnetwork.arpdevice.device;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Handler;
 import android.text.TextUtils;
 
 import org.arpnetwork.adb.ShellChannel;
@@ -27,17 +26,20 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class TaskHelper {
     private static final String TAG = "TaskHelper";
     private static final boolean DEBUG = Config.DEBUG;
     private static final int CHECK_TOP_INTERVAL = 800; // shell cost 80ms.
 
     private String mPackageName;
-    private final Handler mHandler;
     private final Adb mAdb;
+    private Timer mTimer;
 
-    public TaskHelper(Handler handler) {
-        mHandler = handler;
+    public TaskHelper() {
+        mTimer = new Timer();
         mAdb = new Adb(Touch.getInstance().getConnection());
     }
 
@@ -59,10 +61,10 @@ public class TaskHelper {
     }
 
     private void startCheckTopTimer() {
-        mHandler.postDelayed(mCheckTopRunnable, CHECK_TOP_INTERVAL);
+        mTimer.schedule(mTimerTask, CHECK_TOP_INTERVAL, CHECK_TOP_INTERVAL);
     }
 
-    private final Runnable mCheckTopRunnable = new Runnable() {
+    private TimerTask mTimerTask = new TimerTask() {
         @Override
         public void run() {
             mAdb.getTopAndroidTask(new ShellChannel.ShellListener() {
@@ -71,7 +73,7 @@ public class TaskHelper {
                     String topPackage = getTopPackage(new String(data));
                     if (!topPackage.contains(mPackageName)) {
                         DataServer.getInstance().onClientDisconnected();
-                        mHandler.removeCallbacksAndMessages(null);
+                        mTimer.cancel();
                     }
                 }
 
@@ -83,13 +85,11 @@ public class TaskHelper {
                 public void onExit(ShellChannel ch, int code) {
                 }
             });
-
-            mHandler.postDelayed(this, CHECK_TOP_INTERVAL);
         }
     };
 
     public void killLaunchedApp() {
-        mHandler.removeCallbacksAndMessages(null);
+        mTimer.cancel();
         mAdb.killApp(mPackageName);
     }
 
