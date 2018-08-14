@@ -18,7 +18,6 @@ package org.arpnetwork.arpdevice.util;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
 
 import com.google.gson.Gson;
 
@@ -37,13 +36,13 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OKHttpUtils {
-    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+    private static final MediaType JSON = MediaType.parse("application/json");
     private static OkHttpClient mOkHttpClient;
 
     private final Gson mGson = new Gson();
     private Handler mHandler = new Handler(Looper.getMainLooper());
 
-    private static synchronized OkHttpClient getOkClient() {
+    private static synchronized OkHttpClient getOkHttpClient() {
         if (mOkHttpClient == null) {
             mOkHttpClient = new OkHttpClient.Builder().
                     connectTimeout(10, TimeUnit.SECONDS)
@@ -63,30 +62,56 @@ public class OKHttpUtils {
         get(url, null, callback);
     }
 
-    public void get(String url, Map<String, Object> param, BaseCallback callback) {
-        Request request = buildRequest(url, Method.GET, param);
+    public void get(String url, String tag, BaseCallback callback) {
+        get(url, tag, null, callback);
+    }
+
+    public void get(String url, String tag, Map<String, Object> param, BaseCallback callback) {
+        Request request = buildRequest(url, Method.GET, tag, param);
 
         request(request, callback);
     }
 
-    public void post(String url, String json, BaseCallback callback) {
-        if (TextUtils.isEmpty(json)) {
-            return;
-        }
-        RequestBody body = RequestBody.create(JSON, json);
+    public void post(String url, String json, String tag, BaseCallback callback) {
+        byte[] bytes = json.getBytes(); // Overwrite Content-Type: https://github.com/square/okhttp/issues/2099
+        RequestBody body = RequestBody.create(JSON, bytes);
         Request.Builder builder = new Request.Builder()
                 .url(url)
-                .post(body);
+                .post(body)
+                .tag(tag);
         Request request = builder.build();
         request(request, callback);
     }
 
-    public void post(String url, Map<String, Object> param, BaseCallback callback) {
-        Request request = buildRequest(url, Method.POST, param);
+    public void post(String url, String tag, Map<String, Object> param, BaseCallback callback) {
+        Request request = buildRequest(url, Method.POST, tag, param);
         request(request, callback);
     }
 
-    private Request buildRequest(String url, Method methodType, Map<String, Object> params) {
+    public void cancelTag(Object tag) {
+        if (tag == null) return;
+        for (Call call : getOkHttpClient().dispatcher().queuedCalls()) {
+            if (tag.equals(call.request().tag())) {
+                call.cancel();
+            }
+        }
+        for (Call call : getOkHttpClient().dispatcher().runningCalls()) {
+            if (tag.equals(call.request().tag())) {
+                call.cancel();
+            }
+        }
+    }
+
+    public void cancelAll() {
+        for (Call call : getOkHttpClient().dispatcher().queuedCalls()) {
+            call.cancel();
+        }
+        for (Call call : getOkHttpClient().dispatcher().runningCalls()) {
+            call.cancel();
+        }
+    }
+
+    private Request buildRequest(String url, Method methodType, String tag, Map<String, Object> params) {
         Request.Builder builder = new Request.Builder()
                 .url(url);
 
@@ -98,7 +123,7 @@ public class OKHttpUtils {
             builder.url(url);
             builder.get();
         }
-
+        builder.tag(tag);
         return builder.build();
     }
 
@@ -138,7 +163,7 @@ public class OKHttpUtils {
     void request(final Request request, final BaseCallback callback) {
         callback.onBeforeRequest(request);
 
-        getOkClient().newCall(request).enqueue(new Callback() {
+        getOkHttpClient().newCall(request).enqueue(new Callback() {
 
             @Override
             public void onFailure(Call call, IOException e) {
