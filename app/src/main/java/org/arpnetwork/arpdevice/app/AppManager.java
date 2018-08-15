@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.app;
 
 import android.content.Context;
+import android.os.Handler;
 import android.util.Log;
 
 import org.arpnetwork.adb.ShellChannel;
@@ -25,6 +26,7 @@ import org.arpnetwork.arpdevice.device.Adb;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.download.IDownloadListener;
+import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
@@ -40,13 +42,19 @@ public class AppManager {
 
     private TaskHelper mTaskHelper;
     private DApp mDApp;
+    private Handler mHandler;
 
-    public AppManager() {
-        mTaskHelper = new TaskHelper();
+    public AppManager(Handler handler, TaskHelper helper) {
+        mHandler = handler;
+        mTaskHelper = helper;
     }
 
     public void setDApp(DApp dApp) {
         mDApp = dApp;
+    }
+
+    public DApp getDApp() {
+        return mDApp;
     }
 
     public void appInstall(Context context, final String packageName, String url, int fileSize, String md5) {
@@ -90,7 +98,13 @@ public class AppManager {
     }
 
     public void startApp(String packageName) {
-        mTaskHelper.launchApp(packageName);
+        if (mTaskHelper != null) {
+            if (mTaskHelper.launchApp(packageName)) {
+                mHandler.sendEmptyMessageDelayed(DataServer.MSG_CONNECTED_TIMEOUT, DataServer.CONNECTED_TIMEOUT);
+            } else {
+                mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
+            }
+        }
     }
 
     private void appInstall(File file, final String packageName) {
@@ -103,8 +117,6 @@ public class AppManager {
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
-                Log.e(TAG, "Install app failed. e = " + new String(data));
-
                 DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
             }
 

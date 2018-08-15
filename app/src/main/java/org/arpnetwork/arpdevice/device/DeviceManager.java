@@ -118,13 +118,6 @@ public class DeviceManager implements DeviceConnection.Listener {
         return mRegistered;
     }
 
-    /**
-     * Return the session which is assigned from the server
-     */
-    public String getSession() {
-        return "";
-    }
-
     @Override
     public void onConnected(DeviceConnection conn) {
         verify();

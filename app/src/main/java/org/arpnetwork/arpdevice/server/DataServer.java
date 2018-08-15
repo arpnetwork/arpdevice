@@ -22,8 +22,9 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.device.DeviceManager;
+import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.data.ChangeQualityReq;
@@ -34,23 +35,30 @@ import org.arpnetwork.arpdevice.data.Req;
 import org.arpnetwork.arpdevice.data.TouchSetting;
 import org.arpnetwork.arpdevice.data.VideoInfo;
 
+import java.lang.ref.SoftReference;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import io.netty.buffer.ByteBuf;
 
 public final class DataServer implements NettyConnection.ConnectionListener {
+    public static final int MSG_CONNECTED_TIMEOUT = 1;
+    public static final int MSG_LAUNCH_APP_FAILED = MSG_CONNECTED_TIMEOUT + 1;
+    public static final int CONNECTED_TIMEOUT = 10000;
+
     private static final String TAG = "DataServer";
     private static final boolean DEBUG = Config.DEBUG;
+
     private static final int HEARTBEAT_TIMEOUT = 10000;
     private static final int HEARTBEAT_INTERVAL = 5000;
-    private static final int CONNECTED_TIMEOUT = 10000;
+
     private static volatile DataServer sInstance;
 
     private final LinkedBlockingQueue<ByteBuf> mPacketQueue = new LinkedBlockingQueue<ByteBuf>();
-    private Handler mHandler = new Handler();
+    private Handler mHandler;
 
-    private DeviceManager mDeviceManager;
     private Gson mGson;
+    private DApp mDApp;
+    private String mSession;
 
     private SendThread mAVDataThread;
     private int mQuality;
@@ -88,8 +96,24 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         mListener = listener;
     }
 
-    public void setDeviceManager(DeviceManager deviceManager) {
-        mDeviceManager = deviceManager;
+    public void setDApp(DApp dApp) {
+        mDApp = dApp;
+    }
+
+    public void releaseDApp() {
+        DAppApi.clientDisconnected(mSession, mDApp);
+        mDApp = null;
+
+        mReceiveDisconnect = true;
+        stop();
+    }
+
+    public void setTaskHelper(TaskHelper helper) {
+        mTaskHelper = helper;
+    }
+
+    public Handler getHandler() {
+        return mHandler;
     }
 
     public void startServer() {
@@ -132,8 +156,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onConnected(NettyConnection conn) {
-        mReceiveDisconnect = false;
-        if (mDeviceManager == null || !mDeviceManager.isRegistered()) {
+        if (mDApp == null) {
             stop();
             return;
         }
@@ -147,6 +170,12 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         if (!mReceiveDisconnect) {
             stop();
         }
+
+        if (mDApp != null) {
+            DAppApi.clientDisconnected(mSession, mDApp);
+        }
+        mReceiveDisconnect = false;
+        mSession = null;
     }
 
     @Override
@@ -181,6 +210,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private DataServer() {
         mConn = new NettyConnection(this, Config.DATA_SERVER_PORT);
         mGson = new Gson();
+        mHandler = new DataServerHandler(this);
     }
 
     private void onReceiveHeartbeat() {
@@ -202,7 +232,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Req req = mGson.fromJson(protocolJson, Req.class);
         switch (req.id) {
             case ProtocolPacket.CONNECT_REQ:
-                mHandler.removeCallbacks(mConnectedTimeoutRunnable);
+                mHandler.removeMessages(MSG_CONNECTED_TIMEOUT);
 
                 final ConnectReq connectReq = mGson.fromJson(protocolJson, ConnectReq.class);
                 if (!protocolCompatible(connectReq)) {
@@ -212,18 +242,19 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 } else if (!verifySession(connectReq)) {
                     stop(); // close client.
                 } else {
-                    mTaskHelper = new TaskHelper();
-                    onConnectFirstReq(connectReq);
-                    start();
-                    mHandler.postDelayed(new Runnable() {
+                    mSession = connectReq.data.session;
+                    DAppApi.clientConnected(connectReq.data.session, mDApp, new Runnable() {
                         @Override
                         public void run() {
-                            if (!mTaskHelper.launchApp(connectReq.data.packageName)) {
-                                mHandler.removeCallbacks(mConnectedTimeoutRunnable);
-                                stop(); // close client.
-                            }
+                            onConnectFirstReq(connectReq);
+                            start();
                         }
-                    }, 500);
+                    }, new Runnable() {
+                        @Override
+                        public void run() {
+                            stop();
+                        }
+                    });
                 }
                 break;
 
@@ -246,7 +277,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private boolean verifySession(ConnectReq req) {
-        return !TextUtils.isEmpty(req.data.session) && req.data.session.equals(mDeviceManager.getSession());
+        return req.data != null && !TextUtils.isEmpty(req.data.session);
+    }
+
+    private boolean sessionExists() {
+        return mSession != null;
     }
 
     private void onConnectFirstReq(ConnectReq req) {
@@ -318,6 +353,33 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         stopHeartbeatTimeout();
     }
 
+    private static class DataServerHandler extends Handler {
+        private SoftReference<DataServer> mWeakDataServer;
+
+        public DataServerHandler(DataServer dataServer) {
+            mWeakDataServer = new SoftReference<>(dataServer);
+        }
+
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            DataServer dataServer = mWeakDataServer.get();
+            switch (msg.what) {
+                case MSG_CONNECTED_TIMEOUT:
+                    if (dataServer != null && !dataServer.sessionExists()) {
+                        dataServer.stop();
+                    }
+                    break;
+                case MSG_LAUNCH_APP_FAILED:
+                    if (dataServer != null) {
+                        dataServer.stop();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
     private class SendThread extends Thread {
         private boolean mStopped;
 
@@ -378,11 +440,4 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private void stopHeartbeatTimeout() {
         mHandler.removeCallbacks(mClientHeartTimeout);
     }
-
-    private Runnable mConnectedTimeoutRunnable = new Runnable() {
-        @Override
-        public void run() {
-            stop();
-        }
-    };
 }

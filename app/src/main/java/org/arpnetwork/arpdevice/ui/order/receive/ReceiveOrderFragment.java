@@ -26,11 +26,14 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.device.DeviceManager;
+import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.server.DataServer;
+import org.arpnetwork.arpdevice.server.http.Dispatcher;
 import org.arpnetwork.arpdevice.server.http.HttpServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
@@ -41,7 +44,6 @@ public class ReceiveOrderFragment extends BaseFragment {
     private int mQuality;
     private DeviceManager mDeviceManager;
     private HttpServer mHttpServer;
-    private DefaultRPCDispatcher mDefaultRPCDispatcher;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,26 +80,34 @@ public class ReceiveOrderFragment extends BaseFragment {
     }
 
     private void startDeviceService() {
+        TaskHelper taskHelper = new TaskHelper();
+
+        DataServer.getInstance().setListener(mConnectionListener);
+        DataServer.getInstance().setTaskHelper(taskHelper);
+        DataServer.getInstance().startServer();
+
+        final AppManager appManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
+
         mDeviceManager = new DeviceManager();
         mDeviceManager.setOnDeviceAssignedListener(new DeviceManager.OnManageDeviceListener() {
             @Override
             public void onDeviceAssigned(DApp dApp) {
-                mDefaultRPCDispatcher.setDApp(dApp);
+                appManager.setDApp(dApp);
+                DataServer.getInstance().setDApp(dApp);
             }
 
             @Override
             public void onDeviceReleased() {
-                mDefaultRPCDispatcher.setDApp(null);
+                appManager.setDApp(null);
+                DataServer.getInstance().releaseDApp();
             }
         });
         mDeviceManager.setOnErrorListener(mOnErrorListener);
         mDeviceManager.connect();
 
-        DataServer.getInstance().setListener(mConnectionListener);
-        DataServer.getInstance().setDeviceManager(mDeviceManager);
-        DataServer.getInstance().startServer();
-
-        startHttpServer();
+        DefaultRPCDispatcher defaultRPCDispatcher = new DefaultRPCDispatcher(getContext());
+        defaultRPCDispatcher.setAppManager(appManager);
+        startHttpServer(defaultRPCDispatcher);
     }
 
     private void stopDeviceService() {
@@ -109,10 +119,9 @@ public class ReceiveOrderFragment extends BaseFragment {
         }
     }
 
-    private void startHttpServer() {
+    private void startHttpServer(Dispatcher dispatcher) {
         try {
-            mDefaultRPCDispatcher = new DefaultRPCDispatcher(getContext());
-            mHttpServer = new HttpServer(Config.HTTP_SERVER_PORT, mDefaultRPCDispatcher);
+            mHttpServer = new HttpServer(Config.HTTP_SERVER_PORT, dispatcher);
             mHttpServer.start();
         } catch (Exception e) {
         }
