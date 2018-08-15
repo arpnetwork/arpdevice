@@ -89,4 +89,10 @@ public class Adb {
             mConnection.openShell(String.format("am force-stop %s", packageName));
         }
     }
+
+    public void clearApplicationUserData(String packageName) {
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            mConnection.openShell("pm clear " + packageName);
+        }
+    }
 }

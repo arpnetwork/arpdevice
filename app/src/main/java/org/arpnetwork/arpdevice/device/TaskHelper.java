@@ -91,6 +91,7 @@ public class TaskHelper {
     public void killLaunchedApp() {
         mTimer.cancel();
         mAdb.killApp(mPackageName);
+        mAdb.clearApplicationUserData(mPackageName);
     }
 
     private String getTopPackage(String topTaskPackages) {
