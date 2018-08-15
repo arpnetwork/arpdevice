@@ -16,5 +16,5 @@
 
 package org.arpnetwork.arpdevice.data;
 
-public class UserRequestResponse extends Response<Dapp> {
+public class DeviceAssignedResponse extends Response<DApp> {
 }

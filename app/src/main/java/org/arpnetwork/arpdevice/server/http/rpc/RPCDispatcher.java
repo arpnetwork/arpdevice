@@ -29,7 +29,7 @@ public abstract class RPCDispatcher extends Dispatcher {
         try {
             doRequest(new RPCRequest(request.getContent()), rpcResponse);
         } catch (JSONException e) {
-            rpcResponse.setError(RPCErrorCode.INVALID_JSON, "null", "Invalid json");
+            rpcResponse.setError(RPCErrorCode.INVALID_JSON, null, "Invalid json");
         }
         response.setContent(rpcResponse.getJSONString());
     }

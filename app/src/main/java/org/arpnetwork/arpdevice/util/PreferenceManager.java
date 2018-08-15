@@ -71,7 +71,7 @@ public class PreferenceManager {
     }
 
     public long getLong(String key) {
-        return mSharedPreferences.getLong(key, 0);
+        return mSharedPreferences.getLong(key, -1L);
     }
 }
 

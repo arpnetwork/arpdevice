@@ -24,9 +24,10 @@ import com.google.gson.Gson;
 
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
+import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Req;
 import org.arpnetwork.arpdevice.data.SpeedReq;
-import org.arpnetwork.arpdevice.data.UserRequestResponse;
+import org.arpnetwork.arpdevice.data.DeviceAssignedResponse;
 import org.arpnetwork.arpdevice.data.Message;
 import org.arpnetwork.arpdevice.data.RegisterReq;
 import org.arpnetwork.arpdevice.data.Response;
@@ -71,7 +72,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     private OnErrorListener mOnErrorListener;
 
     public interface OnManageDeviceListener {
-        void onDeviceAssigned(String dappAddr);
+        void onDeviceAssigned(DApp dApp);
 
         void onDeviceReleased();
     }
@@ -182,12 +183,12 @@ public class DeviceManager implements DeviceConnection.Listener {
                     handleError(response.result, "Incompatible protocol");
                 }
             } else if (response.id == DEVICE_ASSIGNED) {
-                final UserRequestResponse res = mGson.fromJson(json, UserRequestResponse.class);
+                final DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mOnManageDeviceListener != null) {
-                            mOnManageDeviceListener.onDeviceAssigned(res.data.address);
+                            mOnManageDeviceListener.onDeviceAssigned(res.data);
                         }
                     }
                 });

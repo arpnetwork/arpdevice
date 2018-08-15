@@ -21,6 +21,7 @@ import android.util.Log;
 
 import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCDispatcher;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCErrorCode;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
@@ -34,21 +35,24 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     private static final String TAG = DefaultRPCDispatcher.class.getSimpleName();
 
     private Context mContext;
-    private String mDAppAddress;
+    private AppManager mAppManager;
+    private DApp mDApp;
     private int mNonce;
 
     public DefaultRPCDispatcher(Context context) {
         mContext = context;
+        mAppManager = new AppManager();
         mNonce = -1;
     }
 
-    public void setDAppAddress(String address) {
-        mDAppAddress = address;
+    public void setDApp(DApp dApp) {
+        mDApp = dApp;
+        mAppManager.setDApp(dApp);
     }
 
     @Override
     protected void doRequest(RPCRequest request, RPCResponse response) {
-        if (mDAppAddress == null) {
+        if (mDApp == null) {
             response.setError(RPCErrorCode.INVALID_REQUEST, request.getId(), "Invalid request");
             return;
         }
@@ -61,37 +65,37 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             String md5 = request.getString(3);
             String nonce = request.getString(4);
             String sign = request.getString(5);
-            String data = String.format("%s:%s:%s:%d:%s:%s:%s", method, packageName, url, filesize, md5, nonce, mDAppAddress);
+            String data = String.format("%s:%s:%s:%d:%s:%s:%s", method, packageName, url, filesize, md5, nonce, mDApp.address);
 
             if (verify(response, request.getId(), data, sign, nonce)) {
-                AppManager.appInstall(mContext, packageName, url, filesize, md5);
+                mAppManager.appInstall(mContext, packageName, url, filesize, md5);
                 responseResult(response, request.getId(), nonce);
             }
         } else if ("app_uninstall".equals(method)) {
             String packageName = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, mDAppAddress);
+            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, mDApp.address);
 
             if (verify(response, request.getId(), data, sign, nonce)) {
-                AppManager.uninstallApp(packageName);
+                mAppManager.uninstallApp(packageName);
                 responseResult(response, request.getId(), nonce);
             }
         } else if ("app_start".equals(method)) {
             String packageName = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, mDAppAddress);
+            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, mDApp.address);
 
             if (verify(response, request.getId(), data, sign, nonce)) {
-                AppManager.startApp(packageName);
+                mAppManager.startApp(packageName);
                 responseResult(response, request.getId(), nonce);
             }
         } else if ("account_pay".equals(method)) {
             String promise = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, promise, nonce, mDAppAddress);
+            String data = String.format("%s:%s:%s:%s", method, promise, nonce, mDApp.address);
 
             if (verify(response, request.getId(), data, sign, nonce)) {
                 //FIXME: Receive a proof of token from dapp
@@ -133,7 +137,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
         boolean res = false;
         try {
             String addr = VerifyAPI.getSignatureAddress(data, sign);
-            if (Numeric.cleanHexPrefix(mDAppAddress).equalsIgnoreCase(addr)) {
+            if (Numeric.cleanHexPrefix(mDApp.address).equalsIgnoreCase(addr)) {
                 res = true;
             }
         } catch (Exception e) {
@@ -146,7 +150,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
         try {
             JSONObject result = new JSONObject();
             result.put("nonce", nonce);
-            result.put("sign", SignUtil.sign(String.format("%s:%s", nonce, mDAppAddress)));
+            result.put("sign", SignUtil.sign(String.format("%s:%s", nonce, mDApp.address)));
 
             response.setId(id);
             response.setResult(result);

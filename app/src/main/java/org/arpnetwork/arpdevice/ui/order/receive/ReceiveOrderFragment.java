@@ -27,6 +27,7 @@ import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.server.DataServer;
@@ -80,13 +81,13 @@ public class ReceiveOrderFragment extends BaseFragment {
         mDeviceManager = new DeviceManager();
         mDeviceManager.setOnDeviceAssignedListener(new DeviceManager.OnManageDeviceListener() {
             @Override
-            public void onDeviceAssigned(String dappAddr) {
-                mDefaultRPCDispatcher.setDAppAddress(dappAddr);
+            public void onDeviceAssigned(DApp dApp) {
+                mDefaultRPCDispatcher.setDApp(dApp);
             }
 
             @Override
             public void onDeviceReleased() {
-                mDefaultRPCDispatcher.setDAppAddress(null);
+                mDefaultRPCDispatcher.setDApp(null);
             }
         });
         mDeviceManager.setOnErrorListener(mOnErrorListener);

@@ -16,15 +16,8 @@
 
 package org.arpnetwork.arpdevice.data;
 
-public class Dapp {
+public class DApp {
     public String address;
     public String ip;
     public int port;
-
-    public Dapp() {
-    }
-
-    public Dapp(String address) {
-        this.address = address;
-    }
 }
