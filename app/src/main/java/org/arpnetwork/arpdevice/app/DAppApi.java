@@ -45,7 +45,7 @@ public class DAppApi {
         String json = request.toJSON();
         String url = String.format("http://%s:%d", dApp.ip, dApp.port);
 
-        new OKHttpUtils().post(url, json, null);
+        new OKHttpUtils().post(url, json, "appInstalled", null);
     }
 
     public static void clientConnected(String session, DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {
@@ -64,7 +64,7 @@ public class DAppApi {
         String json = request.toJSON();
         String url = String.format("http://%s:%d", dApp.ip, dApp.port);
 
-        new OKHttpUtils().post(url, json, new SimpleCallback<String>() {
+        new OKHttpUtils().post(url, json, "clientConnected", new SimpleCallback<String>() {
             @Override
             public void onSuccess(Response response, String result) {
                 if (successRunnable != null) {
@@ -104,6 +104,6 @@ public class DAppApi {
         String json = request.toJSON();
         String url = String.format("http://%s:%d", dApp.ip, dApp.port);
 
-        new OKHttpUtils().post(url, json, null);
+        new OKHttpUtils().post(url, json, "clientDisconnected", null);
     }
 }
