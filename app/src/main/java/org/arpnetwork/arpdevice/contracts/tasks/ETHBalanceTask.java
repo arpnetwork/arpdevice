@@ -18,7 +18,7 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 
 import android.os.AsyncTask;
 
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthGetBalance;
 import org.web3j.utils.Convert;
@@ -38,7 +38,7 @@ public class ETHBalanceTask extends AsyncTask<String, String, BigDecimal> {
         String address = param[0];
         EthGetBalance balance = null;
         try {
-            balance = BalanceAPI.getWeb3J().ethGetBalance(
+            balance = EtherAPI.getWeb3J().ethGetBalance(
                     address, DefaultBlockParameterName.LATEST).send();
         } catch (IOException ignored) {
         } catch (RuntimeException ignored) {

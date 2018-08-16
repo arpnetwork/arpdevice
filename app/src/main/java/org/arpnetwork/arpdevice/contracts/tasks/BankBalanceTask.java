@@ -19,12 +19,10 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 import android.os.AsyncTask;
 
 import org.arpnetwork.arpdevice.contracts.ARPBank;
-import org.arpnetwork.arpdevice.contracts.ARPContract;
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Uint;
@@ -75,7 +73,7 @@ public class BankBalanceTask extends AsyncTask<String, String, BigDecimal> {
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
         String encodedFunction = FunctionEncoder.encode(function);
-        EthCall response = BalanceAPI.getWeb3J().ethCall(
+        EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(owner, ARPBank.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();

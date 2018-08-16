@@ -27,7 +27,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.ARPContract;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
@@ -61,7 +62,7 @@ public class MyWalletFragment extends BaseFragment {
         nameText.setText(myWallet.getName());
 
         final TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
-        BalanceAPI.getArpBalance(myWallet.getPublicKey(), new OnValueResult<BigDecimal>() {
+        ARPContract.getArpBalance(myWallet.getPublicKey(), new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
                 setBalance(result, arpBalanceText);
@@ -69,7 +70,7 @@ public class MyWalletFragment extends BaseFragment {
         });
 
         final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);
-        BalanceAPI.getEtherBalance(myWallet.getPublicKey(), new OnValueResult<BigDecimal>() {
+        EtherAPI.getEtherBalance(myWallet.getPublicKey(), new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
                 setBalance(result, ethBalanceText);

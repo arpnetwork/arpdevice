@@ -22,7 +22,7 @@ import android.support.annotation.Nullable;
 
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.crypto.Credentials;
@@ -109,7 +109,7 @@ public class BindMinerIntentService extends IntentService {
         String hexData = ARPContract.getTransactionHexData(ARPRegistry.CONTRACT_ADDRESS,
                 credentials, gasPrice, gasLimit);
         try {
-            BalanceAPI.getWeb3J().ethSendRawTransaction(hexData).send();
+            EtherAPI.getWeb3J().ethSendRawTransaction(hexData).send();
             result = true;
         } catch (IOException e) {
             result = false;
@@ -119,7 +119,7 @@ public class BindMinerIntentService extends IntentService {
 
     private boolean bindDevice(String address, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         boolean success = false;
-        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, BalanceAPI.getWeb3J(),
+        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
                 credentials, gasPrice, gasLimit);
         try {
             TransactionReceipt bindDeviceReceipt = registry.bindDevice(address).send();
@@ -131,7 +131,7 @@ public class BindMinerIntentService extends IntentService {
 
     private boolean unbindDevice(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         boolean success = false;
-        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, BalanceAPI.getWeb3J(),
+        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
                 credentials, gasPrice, gasLimit);
         try {
             TransactionReceipt bindDeviceReceipt = registry.unbindDevice().send();

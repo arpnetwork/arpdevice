@@ -3,7 +3,7 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 import android.text.TextUtils;
 
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
@@ -58,7 +58,7 @@ public class BindMinerHelper {
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
                 }));
         String encodedFunction = FunctionEncoder.encode(function);
-        EthCall response = BalanceAPI.getWeb3J().ethCall(
+        EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
@@ -80,7 +80,7 @@ public class BindMinerHelper {
                 }, new TypeReference<Uint256>() {
                 }));
         String encodedFunction = FunctionEncoder.encode(function);
-        EthCall response = BalanceAPI.getWeb3J().ethCall(
+        EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
@@ -124,7 +124,7 @@ public class BindMinerHelper {
                 }));
 
         String encodedFunction = FunctionEncoder.encode(function);
-        EthCall response = BalanceAPI.getWeb3J().ethCall(
+        EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();

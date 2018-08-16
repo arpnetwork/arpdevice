@@ -19,7 +19,7 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 import android.os.AsyncTask;
 
 import org.arpnetwork.arpdevice.contracts.ARPContract;
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -75,7 +75,7 @@ public class ARPAllowanceTask extends AsyncTask<String, String, BigDecimal> {
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
                 }));
         String encodedFunction = FunctionEncoder.encode(function);
-        EthCall response = BalanceAPI.getWeb3J().ethCall(
+        EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(owner, ARPContract.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();

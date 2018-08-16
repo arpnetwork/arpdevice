@@ -2,6 +2,7 @@ package org.arpnetwork.arpdevice.contracts;
 
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.ARPAllowanceTask;
+import org.arpnetwork.arpdevice.contracts.tasks.ARPBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 
@@ -63,5 +64,10 @@ public class ARPContract extends Contract {
         String data = getApproveFunctionData(spenderAddress, value);
 
         return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
+    }
+
+    public static void getArpBalance(String address, OnValueResult<BigDecimal> onResult) {
+        ARPBalanceTask arpBalanceTask = new ARPBalanceTask(onResult);
+        arpBalanceTask.execute(address);
     }
 }

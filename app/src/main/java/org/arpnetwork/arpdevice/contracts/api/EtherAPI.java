@@ -25,7 +25,7 @@ import org.web3j.protocol.http.HttpService;
 
 import java.math.BigDecimal;
 
-public class BalanceAPI {
+public class EtherAPI {
     private static String ETHER_NODE = "http://dev.arpnetwork.org:8545";
 
     public static Web3j getWeb3J() {
@@ -35,10 +35,5 @@ public class BalanceAPI {
     public static void getEtherBalance(String address, OnValueResult<BigDecimal> onResult) {
         ETHBalanceTask ethBalanceTask = new ETHBalanceTask(onResult);
         ethBalanceTask.execute(address);
-    }
-
-    public static void getArpBalance(String address, OnValueResult<BigDecimal> onResult) {
-        ARPBalanceTask arpBalanceTask = new ARPBalanceTask(onResult);
-        arpBalanceTask.execute(address);
     }
 }

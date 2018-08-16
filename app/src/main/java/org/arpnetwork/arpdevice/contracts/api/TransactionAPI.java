@@ -49,14 +49,14 @@ public class TransactionAPI {
     }
 
     public static BigInteger getTransactionGasLimit(Transaction transaction) throws IOException {
-        EthEstimateGas gas = BalanceAPI.getWeb3J().ethEstimateGas(transaction).send();
+        EthEstimateGas gas = EtherAPI.getWeb3J().ethEstimateGas(transaction).send();
         return gas.getAmountUsed();
     }
 
     private static BigInteger getTransactionCount(String address) {
         EthGetTransactionCount transactionCount = new EthGetTransactionCount();
         try {
-            transactionCount = BalanceAPI.getWeb3J()
+            transactionCount = EtherAPI.getWeb3J()
                     .ethGetTransactionCount(address, DefaultBlockParameterName.PENDING).send();
         } catch (IOException e) {
             e.printStackTrace();

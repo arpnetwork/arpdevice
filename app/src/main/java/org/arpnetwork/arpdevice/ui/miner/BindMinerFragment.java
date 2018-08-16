@@ -37,7 +37,7 @@ import android.widget.TextView;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.tasks.BindMinerHelper;
@@ -286,13 +286,13 @@ public class BindMinerFragment extends BaseFragment {
     private void checkBalance(final double ethCost) {
         // check balance before binding miner
         final String address = Wallet.get().getPublicKey();
-        BalanceAPI.getEtherBalance(address, new OnValueResult<BigDecimal>() {
+        EtherAPI.getEtherBalance(address, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
                 if (result.doubleValue() < ethCost) {
                     showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
                 } else {
-                    BalanceAPI.getArpBalance(address, new OnValueResult<BigDecimal>() {
+                    ARPContract.getArpBalance(address, new OnValueResult<BigDecimal>() {
                         @Override
                         public void onValueResult(BigDecimal result) {
                             if (result.doubleValue() < LOCK_ARP) {

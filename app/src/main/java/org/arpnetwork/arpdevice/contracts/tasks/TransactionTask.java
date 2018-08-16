@@ -18,7 +18,7 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 
 import android.os.AsyncTask;
 
-import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ public class TransactionTask extends AsyncTask<String, String, String> {
         String result;
         String txHexData = param[0];
         try {
-            EthSendTransaction transaction = BalanceAPI.getWeb3J().ethSendRawTransaction(txHexData).send();
+            EthSendTransaction transaction = EtherAPI.getWeb3J().ethSendRawTransaction(txHexData).send();
             result = transaction.getTransactionHash();
         } catch (IOException e) {
             result = null;
