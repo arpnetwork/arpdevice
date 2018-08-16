@@ -18,7 +18,6 @@ package org.arpnetwork.arpdevice.app;
 
 import android.content.Context;
 import android.os.Handler;
-import android.util.Log;
 
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.data.DApp;
@@ -32,6 +31,8 @@ import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 
 public class AppManager {
     private static final String TAG = AppManager.class.getSimpleName();
@@ -40,13 +41,15 @@ public class AppManager {
     private static final int DOWNLOAD_FAILED = 1;
     private static final int INSTALL_FAILED = 2;
 
-    private TaskHelper mTaskHelper;
     private DApp mDApp;
+    private Set<String> mPackageSet;
+    private TaskHelper mTaskHelper;
     private Handler mHandler;
 
     public AppManager(Handler handler, TaskHelper helper) {
         mHandler = handler;
         mTaskHelper = helper;
+        mPackageSet = new HashSet<>();
     }
 
     public void setDApp(DApp dApp) {
@@ -92,11 +95,6 @@ public class AppManager {
         }
     }
 
-    public void uninstallApp(String packageName) {
-        Adb adb = new Adb(Touch.getInstance().getConnection());
-        adb.uninstallApp(packageName, null);
-    }
-
     public void startApp(String packageName) {
         if (mTaskHelper != null) {
             if (mTaskHelper.launchApp(packageName)) {
@@ -107,11 +105,22 @@ public class AppManager {
         }
     }
 
+    public void uninstallApp(String packageName) {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.uninstallApp(packageName, null);
+    }
+
+    public void clear() {
+        uninstallAll();
+        mDApp = null;
+    }
+
     private void appInstall(File file, final String packageName) {
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.installApp(file.getAbsolutePath(), packageName, new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
+                mPackageSet.add(packageName);
                 DAppApi.appInstalled(packageName, SUCCESS, mDApp);
             }
 
@@ -124,5 +133,11 @@ public class AppManager {
             public void onExit(ShellChannel ch, int code) {
             }
         });
+    }
+
+    private void uninstallAll() {
+        for (String pkg : mPackageSet) {
+            uninstallApp(pkg);
+        }
     }
 }

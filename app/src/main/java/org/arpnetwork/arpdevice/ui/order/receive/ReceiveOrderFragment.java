@@ -98,7 +98,7 @@ public class ReceiveOrderFragment extends BaseFragment {
 
             @Override
             public void onDeviceReleased() {
-                appManager.setDApp(null);
+                appManager.clear();
                 DataServer.getInstance().releaseDApp();
             }
         });
