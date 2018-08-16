@@ -1,10 +1,11 @@
-package org.arpnetwork.arpdevice.contracts.tasks;
+package org.arpnetwork.arpdevice.ui.miner;
 
 import android.text.TextUtils;
 
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -17,8 +18,8 @@ import org.web3j.abi.datatypes.generated.Uint32;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
-import org.web3j.tuples.generated.Tuple3;
-import org.web3j.tuples.generated.Tuple7;
+import org.web3j.tuples.generated.Tuple2;
+import org.web3j.tuples.generated.Tuple5;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -34,15 +35,13 @@ public class BindMinerHelper {
         try {
             BigInteger serverCount = serverCount();
             for (int i = 0; i < serverCount.intValue(); i++) {
-                Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger> server = serverByIndex(BigInteger.valueOf(i));
+                Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger> server = serverByIndex(BigInteger.valueOf(i));
                 Miner miner = new Miner();
                 miner.address = server.getValue1();
                 miner.ip = server.getValue2();
                 miner.port = server.getValue3();
-                miner.capacity = server.getValue4();
-                miner.amount = server.getValue5();
-                miner.expired = server.getValue6();
-                miner.deviceCount = server.getValue7();
+                miner.size = server.getValue4();
+                miner.expired = server.getValue5();
                 list.add(miner);
             }
             return list;
@@ -68,45 +67,44 @@ public class BindMinerHelper {
         return (BigInteger) someTypes.get(0).getValue();
     }
 
-    public static Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger> serverByIndex(BigInteger _index) throws ExecutionException, InterruptedException {
+    public static Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger> serverByIndex(BigInteger _index) throws ExecutionException, InterruptedException {
         final Function function = new Function(ARPRegistry.FUNC_SERVERBYINDEX,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(_index)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {
-                }, new TypeReference<Uint32>() {
-                }, new TypeReference<Uint16>() {
-                }, new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }));
+                                                }, new TypeReference<Uint32>() {
+                                                },
+                        new TypeReference<Uint16>() {
+                        }, new TypeReference<Uint256>() {
+                        },
+                        new TypeReference<Uint256>() {
+                        }));
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
 
-        List<Type> someTypes = FunctionReturnDecoder.decode(
+        List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
-        return new Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>(
-                (String) someTypes.get(0).getValue(),
-                (BigInteger) someTypes.get(1).getValue(),
-                (BigInteger) someTypes.get(2).getValue(),
-                (BigInteger) someTypes.get(3).getValue(),
-                (BigInteger) someTypes.get(4).getValue(),
-                (BigInteger) someTypes.get(5).getValue(),
-                (BigInteger) someTypes.get(6).getValue());
+        return new Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger>(
+                (String) results.get(0).getValue(),
+                (BigInteger) results.get(1).getValue(),
+                (BigInteger) results.get(2).getValue(),
+                (BigInteger) results.get(3).getValue(),
+                (BigInteger) results.get(4).getValue());
     }
 
     public static Miner getBound(String address) {
         Miner miner = null;
         try {
-            Tuple3<String, BigInteger, BigInteger> binder = devices(address);
+            byte[] address32 = Util.stringToBytes32(address);
+
+            Tuple2<String, BigInteger> binder = bindings(address32);
             if (!TextUtils.isEmpty(binder.getValue1()) && !binder.getValue1().
                     equals("0x0000000000000000000000000000000000000000")) {
                 miner = new Miner();
                 miner.address = binder.getValue1();
-                miner.amount = binder.getValue2();
-                miner.expired = binder.getValue3();
+                miner.expired = binder.getValue2();
             }
         } catch (ExecutionException e) {
         } catch (InterruptedException e) {
@@ -115,11 +113,10 @@ public class BindMinerHelper {
     }
 
     // Check my address has bind miner.
-    public static Tuple3<String, BigInteger, BigInteger> devices(String address) throws ExecutionException, InterruptedException {
-        final Function function = new Function(ARPRegistry.FUNC_DEVICES,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(address)),
+    public static Tuple2<String, BigInteger> bindings(byte[] address32) throws ExecutionException, InterruptedException {
+        Function function = new Function(ARPRegistry.FUNC_BINDINGS,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes32(address32)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {
-                }, new TypeReference<Uint256>() {
                 }, new TypeReference<Uint256>() {
                 }));
 
@@ -131,9 +128,8 @@ public class BindMinerHelper {
 
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
-        return new Tuple3<String, BigInteger, BigInteger>(
+        return new Tuple2<String, BigInteger>(
                 (String) someTypes.get(0).getValue(),
-                (BigInteger) someTypes.get(1).getValue(),
-                (BigInteger) someTypes.get(2).getValue());
+                (BigInteger) someTypes.get(1).getValue());
     }
 }

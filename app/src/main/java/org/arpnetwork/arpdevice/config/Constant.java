@@ -17,8 +17,6 @@
 package org.arpnetwork.arpdevice.config;
 
 public class Constant {
-    public static final String API_URL = "http://dev.arpnetwork.org:8545";
-
     public static final int CHECK_DEFAULT = -1;
     public static final int CHECK_OS = 1;
     public static final int CHECK_ADB = 2;
@@ -37,6 +35,7 @@ public class Constant {
     public static final String KEY_ADDRESS = "address";
     public static final String KEY_GASPRICE = "gas_price";
     public static final String KEY_GASLIMIT = "gas_limit";
+    public static final String KEY_BINDPROMISE = "bind_promise";
 
     public static final String ORDER_PRICE = "order_price";
 }

@@ -24,6 +24,12 @@ public class GasInfo {
     private String gasLimit;
     private String ethToYuanRate;
 
+    public GasInfo(String gasPriceGwei, String gasLimit, String ethToYuanRate) {
+        this.gasPriceGwei = gasPriceGwei;
+        this.gasLimit = gasLimit;
+        this.ethToYuanRate = ethToYuanRate;
+    }
+
     public BigDecimal getGasPriceGwei() {
         return new BigDecimal(gasPriceGwei);
     }

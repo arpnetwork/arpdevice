@@ -16,7 +16,6 @@
 
 package org.arpnetwork.arpdevice.contracts.api;
 
-import org.arpnetwork.arpdevice.contracts.tasks.ARPBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.ETHBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.web3j.protocol.Web3j;

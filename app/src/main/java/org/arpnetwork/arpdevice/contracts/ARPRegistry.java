@@ -24,9 +24,8 @@ import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tuples.generated.Tuple2;
-import org.web3j.tuples.generated.Tuple3;
-import org.web3j.tuples.generated.Tuple6;
-import org.web3j.tuples.generated.Tuple7;
+import org.web3j.tuples.generated.Tuple4;
+import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import rx.Observable;
@@ -42,34 +41,28 @@ import rx.functions.Func1;
  * <p>Generated with web3j version 3.5.0.
  */
 public class ARPRegistry extends Contract {
-    public static final String CONTRACT_ADDRESS = "0xa3159b314777e6529bca4ca2000c6e6456496589";
+    public static final String CONTRACT_ADDRESS = "0xeaec0f493d085183541f9130b8c9ee78de8a6fc3";
     private static final String BINARY = null;
 
     public static final String FUNC_SERVERS = "servers";
 
-    public static final String FUNC_ARPTOKEN = "arpToken";
+    public static final String FUNC_BINDINGS = "bindings";
 
-    public static final String FUNC_DEVICE_UNBOUND_DELAY = "DEVICE_UNBOUND_DELAY";
+    public static final String FUNC_PERMANENT = "PERMANENT";
 
     public static final String FUNC_EXPIRED_DELAY = "EXPIRED_DELAY";
 
     public static final String FUNC_SERVER_HOLDING = "SERVER_HOLDING";
 
+    public static final String FUNC_ARPBANK = "arpBank";
+
     public static final String FUNC_DEVICE_HOLDING = "DEVICE_HOLDING";
 
-    public static final String FUNC_CAPACITY_MIN = "CAPACITY_MIN";
+    public static final String FUNC_REGISTERSERVER = "registerServer";
 
-    public static final String FUNC_DEVICES = "devices";
+    public static final String FUNC_UPDATESERVER = "updateServer";
 
-    public static final String FUNC_APP_HOLDING = "APP_HOLDING";
-
-    public static final String FUNC_HOLDING_PER_DEVICE = "HOLDING_PER_DEVICE";
-
-    public static final String FUNC_REGISTER = "register";
-
-    public static final String FUNC_UNREGISTER = "unregister";
-
-    public static final String FUNC_UPDATE = "update";
+    public static final String FUNC_UNREGISTERSERVER = "unregisterServer";
 
     public static final String FUNC_BINDDEVICE = "bindDevice";
 
@@ -81,23 +74,23 @@ public class ARPRegistry extends Contract {
 
     public static final String FUNC_UNBINDAPP = "unbindApp";
 
+    public static final String FUNC_UNBINDAPPBYSERVER = "unbindAppByServer";
+
     public static final String FUNC_SERVERBYINDEX = "serverByIndex";
 
     public static final String FUNC_SERVERCOUNT = "serverCount";
 
-    public static final String FUNC_APPOF = "appOf";
-
-    public static final Event REGISTERED_EVENT = new Event("Registered",
+    public static final Event SERVERREGISTERED_EVENT = new Event("ServerRegistered",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
 
-    public static final Event UNREGISTERED_EVENT = new Event("Unregistered",
+    public static final Event SERVERUNREGISTERED_EVENT = new Event("ServerUnregistered",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
 
-    public static final Event UPDATED_EVENT = new Event("Updated",
+    public static final Event SERVEREXPIRED_EVENT = new Event("ServerExpired",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
@@ -112,12 +105,22 @@ public class ARPRegistry extends Contract {
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
 
-    public static final Event DEVICEEXPIRED_EVENT = new Event("DeviceExpired",
+    public static final Event DEVICEBOUNDEXPIRED_EVENT = new Event("DeviceBoundExpired",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
 
     public static final Event APPBOUND_EVENT = new Event("AppBound",
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
+    ;
+
+    public static final Event APPUNBOUND_EVENT = new Event("AppUnbound",
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
+    ;
+
+    public static final Event APPBOUNDEXPIRED_EVENT = new Event("AppBoundExpired",
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
             Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}));
     ;
@@ -130,35 +133,42 @@ public class ARPRegistry extends Contract {
         super(BINARY, contractAddress, web3j, transactionManager, gasPrice, gasLimit);
     }
 
-    public RemoteCall<Tuple6<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>> servers(String param0) {
+    public RemoteCall<Tuple4<BigInteger, BigInteger, BigInteger, BigInteger>> servers(String param0) {
         final Function function = new Function(FUNC_SERVERS,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(param0)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint32>() {}, new TypeReference<Uint16>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-        return new RemoteCall<Tuple6<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>>(
-                new Callable<Tuple6<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>>() {
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint32>() {}, new TypeReference<Uint16>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
+        return new RemoteCall<Tuple4<BigInteger, BigInteger, BigInteger, BigInteger>>(
+                new Callable<Tuple4<BigInteger, BigInteger, BigInteger, BigInteger>>() {
                     @Override
-                    public Tuple6<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger> call() throws Exception {
+                    public Tuple4<BigInteger, BigInteger, BigInteger, BigInteger> call() throws Exception {
                         List<Type> results = executeCallMultipleValueReturn(function);
-                        return new Tuple6<BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>(
+                        return new Tuple4<BigInteger, BigInteger, BigInteger, BigInteger>(
                                 (BigInteger) results.get(0).getValue(),
                                 (BigInteger) results.get(1).getValue(),
                                 (BigInteger) results.get(2).getValue(),
-                                (BigInteger) results.get(3).getValue(),
-                                (BigInteger) results.get(4).getValue(),
-                                (BigInteger) results.get(5).getValue());
+                                (BigInteger) results.get(3).getValue());
                     }
                 });
     }
 
-    public RemoteCall<String> arpToken() {
-        final Function function = new Function(FUNC_ARPTOKEN,
-                Arrays.<Type>asList(),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
-        return executeRemoteCallSingleValueReturn(function, String.class);
+    public RemoteCall<Tuple2<String, BigInteger>> bindings(byte[] param0) {
+        final Function function = new Function(FUNC_BINDINGS,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes32(param0)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Uint256>() {}));
+        return new RemoteCall<Tuple2<String, BigInteger>>(
+                new Callable<Tuple2<String, BigInteger>>() {
+                    @Override
+                    public Tuple2<String, BigInteger> call() throws Exception {
+                        List<Type> results = executeCallMultipleValueReturn(function);
+                        return new Tuple2<String, BigInteger>(
+                                (String) results.get(0).getValue(),
+                                (BigInteger) results.get(1).getValue());
+                    }
+                });
     }
 
-    public RemoteCall<BigInteger> DEVICE_UNBOUND_DELAY() {
-        final Function function = new Function(FUNC_DEVICE_UNBOUND_DELAY,
+    public RemoteCall<BigInteger> PERMANENT() {
+        final Function function = new Function(FUNC_PERMANENT,
                 Arrays.<Type>asList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
@@ -178,6 +188,13 @@ public class ARPRegistry extends Contract {
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
+    public RemoteCall<String> arpBank() {
+        final Function function = new Function(FUNC_ARPBANK,
+                Arrays.<Type>asList(),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}));
+        return executeRemoteCallSingleValueReturn(function, String.class);
+    }
+
     public RemoteCall<BigInteger> DEVICE_HOLDING() {
         final Function function = new Function(FUNC_DEVICE_HOLDING,
                 Arrays.<Type>asList(),
@@ -185,59 +202,21 @@ public class ARPRegistry extends Contract {
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
-    public RemoteCall<BigInteger> CAPACITY_MIN() {
-        final Function function = new Function(FUNC_CAPACITY_MIN,
-                Arrays.<Type>asList(),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
-        return executeRemoteCallSingleValueReturn(function, BigInteger.class);
-    }
-
-    public RemoteCall<Tuple3<String, BigInteger, BigInteger>> devices(String param0) {
-        final Function function = new Function(FUNC_DEVICES,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(param0)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-        return new RemoteCall<Tuple3<String, BigInteger, BigInteger>>(
-                new Callable<Tuple3<String, BigInteger, BigInteger>>() {
-                    @Override
-                    public Tuple3<String, BigInteger, BigInteger> call() throws Exception {
-                        List<Type> results = executeCallMultipleValueReturn(function);
-                        return new Tuple3<String, BigInteger, BigInteger>(
-                                (String) results.get(0).getValue(),
-                                (BigInteger) results.get(1).getValue(),
-                                (BigInteger) results.get(2).getValue());
-                    }
-                });
-    }
-
-    public RemoteCall<BigInteger> APP_HOLDING() {
-        final Function function = new Function(FUNC_APP_HOLDING,
-                Arrays.<Type>asList(),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
-        return executeRemoteCallSingleValueReturn(function, BigInteger.class);
-    }
-
-    public RemoteCall<BigInteger> HOLDING_PER_DEVICE() {
-        final Function function = new Function(FUNC_HOLDING_PER_DEVICE,
-                Arrays.<Type>asList(),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
-        return executeRemoteCallSingleValueReturn(function, BigInteger.class);
-    }
-
-    public static RemoteCall<ARPRegistry> deploy(Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit, String _arpToken) {
-        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_arpToken)));
+    public static RemoteCall<ARPRegistry> deploy(Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit, String _arpBank) {
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_arpBank)));
         return deployRemoteCall(ARPRegistry.class, web3j, credentials, gasPrice, gasLimit, BINARY, encodedConstructor);
     }
 
-    public static RemoteCall<ARPRegistry> deploy(Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit, String _arpToken) {
-        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_arpToken)));
+    public static RemoteCall<ARPRegistry> deploy(Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit, String _arpBank) {
+        String encodedConstructor = FunctionEncoder.encodeConstructor(Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_arpBank)));
         return deployRemoteCall(ARPRegistry.class, web3j, transactionManager, gasPrice, gasLimit, BINARY, encodedConstructor);
     }
 
-    public List<RegisteredEventResponse> getRegisteredEvents(TransactionReceipt transactionReceipt) {
-        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(REGISTERED_EVENT, transactionReceipt);
-        ArrayList<RegisteredEventResponse> responses = new ArrayList<RegisteredEventResponse>(valueList.size());
+    public List<ServerRegisteredEventResponse> getServerRegisteredEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(SERVERREGISTERED_EVENT, transactionReceipt);
+        ArrayList<ServerRegisteredEventResponse> responses = new ArrayList<ServerRegisteredEventResponse>(valueList.size());
         for (Contract.EventValuesWithLog eventValues : valueList) {
-            RegisteredEventResponse typedResponse = new RegisteredEventResponse();
+            ServerRegisteredEventResponse typedResponse = new ServerRegisteredEventResponse();
             typedResponse.log = eventValues.getLog();
             typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
             responses.add(typedResponse);
@@ -245,12 +224,12 @@ public class ARPRegistry extends Contract {
         return responses;
     }
 
-    public Observable<RegisteredEventResponse> registeredEventObservable(EthFilter filter) {
-        return web3j.ethLogObservable(filter).map(new Func1<Log, RegisteredEventResponse>() {
+    public Observable<ServerRegisteredEventResponse> serverRegisteredEventObservable(EthFilter filter) {
+        return web3j.ethLogObservable(filter).map(new Func1<Log, ServerRegisteredEventResponse>() {
             @Override
-            public RegisteredEventResponse call(Log log) {
-                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(REGISTERED_EVENT, log);
-                RegisteredEventResponse typedResponse = new RegisteredEventResponse();
+            public ServerRegisteredEventResponse call(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(SERVERREGISTERED_EVENT, log);
+                ServerRegisteredEventResponse typedResponse = new ServerRegisteredEventResponse();
                 typedResponse.log = log;
                 typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
                 return typedResponse;
@@ -258,17 +237,17 @@ public class ARPRegistry extends Contract {
         });
     }
 
-    public Observable<RegisteredEventResponse> registeredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+    public Observable<ServerRegisteredEventResponse> serverRegisteredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
         EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
-        filter.addSingleTopic(EventEncoder.encode(REGISTERED_EVENT));
-        return registeredEventObservable(filter);
+        filter.addSingleTopic(EventEncoder.encode(SERVERREGISTERED_EVENT));
+        return serverRegisteredEventObservable(filter);
     }
 
-    public List<UnregisteredEventResponse> getUnregisteredEvents(TransactionReceipt transactionReceipt) {
-        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(UNREGISTERED_EVENT, transactionReceipt);
-        ArrayList<UnregisteredEventResponse> responses = new ArrayList<UnregisteredEventResponse>(valueList.size());
+    public List<ServerUnregisteredEventResponse> getServerUnregisteredEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(SERVERUNREGISTERED_EVENT, transactionReceipt);
+        ArrayList<ServerUnregisteredEventResponse> responses = new ArrayList<ServerUnregisteredEventResponse>(valueList.size());
         for (Contract.EventValuesWithLog eventValues : valueList) {
-            UnregisteredEventResponse typedResponse = new UnregisteredEventResponse();
+            ServerUnregisteredEventResponse typedResponse = new ServerUnregisteredEventResponse();
             typedResponse.log = eventValues.getLog();
             typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
             responses.add(typedResponse);
@@ -276,12 +255,12 @@ public class ARPRegistry extends Contract {
         return responses;
     }
 
-    public Observable<UnregisteredEventResponse> unregisteredEventObservable(EthFilter filter) {
-        return web3j.ethLogObservable(filter).map(new Func1<Log, UnregisteredEventResponse>() {
+    public Observable<ServerUnregisteredEventResponse> serverUnregisteredEventObservable(EthFilter filter) {
+        return web3j.ethLogObservable(filter).map(new Func1<Log, ServerUnregisteredEventResponse>() {
             @Override
-            public UnregisteredEventResponse call(Log log) {
-                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(UNREGISTERED_EVENT, log);
-                UnregisteredEventResponse typedResponse = new UnregisteredEventResponse();
+            public ServerUnregisteredEventResponse call(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(SERVERUNREGISTERED_EVENT, log);
+                ServerUnregisteredEventResponse typedResponse = new ServerUnregisteredEventResponse();
                 typedResponse.log = log;
                 typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
                 return typedResponse;
@@ -289,17 +268,17 @@ public class ARPRegistry extends Contract {
         });
     }
 
-    public Observable<UnregisteredEventResponse> unregisteredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+    public Observable<ServerUnregisteredEventResponse> serverUnregisteredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
         EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
-        filter.addSingleTopic(EventEncoder.encode(UNREGISTERED_EVENT));
-        return unregisteredEventObservable(filter);
+        filter.addSingleTopic(EventEncoder.encode(SERVERUNREGISTERED_EVENT));
+        return serverUnregisteredEventObservable(filter);
     }
 
-    public List<UpdatedEventResponse> getUpdatedEvents(TransactionReceipt transactionReceipt) {
-        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(UPDATED_EVENT, transactionReceipt);
-        ArrayList<UpdatedEventResponse> responses = new ArrayList<UpdatedEventResponse>(valueList.size());
+    public List<ServerExpiredEventResponse> getServerExpiredEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(SERVEREXPIRED_EVENT, transactionReceipt);
+        ArrayList<ServerExpiredEventResponse> responses = new ArrayList<ServerExpiredEventResponse>(valueList.size());
         for (Contract.EventValuesWithLog eventValues : valueList) {
-            UpdatedEventResponse typedResponse = new UpdatedEventResponse();
+            ServerExpiredEventResponse typedResponse = new ServerExpiredEventResponse();
             typedResponse.log = eventValues.getLog();
             typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
             responses.add(typedResponse);
@@ -307,12 +286,12 @@ public class ARPRegistry extends Contract {
         return responses;
     }
 
-    public Observable<UpdatedEventResponse> updatedEventObservable(EthFilter filter) {
-        return web3j.ethLogObservable(filter).map(new Func1<Log, UpdatedEventResponse>() {
+    public Observable<ServerExpiredEventResponse> serverExpiredEventObservable(EthFilter filter) {
+        return web3j.ethLogObservable(filter).map(new Func1<Log, ServerExpiredEventResponse>() {
             @Override
-            public UpdatedEventResponse call(Log log) {
-                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(UPDATED_EVENT, log);
-                UpdatedEventResponse typedResponse = new UpdatedEventResponse();
+            public ServerExpiredEventResponse call(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(SERVEREXPIRED_EVENT, log);
+                ServerExpiredEventResponse typedResponse = new ServerExpiredEventResponse();
                 typedResponse.log = log;
                 typedResponse.server = (String) eventValues.getIndexedValues().get(0).getValue();
                 return typedResponse;
@@ -320,10 +299,10 @@ public class ARPRegistry extends Contract {
         });
     }
 
-    public Observable<UpdatedEventResponse> updatedEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+    public Observable<ServerExpiredEventResponse> serverExpiredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
         EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
-        filter.addSingleTopic(EventEncoder.encode(UPDATED_EVENT));
-        return updatedEventObservable(filter);
+        filter.addSingleTopic(EventEncoder.encode(SERVEREXPIRED_EVENT));
+        return serverExpiredEventObservable(filter);
     }
 
     public List<DeviceBoundEventResponse> getDeviceBoundEvents(TransactionReceipt transactionReceipt) {
@@ -392,11 +371,11 @@ public class ARPRegistry extends Contract {
         return deviceUnboundEventObservable(filter);
     }
 
-    public List<DeviceExpiredEventResponse> getDeviceExpiredEvents(TransactionReceipt transactionReceipt) {
-        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(DEVICEEXPIRED_EVENT, transactionReceipt);
-        ArrayList<DeviceExpiredEventResponse> responses = new ArrayList<DeviceExpiredEventResponse>(valueList.size());
+    public List<DeviceBoundExpiredEventResponse> getDeviceBoundExpiredEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(DEVICEBOUNDEXPIRED_EVENT, transactionReceipt);
+        ArrayList<DeviceBoundExpiredEventResponse> responses = new ArrayList<DeviceBoundExpiredEventResponse>(valueList.size());
         for (Contract.EventValuesWithLog eventValues : valueList) {
-            DeviceExpiredEventResponse typedResponse = new DeviceExpiredEventResponse();
+            DeviceBoundExpiredEventResponse typedResponse = new DeviceBoundExpiredEventResponse();
             typedResponse.log = eventValues.getLog();
             typedResponse.device = (String) eventValues.getIndexedValues().get(0).getValue();
             typedResponse.server = (String) eventValues.getIndexedValues().get(1).getValue();
@@ -405,12 +384,12 @@ public class ARPRegistry extends Contract {
         return responses;
     }
 
-    public Observable<DeviceExpiredEventResponse> deviceExpiredEventObservable(EthFilter filter) {
-        return web3j.ethLogObservable(filter).map(new Func1<Log, DeviceExpiredEventResponse>() {
+    public Observable<DeviceBoundExpiredEventResponse> deviceBoundExpiredEventObservable(EthFilter filter) {
+        return web3j.ethLogObservable(filter).map(new Func1<Log, DeviceBoundExpiredEventResponse>() {
             @Override
-            public DeviceExpiredEventResponse call(Log log) {
-                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(DEVICEEXPIRED_EVENT, log);
-                DeviceExpiredEventResponse typedResponse = new DeviceExpiredEventResponse();
+            public DeviceBoundExpiredEventResponse call(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(DEVICEBOUNDEXPIRED_EVENT, log);
+                DeviceBoundExpiredEventResponse typedResponse = new DeviceBoundExpiredEventResponse();
                 typedResponse.log = log;
                 typedResponse.device = (String) eventValues.getIndexedValues().get(0).getValue();
                 typedResponse.server = (String) eventValues.getIndexedValues().get(1).getValue();
@@ -419,10 +398,10 @@ public class ARPRegistry extends Contract {
         });
     }
 
-    public Observable<DeviceExpiredEventResponse> deviceExpiredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+    public Observable<DeviceBoundExpiredEventResponse> deviceBoundExpiredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
         EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
-        filter.addSingleTopic(EventEncoder.encode(DEVICEEXPIRED_EVENT));
-        return deviceExpiredEventObservable(filter);
+        filter.addSingleTopic(EventEncoder.encode(DEVICEBOUNDEXPIRED_EVENT));
+        return deviceBoundExpiredEventObservable(filter);
     }
 
     public List<AppBoundEventResponse> getAppBoundEvents(TransactionReceipt transactionReceipt) {
@@ -458,40 +437,108 @@ public class ARPRegistry extends Contract {
         return appBoundEventObservable(filter);
     }
 
-    public RemoteCall<TransactionReceipt> register(BigInteger _ip, BigInteger _port, BigInteger _capacity, BigInteger _amount) {
+    public List<AppUnboundEventResponse> getAppUnboundEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(APPUNBOUND_EVENT, transactionReceipt);
+        ArrayList<AppUnboundEventResponse> responses = new ArrayList<AppUnboundEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            AppUnboundEventResponse typedResponse = new AppUnboundEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.app = (String) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.server = (String) eventValues.getIndexedValues().get(1).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public Observable<AppUnboundEventResponse> appUnboundEventObservable(EthFilter filter) {
+        return web3j.ethLogObservable(filter).map(new Func1<Log, AppUnboundEventResponse>() {
+            @Override
+            public AppUnboundEventResponse call(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(APPUNBOUND_EVENT, log);
+                AppUnboundEventResponse typedResponse = new AppUnboundEventResponse();
+                typedResponse.log = log;
+                typedResponse.app = (String) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.server = (String) eventValues.getIndexedValues().get(1).getValue();
+                return typedResponse;
+            }
+        });
+    }
+
+    public Observable<AppUnboundEventResponse> appUnboundEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(APPUNBOUND_EVENT));
+        return appUnboundEventObservable(filter);
+    }
+
+    public List<AppBoundExpiredEventResponse> getAppBoundExpiredEvents(TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = extractEventParametersWithLog(APPBOUNDEXPIRED_EVENT, transactionReceipt);
+        ArrayList<AppBoundExpiredEventResponse> responses = new ArrayList<AppBoundExpiredEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            AppBoundExpiredEventResponse typedResponse = new AppBoundExpiredEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.app = (String) eventValues.getIndexedValues().get(0).getValue();
+            typedResponse.server = (String) eventValues.getIndexedValues().get(1).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public Observable<AppBoundExpiredEventResponse> appBoundExpiredEventObservable(EthFilter filter) {
+        return web3j.ethLogObservable(filter).map(new Func1<Log, AppBoundExpiredEventResponse>() {
+            @Override
+            public AppBoundExpiredEventResponse call(Log log) {
+                Contract.EventValuesWithLog eventValues = extractEventParametersWithLog(APPBOUNDEXPIRED_EVENT, log);
+                AppBoundExpiredEventResponse typedResponse = new AppBoundExpiredEventResponse();
+                typedResponse.log = log;
+                typedResponse.app = (String) eventValues.getIndexedValues().get(0).getValue();
+                typedResponse.server = (String) eventValues.getIndexedValues().get(1).getValue();
+                return typedResponse;
+            }
+        });
+    }
+
+    public Observable<AppBoundExpiredEventResponse> appBoundExpiredEventObservable(DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(APPBOUNDEXPIRED_EVENT));
+        return appBoundExpiredEventObservable(filter);
+    }
+
+    public RemoteCall<TransactionReceipt> registerServer(BigInteger _ip, BigInteger _port) {
         final Function function = new Function(
-                FUNC_REGISTER,
+                FUNC_REGISTERSERVER,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint32(_ip),
-                        new org.web3j.abi.datatypes.generated.Uint16(_port),
-                        new org.web3j.abi.datatypes.generated.Uint256(_capacity),
-                        new org.web3j.abi.datatypes.generated.Uint256(_amount)),
+                        new org.web3j.abi.datatypes.generated.Uint16(_port)),
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteCall<TransactionReceipt> unregister() {
+    public RemoteCall<TransactionReceipt> updateServer(BigInteger _ip, BigInteger _port) {
         final Function function = new Function(
-                FUNC_UNREGISTER,
+                FUNC_UPDATESERVER,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint32(_ip),
+                        new org.web3j.abi.datatypes.generated.Uint16(_port)),
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteCall<TransactionReceipt> unregisterServer() {
+        final Function function = new Function(
+                FUNC_UNREGISTERSERVER,
                 Arrays.<Type>asList(),
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteCall<TransactionReceipt> update(BigInteger _ip, BigInteger _port, BigInteger _capacity, BigInteger _amount) {
-        final Function function = new Function(
-                FUNC_UPDATE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint32(_ip),
-                        new org.web3j.abi.datatypes.generated.Uint16(_port),
-                        new org.web3j.abi.datatypes.generated.Uint256(_capacity),
-                        new org.web3j.abi.datatypes.generated.Uint256(_amount)),
-                Collections.<TypeReference<?>>emptyList());
-        return executeRemoteCallTransaction(function);
-    }
-
-    public RemoteCall<TransactionReceipt> bindDevice(String _server) {
+    public RemoteCall<TransactionReceipt> bindDevice(String _server, BigInteger _amount, BigInteger _expired, BigInteger _signExpired, BigInteger _v, byte[] _r, byte[] _s) {
         final Function function = new Function(
                 FUNC_BINDDEVICE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_server)),
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_server),
+                        new org.web3j.abi.datatypes.generated.Uint256(_amount),
+                        new org.web3j.abi.datatypes.generated.Uint256(_expired),
+                        new org.web3j.abi.datatypes.generated.Uint256(_signExpired),
+                        new org.web3j.abi.datatypes.generated.Uint8(_v),
+                        new org.web3j.abi.datatypes.generated.Bytes32(_r),
+                        new org.web3j.abi.datatypes.generated.Bytes32(_s)),
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
@@ -512,11 +559,10 @@ public class ARPRegistry extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteCall<TransactionReceipt> bindApp(String _server, BigInteger _amount) {
+    public RemoteCall<TransactionReceipt> bindApp(String _server) {
         final Function function = new Function(
                 FUNC_BINDAPP,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_server),
-                        new org.web3j.abi.datatypes.generated.Uint256(_amount)),
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_server)),
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
@@ -529,23 +575,29 @@ public class ARPRegistry extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteCall<Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>> serverByIndex(BigInteger _index) {
+    public RemoteCall<TransactionReceipt> unbindAppByServer(String _app) {
+        final Function function = new Function(
+                FUNC_UNBINDAPPBYSERVER,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_app)),
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteCall<Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger>> serverByIndex(BigInteger _index) {
         final Function function = new Function(FUNC_SERVERBYINDEX,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(_index)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Uint32>() {}, new TypeReference<Uint16>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-        return new RemoteCall<Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>>(
-                new Callable<Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>>() {
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Uint32>() {}, new TypeReference<Uint16>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
+        return new RemoteCall<Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger>>(
+                new Callable<Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger>>() {
                     @Override
-                    public Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger> call() throws Exception {
+                    public Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger> call() throws Exception {
                         List<Type> results = executeCallMultipleValueReturn(function);
-                        return new Tuple7<String, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger, BigInteger>(
+                        return new Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger>(
                                 (String) results.get(0).getValue(),
                                 (BigInteger) results.get(1).getValue(),
                                 (BigInteger) results.get(2).getValue(),
                                 (BigInteger) results.get(3).getValue(),
-                                (BigInteger) results.get(4).getValue(),
-                                (BigInteger) results.get(5).getValue(),
-                                (BigInteger) results.get(6).getValue());
+                                (BigInteger) results.get(4).getValue());
                     }
                 });
     }
@@ -557,23 +609,6 @@ public class ARPRegistry extends Contract {
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
     }
 
-    public RemoteCall<Tuple2<BigInteger, BigInteger>> appOf(String _app, String _server) {
-        final Function function = new Function(FUNC_APPOF,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_app),
-                        new org.web3j.abi.datatypes.Address(_server)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-        return new RemoteCall<Tuple2<BigInteger, BigInteger>>(
-                new Callable<Tuple2<BigInteger, BigInteger>>() {
-                    @Override
-                    public Tuple2<BigInteger, BigInteger> call() throws Exception {
-                        List<Type> results = executeCallMultipleValueReturn(function);
-                        return new Tuple2<BigInteger, BigInteger>(
-                                (BigInteger) results.get(0).getValue(),
-                                (BigInteger) results.get(1).getValue());
-                    }
-                });
-    }
-
     public static ARPRegistry load(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         return new ARPRegistry(contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
@@ -582,19 +617,19 @@ public class ARPRegistry extends Contract {
         return new ARPRegistry(contractAddress, web3j, transactionManager, gasPrice, gasLimit);
     }
 
-    public static class RegisteredEventResponse {
+    public static class ServerRegisteredEventResponse {
         public Log log;
 
         public String server;
     }
 
-    public static class UnregisteredEventResponse {
+    public static class ServerUnregisteredEventResponse {
         public Log log;
 
         public String server;
     }
 
-    public static class UpdatedEventResponse {
+    public static class ServerExpiredEventResponse {
         public Log log;
 
         public String server;
@@ -616,7 +651,7 @@ public class ARPRegistry extends Contract {
         public String server;
     }
 
-    public static class DeviceExpiredEventResponse {
+    public static class DeviceBoundExpiredEventResponse {
         public Log log;
 
         public String device;
@@ -625,6 +660,22 @@ public class ARPRegistry extends Contract {
     }
 
     public static class AppBoundEventResponse {
+        public Log log;
+
+        public String app;
+
+        public String server;
+    }
+
+    public static class AppUnboundEventResponse {
+        public Log log;
+
+        public String app;
+
+        public String server;
+    }
+
+    public static class AppBoundExpiredEventResponse {
         public Log log;
 
         public String app;

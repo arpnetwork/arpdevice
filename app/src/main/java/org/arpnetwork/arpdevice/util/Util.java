@@ -20,7 +20,10 @@ import android.content.Context;
 
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.R;
+
+import org.spongycastle.util.encoders.Hex;
 import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -162,6 +165,15 @@ public class Util {
     public static long ipToLong(String strIp) {
         String[] ip = strIp.split("\\.");
         return (Long.parseLong(ip[0]) << 24) + (Long.parseLong(ip[1]) << 16) + (Long.parseLong(ip[2]) << 8) + Long.parseLong(ip[3]);
+    }
+
+    public static byte[] stringToBytes32(String address) {
+        String addrCleanPrefix = Numeric.cleanHexPrefix(address);
+
+        byte[] bytes = Hex.decode(addrCleanPrefix);
+        byte[] address32 = new byte[32];
+        System.arraycopy(bytes, 0, address32, 32 - bytes.length, bytes.length);
+        return address32;
     }
 
     public static String getDurationString(Context context, long duration) {

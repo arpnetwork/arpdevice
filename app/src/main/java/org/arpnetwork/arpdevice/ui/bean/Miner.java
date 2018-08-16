@@ -16,21 +16,34 @@
 
 package org.arpnetwork.arpdevice.ui.bean;
 
+import org.arpnetwork.arpdevice.util.Util;
+
 import java.math.BigInteger;
 
 public class Miner {
     public String address;
-    public BigInteger capacity;
-    public BigInteger amount;
-    public BigInteger expired;
-    public BigInteger deviceCount;
     public BigInteger ip;
     public BigInteger port;
+    public BigInteger size;
+    public BigInteger expired;
+    public BigInteger amount;
 
     public String name;
     public String country;
     public String bandwidth;
     public String load;
+
+    public String getIpString() {
+        return Util.longToIp(ip.longValue());
+    }
+
+    public int getPortHttpInt() {
+        return port.intValue() + 1;
+    }
+
+    public int getPortTcpInt() {
+        return port.intValue();
+    }
 
     @Override
     public int hashCode() {
@@ -52,12 +65,11 @@ public class Miner {
     public String toString() {
         return "Miner{" +
                 "address='" + address + '\'' +
-                ", capacity=" + capacity +
-                ", amount=" + amount +
-                ", expired=" + expired +
-                ", deviceCount=" + deviceCount +
                 ", ip=" + ip +
                 ", port=" + port +
+                ", size=" + size +
+                ", expired=" + expired +
+                ", amount=" + amount +
                 ", name='" + name + '\'' +
                 ", country='" + country + '\'' +
                 ", bandwidth='" + bandwidth + '\'' +

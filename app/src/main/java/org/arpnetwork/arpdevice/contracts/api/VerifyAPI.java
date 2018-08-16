@@ -94,7 +94,7 @@ public class VerifyAPI {
         return Keys.getAddress(key);
     }
 
-    private static Sign.SignatureData getSignatureDataFromByte(byte[] bytesBinary) {
+    public static Sign.SignatureData getSignatureDataFromByte(byte[] bytesBinary) {
         if (bytesBinary.length != (32 + 32 + 1)) return null;
 
         ByteBuffer buffer = ByteBuffer.wrap(bytesBinary);

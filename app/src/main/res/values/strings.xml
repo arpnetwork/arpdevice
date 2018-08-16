@@ -3,6 +3,8 @@
     <string name="exit_app">press again to exit</string>
     <string name="ok">Confirm</string>
     <string name="cancel">Cancel</string>
+    <string name="load_error">load failed,please try again</string>
+    <string name="loading">Loading...</string>
 
     <!-- dialog -->
     <string name="input_passwd_tip">Please input wallet password</string>
@@ -75,6 +77,10 @@
     <string name="bind_approving">Approve is in process,please wait</string>
     <string name="bind_approve_success">Approve success</string>
     <string name="bind_approve_failed">Approve failed,please try again.</string>
+    <string name="bind_apply">Apply bind miner</string>
+    <string name="bind_apply_message">miner approve amount is %sARP，are you sure to bind?</string>
+    <string name="bind_apply_expired">apply for binding is expired</string>
+    <string name="unbind">unbind</string>
 
     <!-- my earning -->
     <string name="exchange">Exchange</string>
