@@ -21,6 +21,9 @@ import android.os.Looper;
 
 import com.google.gson.Gson;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -180,6 +183,24 @@ public class OKHttpUtils {
                     if (callback.mType == String.class) {
                         callbackSuccess(callback, response, resultStr);
                     } else {
+                        boolean jsonRpcFormat = false;
+                        JSONObject jsonRpc = null;
+                        try {
+                            jsonRpc = new JSONObject(resultStr);
+                            String jsonRpcVersion = jsonRpc.getString("jsonrpc");
+                            if (jsonRpcVersion.equals("2.0")) {
+                                jsonRpcFormat = true;
+                            }
+                        } catch (JSONException e) {
+                        }
+                        if (jsonRpcFormat) {
+                            if (jsonRpc.has("error")) {
+                                callbackError(callback, response, null);
+                                return;
+                            }
+                            resultStr = jsonRpc.optString("result");
+                        }
+
                         try {
                             Object obj = mGson.fromJson(resultStr, callback.mType);
                             callbackSuccess(callback, response, obj);
