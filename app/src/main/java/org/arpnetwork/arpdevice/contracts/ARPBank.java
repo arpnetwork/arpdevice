@@ -13,16 +13,23 @@ import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.BankBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.contracts.tasks.TransactionGasEstimateTask;
+import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
 
 import org.web3j.protocol.core.RemoteCall;
+import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Contract;
@@ -134,11 +141,25 @@ public class ARPBank extends Contract {
         Function function = new Function(
                 FUNC_APPROVE,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(spender),
-                        new org.web3j.abi.datatypes.generated.Uint256(amount),
-                        new org.web3j.abi.datatypes.generated.Uint256(expired),
-                        new org.web3j.abi.datatypes.Address(proxy)),
+                        new Uint256(amount), new Uint256(expired), new Address(proxy)),
                 Collections.<TypeReference<?>>emptyList());
         return FunctionEncoder.encode(function);
+    }
+
+    public static String getCashFunctionData(String from, BigInteger amount, Sign.SignatureData signatureData) {
+        Function function = new Function(FUNC_CASH,
+                Arrays.<Type>asList(new Address(from), new Uint256(amount),
+                        new Uint8(signatureData.getV()), new Bytes32(signatureData.getR()),
+                        new Bytes32(signatureData.getS())),
+                Collections.<TypeReference<?>>emptyList());
+        return FunctionEncoder.encode(function);
+    }
+
+    public static String getTransactionHexData(String data, Credentials credentials,
+            BigInteger gasPrice, BigInteger gasLimit) {
+        String hexData = TransactionAPI.getRawTransaction(gasPrice, gasLimit, CONTRACT_ADDRESS,
+                data, credentials);
+        return hexData;
     }
 
     public static String getTransactionHexData(String spender, BigInteger expired, String proxy, Credentials credentials,
@@ -158,4 +179,19 @@ public class ARPBank extends Contract {
         arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner);
     }
 
+    public static void estimateCashGasLimit(String from, BigInteger amount, Sign.SignatureData signatureData, final OnValueResult<BigInteger> onValueResult) {
+        String cashFunctionString = getCashFunctionData(from, amount, signatureData);
+        String ownerAddress = Wallet.get().getPublicKey();
+        Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, cashFunctionString);
+        TransactionGasEstimateTask estimateTask = new TransactionGasEstimateTask(transaction, onValueResult);
+        estimateTask.execute();
+    }
+
+    public static void cash(String from, BigInteger amount, Sign.SignatureData signatureData, Credentials credentials,
+            BigInteger gasPrice, BigInteger gasLimit, OnValueResult<String> onValueResult) {
+        String cashFunctionString = getCashFunctionData(from, amount, signatureData);
+        String transactionString = getTransactionHexData(cashFunctionString, credentials, gasPrice, gasLimit);
+        TransactionTask task = new TransactionTask(onValueResult);
+        task.execute(transactionString);
+    }
 }
