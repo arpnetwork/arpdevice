@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 
 import android.os.AsyncTask;
 
+import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.web3j.abi.FunctionEncoder;
@@ -27,6 +28,7 @@ import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.Uint;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
@@ -37,20 +39,19 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class ARPAllowanceTask extends AsyncTask<String, String, BigDecimal> {
+public class BankBalanceTask extends AsyncTask<String, String, BigDecimal> {
     private OnValueResult<BigDecimal> onResult;
 
-    public ARPAllowanceTask(OnValueResult<BigDecimal> onValueResult) {
+    public BankBalanceTask(OnValueResult<BigDecimal> onValueResult) {
         onResult = onValueResult;
     }
 
     @Override
     protected BigDecimal doInBackground(String... param) {
         String owner = param[0];
-        String spender = param[1];
         Uint balance = null;
         try {
-            balance = arpGetAllowance(owner, spender);
+            balance = balanceOf(owner);
         } catch (ExecutionException ignored) {
         } catch (InterruptedException ignored) {
         }
@@ -69,14 +70,13 @@ public class ARPAllowanceTask extends AsyncTask<String, String, BigDecimal> {
         }
     }
 
-    public static Uint arpGetAllowance(String owner, String spender) throws ExecutionException, InterruptedException {
-        Function function = new Function("allowance",
-                Arrays.<Type>asList(new Address(owner), new Address(spender)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
-                }));
+    public static Uint balanceOf(String owner) throws ExecutionException, InterruptedException {
+        final Function function = new Function("balanceOf",
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = BalanceAPI.getWeb3J().ethCall(
-                Transaction.createEthCallTransaction(owner, ARPContract.CONTRACT_ADDRESS, encodedFunction),
+                Transaction.createEthCallTransaction(owner, ARPBank.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
         List<Type> someTypes = FunctionReturnDecoder.decode(

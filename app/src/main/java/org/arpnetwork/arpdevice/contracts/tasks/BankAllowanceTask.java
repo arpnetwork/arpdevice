@@ -18,7 +18,7 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 
 import android.os.AsyncTask;
 
-import org.arpnetwork.arpdevice.contracts.ARPContract;
+import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.BalanceAPI;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
@@ -37,10 +37,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class ARPAllowanceTask extends AsyncTask<String, String, BigDecimal> {
+public class BankAllowanceTask extends AsyncTask<String, String, BigDecimal> {
     private OnValueResult<BigDecimal> onResult;
 
-    public ARPAllowanceTask(OnValueResult<BigDecimal> onValueResult) {
+    public BankAllowanceTask(OnValueResult<BigDecimal> onValueResult) {
         onResult = onValueResult;
     }
 
@@ -50,7 +50,7 @@ public class ARPAllowanceTask extends AsyncTask<String, String, BigDecimal> {
         String spender = param[1];
         Uint balance = null;
         try {
-            balance = arpGetAllowance(owner, spender);
+            balance = getBankAllowance(owner, spender);
         } catch (ExecutionException ignored) {
         } catch (InterruptedException ignored) {
         }
@@ -69,14 +69,14 @@ public class ARPAllowanceTask extends AsyncTask<String, String, BigDecimal> {
         }
     }
 
-    public static Uint arpGetAllowance(String owner, String spender) throws ExecutionException, InterruptedException {
+    public static Uint getBankAllowance(String owner, String spender) throws ExecutionException, InterruptedException {
         Function function = new Function("allowance",
                 Arrays.<Type>asList(new Address(owner), new Address(spender)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
                 }));
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = BalanceAPI.getWeb3J().ethCall(
-                Transaction.createEthCallTransaction(owner, ARPContract.CONTRACT_ADDRESS, encodedFunction),
+                Transaction.createEthCallTransaction(owner, ARPBank.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
                 .sendAsync().get();
         List<Type> someTypes = FunctionReturnDecoder.decode(

@@ -1,37 +1,34 @@
 package org.arpnetwork.arpdevice.contracts;
 
+import android.os.AsyncTask;
+
+import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
-import org.web3j.abi.EventEncoder;
+import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
+import org.arpnetwork.arpdevice.contracts.tasks.BankBalanceTask;
+import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
-import org.web3j.abi.datatypes.Bool;
-import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Uint;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameter;
+
 import org.web3j.protocol.core.RemoteCall;
-import org.web3j.protocol.core.methods.request.EthFilter;
-import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Convert;
 
-import rx.Observable;
-import rx.functions.Func1;
 
 /**
  * <p>Auto generated code.
@@ -92,6 +89,47 @@ public class ARPBank extends Contract {
         return new ARPBank(contractAddress, web3j, transactionManager, gasPrice, gasLimit);
     }
 
+    public RemoteCall<TransactionReceipt> deposit(BigInteger _value) {
+        final Function function = new Function(
+                FUNC_DEPOSIT,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(_value)),
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
+    public RemoteCall<Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>> allowance(String _owner, String _spender) {
+        final Function function = new Function(FUNC_ALLOWANCE,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_owner),
+                        new org.web3j.abi.datatypes.Address(_spender)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
+                }, new TypeReference<Uint256>() {
+                }, new TypeReference<Uint256>() {
+                }, new TypeReference<Uint256>() {
+                }, new TypeReference<Address>() {
+                }));
+        return new RemoteCall<Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>>(
+                new Callable<Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>>() {
+                    @Override
+                    public Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String> call() throws Exception {
+                        List<Type> results = executeCallMultipleValueReturn(function);
+                        return new Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>(
+                                (BigInteger) results.get(0).getValue(),
+                                (BigInteger) results.get(1).getValue(),
+                                (BigInteger) results.get(2).getValue(),
+                                (BigInteger) results.get(3).getValue(),
+                                (String) results.get(4).getValue());
+                    }
+                });
+    }
+
+    public RemoteCall<TransactionReceipt> cancelApprovalBySpender(String owner) {
+        final Function function = new Function(
+                FUNC_CANCELAPPROVALBYSPENDER,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner)),
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
+    }
+
     public static String getApproveFunctionData(String spender, BigInteger amount, BigInteger expired, String proxy) {
         Function function = new Function(
                 FUNC_APPROVE,
@@ -109,4 +147,15 @@ public class ARPBank extends Contract {
                 getApproveFunctionData(spender, new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()), expired, proxy), credentials);
         return hexData;
     }
+
+    public static void allowanceARP(String owner, String spender, OnValueResult<BigDecimal> onResult) {
+        BankAllowanceTask arpAllowanceTask = new BankAllowanceTask(onResult);
+        arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner, spender);
+    }
+
+    public static void balanceOf(String owner, OnValueResult<BigDecimal> onResult) {
+        BankBalanceTask arpAllowanceTask = new BankBalanceTask(onResult);
+        arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner);
+    }
+
 }
