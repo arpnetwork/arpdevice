@@ -26,11 +26,13 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
+import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.BankBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionGasEstimateTask;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask;
+import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.TypeReference;
@@ -178,9 +180,10 @@ public class ARPBank extends Contract {
         estimateTask.execute();
     }
 
-    public static void cash(String from, BigInteger amount, Sign.SignatureData signatureData, Credentials credentials,
-            BigInteger gasPrice, BigInteger gasLimit, OnValueResult<String> onValueResult) {
-        String cashFunctionString = getCashFunctionData(from, amount, signatureData);
+    public static void cash(Promise promise, Credentials credentials, BigInteger gasPrice,
+            BigInteger gasLimit, OnValueResult<String> onValueResult) {
+        String cashFunctionString = getCashFunctionData(promise.getFrom(), new BigInteger(promise.getAmount()),
+                VerifyAPI.getSignatureDataFromHexString(promise.getSign()));
         String transactionString = getTransactionHexData(cashFunctionString, credentials, gasPrice, gasLimit);
         TransactionTask task = new TransactionTask(onValueResult);
         task.execute(transactionString);

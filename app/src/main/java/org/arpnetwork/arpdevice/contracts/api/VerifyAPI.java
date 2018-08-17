@@ -16,36 +16,21 @@
 
 package org.arpnetwork.arpdevice.contracts.api;
 
+import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.spongycastle.util.encoders.Hex;
+import org.web3j.abi.TypeEncoder;
+import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.Sign;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.SignatureException;
-import java.util.Random;
 
 public class VerifyAPI {
-
-    /**
-     * Get a random string
-     *
-     * @param length length of string wanted
-     * @return
-     */
-    public static String getRandomString(int length) {
-        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        Random random = new Random();
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < length; i++) {
-            int number = random.nextInt(str.length());
-            sb.append(str.charAt(number));
-        }
-
-        return sb.toString();
-    }
 
     /**
      * Sign random data with password for private key
@@ -71,11 +56,37 @@ public class VerifyAPI {
             return null;
         }
 
-        byte[] message = signatureContent.getBytes();
-        Sign.SignatureData signatureData = Sign.signMessage(
-                message, credentials.getEcKeyPair());
+        return toSignatureString(sign(signatureContent.getBytes(), credentials));
+    }
 
-        return toSignatureString(signatureData);
+    public static Sign.SignatureData sign(byte[] message, Credentials credentials) {
+        return Sign.signMessage(message, credentials.getEcKeyPair());
+    }
+
+    /**
+     * Verify promise
+     *
+     * @param promise
+     * @return
+     */
+    public static boolean isEffectivePromise(Promise promise) {
+        Uint256 cid = new Uint256(new BigInteger(promise.getCid()));
+        String from = Numeric.cleanHexPrefix(promise.getFrom());
+        String sender = Numeric.cleanHexPrefix(promise.getTo());
+        Uint256 amount = new Uint256(new BigInteger(promise.getAmount()));
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(TypeEncoder.encode(cid));
+        builder.append(from);
+        builder.append(sender);
+        builder.append(TypeEncoder.encode(amount));
+        String address = null;
+        try {
+            address = VerifyAPI.getSignatureAddress(Hex.decode(builder.toString()), Hex.decode(promise.getSign()));
+        } catch (SignatureException ignore) {
+        }
+
+        return from.toLowerCase().equals(address.toLowerCase());
     }
 
     /**
@@ -89,9 +100,18 @@ public class VerifyAPI {
     public static String getSignatureAddress(String signatureContent, String signatureData) throws SignatureException {
         byte[] bytes = signatureContent.getBytes();
         byte[] signatureDataBytes = Hex.decode(signatureData);
-        BigInteger key = Sign.signedMessageToKey(bytes, getSignatureDataFromByte(signatureDataBytes));
+
+        return getSignatureAddress(bytes, signatureDataBytes);
+    }
+
+    public static String getSignatureAddress(byte[] contentBytes, byte[] signatureDataBytes) throws SignatureException {
+        BigInteger key = Sign.signedMessageToKey(contentBytes, getSignatureDataFromByte(signatureDataBytes));
 
         return Keys.getAddress(key);
+    }
+
+    public static Sign.SignatureData getSignatureDataFromHexString(String hexString) {
+        return getSignatureDataFromByte(Hex.decode(hexString));
     }
 
     public static Sign.SignatureData getSignatureDataFromByte(byte[] bytesBinary) {
@@ -107,7 +127,7 @@ public class VerifyAPI {
         return new Sign.SignatureData(v, r, s);
     }
 
-    private static String toSignatureString(Sign.SignatureData signatureData) {
+    public static String toSignatureString(Sign.SignatureData signatureData) {
         byte[] signatureByte = new byte[65];
         System.arraycopy(signatureData.getR(), 0, signatureByte, 0, 32);
         System.arraycopy(signatureData.getS(), 0, signatureByte, 32, 32);

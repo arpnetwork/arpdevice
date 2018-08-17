@@ -27,6 +27,7 @@ import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.concurrent.ExecutionException;
 
 public class TransactionAPI {
 
@@ -64,9 +65,22 @@ public class TransactionAPI {
         return transactionCount.getTransactionCount();
     }
 
+    private static BigInteger getFutureTransactionCount(String address) throws ExecutionException, InterruptedException {
+        EthGetTransactionCount transactionCount = EtherAPI.getWeb3J()
+                .ethGetTransactionCount(address, DefaultBlockParameterName.PENDING).sendAsync().get();
+        return transactionCount.getTransactionCount();
+    }
+
     private static RawTransaction getTransaction(BigInteger gasPrice, BigInteger gasLimit,
             String contractAddress, String data, Credentials credentials) {
-        BigInteger nonce = getTransactionCount(credentials.getAddress());
+        BigInteger nonce = null;
+        try {
+            nonce = getFutureTransactionCount(credentials.getAddress());
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         RawTransaction rawTransaction  = RawTransaction.createTransaction(
                 nonce, gasPrice, gasLimit, contractAddress, data);
         return rawTransaction;
