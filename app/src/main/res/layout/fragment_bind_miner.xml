@@ -8,7 +8,6 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="50dp"
         android:orientation="vertical">
 
         <TextView
@@ -24,7 +23,7 @@
             android:id="@+id/iv_miners"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tv_bind_tip"
+            android:layout_weight="9"
             android:background="@drawable/round_corner_bg"
             android:listSelector="@android:color/transparent"
             android:scrollbars="none" />
@@ -45,12 +44,17 @@
                 android:gravity="center" />
 
         </LinearLayout>
-    </LinearLayout>
 
-    <Button
-        android:id="@+id/btn_unbind"
-        style="@style/Button"
-        android:layout_gravity="bottom|center_horizontal"
-        android:text="@string/unbind" />
+        <Button
+            android:id="@+id/btn_unbind"
+            style="@style/Button"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginTop="20dp"
+            android:layout_weight="1"
+            android:text="@string/unbind"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
 </FrameLayout>

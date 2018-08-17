@@ -66,21 +66,41 @@
     <string name="bind_failed">Bind miner failed,please try again</string>
     <string name="bind_message">Bind miner need at least 500 ARPs to pay ethereum gas</string>
     <string name="bind_eth_format">%s ether about%.2f¥</string>
-    <string name="bind_btn_bind">Bind</string>
-    <string name="bind_btn_quit">Quit</string>
     <string name="bind_btn_approve">Approve</string>
     <string name="miner_load">,load</string>
     <string name="miner_bandwidth">,bandwidth</string>
     <string name="load_gas_failed">Load gas failed,please try again.</string>
     <string name="bind_handle">Binding is in process,please wait</string>
-    <string name="bind_approve_message">Approve need 5000 ARPs to bind miner(Approve doesn\'t cost ARP but cost eth gas）</string>
     <string name="bind_approving">Approve is in process,please wait</string>
     <string name="bind_approve_success">Approve success</string>
     <string name="bind_approve_failed">Approve failed,please try again.</string>
     <string name="bind_apply">Apply bind miner</string>
     <string name="bind_apply_message">miner approve amount is %sARP，are you sure to bind?</string>
     <string name="bind_apply_expired">apply for binding is expired</string>
-    <string name="unbind">unbind</string>
+    <string name="load_promise_failed">load miner info failed,please try again.</string>
+    <string name="unbind">Unbind</string>
+    <string name="unbind_success">Unbind success</string>
+    <string name="unbind_running">Unbind is in process</string>
+    <string name="unbind_failed">Unbind failed,please try again</string>
+    <!-- bind dialog btn text -->
+    <string name="bind_btn_arp_approve">ARP authorization</string>
+    <string name="bind_btn_bank_approve">Miner authorization</string>
+    <string name="bind_btn_deposit">deposit</string>
+    <string name="bind_btn_bind">Bind</string>
+    <string name="bind_btn_unbind">Unbind</string>
+    <string name="bind_btn_cancel_approve">Cancel approve</string>
+    <string name="bind_btn_quit">Quit</string>
+    <!-- bind step -->
+    <string name="bind_bank_approve_title">BankApprove</string>
+    <string name="bind_bank_approve_msg">BankApprove</string>
+    <string name="bind_bank_deposit_title">BankDeposit</string>
+    <string name="bind_bank_deposit_msg">BankDeposit</string>
+    <string name="bind_arp_approve_title">ARPApprove</string>
+    <string name="bind_arp_approve_msg">Approve need 5000 ARPs to bind miner(Approve doesn\'t cost ARP but cost eth gas）</string>
+    <string name="bind_unbind_title">unbind</string>
+    <string name="bind_unbind_msg">unbind</string>
+    <string name="bind_cancel_approve_title">cancel approve</string>
+    <string name="bind_cancel_approve_msg">cancel approve</string>
 
     <!-- my earning -->
     <string name="exchange">Exchange</string>

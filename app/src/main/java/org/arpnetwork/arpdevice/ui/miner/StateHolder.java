@@ -31,6 +31,18 @@ public class StateHolder {
     public static final int STATE_UNBIND_SUCCESS = 8;
     public static final int STATE_UNBIND_FAILED = 9;
 
+    public static final int STATE_DEPOSIT_RUNNING = 10;
+    public static final int STATE_DEPOSIT_SUCCESS = 11;
+    public static final int STATE_DEPOSIT_FAILED = 12;
+
+    public static final int STATE_BANK_APPROVE_RUNNING = 13;
+    public static final int STATE_BANK_APPROVE_SUCCESS = 14;
+    public static final int STATE_BANK_APPROVE_FAILED = 15;
+
+    public static final int STATE_BANK_CANCEL_APPROVE_RUNNING = 16;
+    public static final int STATE_BANK_CANCEL_APPROVE_SUCCESS = 17;
+    public static final int STATE_BANK_CANCEL_APPROVE_FAILED = 18;
+
     private static ConcurrentHashMap<TaskInfo, Integer> sTaskStateMap = new ConcurrentHashMap<>(1);
 
     public static void setState(TaskInfo task, int status) {
@@ -50,5 +62,9 @@ public class StateHolder {
             }
         }
         return key;
+    }
+
+    public static void clearAllState() {
+        sTaskStateMap.clear();
     }
 }

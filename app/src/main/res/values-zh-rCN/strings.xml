@@ -66,14 +66,10 @@
     <string name="bind_failed">绑定矿工失败，请重试</string>
     <string name="bind_message">绑定矿工需要账户余额至少500个ARP并支付以太坊油费</string>
     <string name="bind_eth_format">%s ether 约为%.2f元人民币</string>
-    <string name="bind_btn_bind">绑定</string>
-    <string name="bind_btn_quit">退出</string>
-    <string name="bind_btn_approve">预授权</string>
     <string name="miner_load">，负载</string>
     <string name="miner_bandwidth">，带宽</string>
     <string name="load_gas_failed">加载gas价格失败，请重试</string>
     <string name="bind_handle">绑定矿工正在处理中，请稍后</string>
-    <string name="bind_approve_message">需要预授权5000个ARP才能绑定矿工（预授权不扣ARP但需要支付以太坊油费）</string>
     <string name="bind_approving">正在预授权，请耐心等待</string>
     <string name="bind_approve_success">授权成功</string>
     <string name="bind_approve_failed">授权失败，请重试</string>
@@ -81,6 +77,29 @@
     <string name="bind_apply_message">矿工授权额度是%s个ARP，申请绑定吗？</string>
     <string name="bind_apply_expired">申请绑定已过期</string>
     <string name="unbind">解绑</string>
+    <string name="unbind_success">解绑成功</string>
+    <string name="unbind_running">正在解绑</string>
+    <string name="unbind_failed">解绑矿工失败，请重试</string>
+    <!-- 绑定矿工 dialog btn text -->
+    <string name="bind_btn_arp_approve">ARP预授权</string>
+    <string name="bind_btn_bank_approve">Bank预授权</string>
+    <string name="bind_btn_deposit">存钱</string>
+    <string name="bind_btn_bind">绑定</string>
+    <string name="bind_btn_unbind">解绑</string>
+    <string name="bind_btn_cancel_approve">取消授权</string>
+    <string name="bind_btn_quit">退出</string>
+    <!-- 绑定矿工 step -->
+    <string name="load_promise_failed">获取矿工信息失败，请重试</string>
+    <string name="bind_bank_approve_title">Bank预授权</string>
+    <string name="bind_bank_approve_msg">Bank需要预授权</string>
+    <string name="bind_bank_deposit_title">存ARP到ARP Bank</string>
+    <string name="bind_bank_deposit_msg">需要预先存ARP500个到ARP Bank</string>
+    <string name="bind_arp_approve_title">ARPApprove</string>
+    <string name="bind_arp_approve_msg">需要预授权5000个ARP才能绑定矿工（预授权不扣ARP但需要支付以太坊油费）</string>
+    <string name="bind_unbind_title">解绑</string>
+    <string name="bind_unbind_msg">解绑</string>
+    <string name="bind_cancel_approve_title">取消授权</string>
+    <string name="bind_cancel_approve_msg">取消授权</string>
 
     <!-- 我的收入 -->
     <string name="exchange">去兑换</string>

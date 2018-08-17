@@ -120,31 +120,6 @@ public class ARPBank extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteCall<Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>> allowance(String _owner, String _spender) {
-        final Function function = new Function(FUNC_ALLOWANCE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(_owner),
-                        new org.web3j.abi.datatypes.Address(_spender)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }, new TypeReference<Address>() {
-                }));
-        return new RemoteCall<Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>>(
-                new Callable<Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>>() {
-                    @Override
-                    public Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String> call() throws Exception {
-                        List<Type> results = executeCallMultipleValueReturn(function);
-                        return new Tuple5<BigInteger, BigInteger, BigInteger, BigInteger, String>(
-                                (BigInteger) results.get(0).getValue(),
-                                (BigInteger) results.get(1).getValue(),
-                                (BigInteger) results.get(2).getValue(),
-                                (BigInteger) results.get(3).getValue(),
-                                (String) results.get(4).getValue());
-                    }
-                });
-    }
-
     public RemoteCall<TransactionReceipt> cancelApprovalBySpender(String owner) {
         final Function function = new Function(
                 FUNC_CANCELAPPROVALBYSPENDER,
@@ -209,5 +184,14 @@ public class ARPBank extends Contract {
         String transactionString = getTransactionHexData(cashFunctionString, credentials, gasPrice, gasLimit);
         TransactionTask task = new TransactionTask(onValueResult);
         task.execute(transactionString);
+    }
+
+    public static Transaction getApproveEstimateGasTrans(String proxy) {
+        String ownerAddress = Wallet.get().getPublicKey();
+        String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
+        BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
+        String data = getApproveFunctionData(spenderAddress, value,BigInteger.ZERO,proxy);
+
+        return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
     }
 }

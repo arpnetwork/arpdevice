@@ -69,7 +69,7 @@ public class BankAllowanceTask extends AsyncTask<String, String, BankAllowanceTa
     }
 
     public static BankAllowance getBankAllowance(String owner, String spender) throws ExecutionException, InterruptedException {
-        Function function = new Function("allowance",
+        Function function = new Function(ARPBank.FUNC_ALLOWANCE,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner),
                         new org.web3j.abi.datatypes.Address(spender)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {},

@@ -59,7 +59,7 @@ public class ARPContract extends Contract {
 
     public static Transaction getApproveEstimateGasTrans() {
         String ownerAddress = Wallet.get().getPublicKey();
-        String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
+        String spenderAddress = ARPBank.CONTRACT_ADDRESS;
         BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
         String data = getApproveFunctionData(spenderAddress, value);
 

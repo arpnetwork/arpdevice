@@ -91,11 +91,25 @@ final class MinerAdapter extends BaseAdapter {
                 case StateHolder.STATE_BIND_RUNNING:
                     viewHolder.bindState.setText(mContext.getString(R.string.bind_running));
                     break;
+
                 case StateHolder.STATE_BIND_SUCCESS:
                     viewHolder.bindState.setText(mContext.getString(R.string.bind_success));
                     break;
+
                 case StateHolder.STATE_BIND_FAILED:
                     viewHolder.bindState.setText(mContext.getString(R.string.bind_failed));
+                    break;
+
+                case StateHolder.STATE_UNBIND_RUNNING:
+                    viewHolder.bindState.setText(mContext.getString(R.string.unbind_running));
+                    break;
+
+                case StateHolder.STATE_UNBIND_SUCCESS:
+                    viewHolder.bindState.setVisibility(View.GONE);
+                    break;
+
+                case StateHolder.STATE_UNBIND_FAILED:
+                    viewHolder.bindState.setText(mContext.getString(R.string.unbind_failed));
                     break;
             }
         } else {

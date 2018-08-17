@@ -34,7 +34,7 @@ public class Miner {
     public String load;
 
     public String getIpString() {
-        return Util.longToIp(ip.longValue());
+        return ip == null ? null : Util.longToIp(ip.longValue());
     }
 
     public int getPortHttpInt() {
@@ -65,7 +65,7 @@ public class Miner {
     public String toString() {
         return "Miner{" +
                 "address='" + address + '\'' +
-                ", ip=" + ip +
+                ", ip=" + getIpString() +
                 ", port=" + port +
                 ", size=" + size +
                 ", expired=" + expired +
