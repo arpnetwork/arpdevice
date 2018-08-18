@@ -100,6 +100,7 @@
     <string name="bind_unbind_msg">解绑</string>
     <string name="bind_cancel_approve_title">取消授权</string>
     <string name="bind_cancel_approve_msg">取消授权</string>
+    <string name="bind_change_bind_msg">请先解绑再绑定新矿工</string>
 
     <!-- 我的收入 -->
     <string name="exchange">去兑换</string>

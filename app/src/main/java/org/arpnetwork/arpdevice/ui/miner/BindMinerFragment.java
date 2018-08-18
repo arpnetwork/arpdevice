@@ -174,20 +174,7 @@ public class BindMinerFragment extends BaseFragment {
                 if (!mAdapter.isBound(position)) {
                     mClickPosition = position;
                     if (mBoundMiner != null || StateHolder.getTaskByState(StateHolder.STATE_BIND_SUCCESS) != null) {
-                        // TODO: 提示凭证兑换
-                        /*showMessageAlertDialog("兑换", "Message", "去兑换", "放弃兑换", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Log.d(TAG, "去兑换");
-                            }
-                        }, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                finish();
-                            }
-                        });*/
-                        // TODO: 兑换成功调用
-                        checkBalance(Util.getEthCost(mGasInfo.getGasPriceGwei(), mGasInfo.getGasLimit()).doubleValue());
+                        showMessageAlertDialog(null, getString(R.string.bind_change_bind_msg), getString(R.string.ok), null, null, null);
                     } else {
                         checkBalance(Util.getEthCost(mGasInfo.getGasPriceGwei(), mGasInfo.getGasLimit()).doubleValue());
                     }
@@ -401,11 +388,7 @@ public class BindMinerFragment extends BaseFragment {
             @Override
             public void onSuccess(Response response, BindPromise result) {
                 String message = String.format(getString(R.string.bind_apply_message), result.getAmountHumanic());
-                if (result.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) { // 4小时内
-                    showErrorAlertDialog(null, getString(R.string.bind_apply_expired));
-                } else {
-                    showAmountAlertDialog(null, message, result);
-                }
+                showAmountAlertDialog(null, message, result);
             }
 
             @Override
@@ -599,7 +582,11 @@ public class BindMinerFragment extends BaseFragment {
                         dialog.dismiss();
 
                         if (opType == OPERATION_BIND) {
-                            startBindService(passwd);
+                            if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) { // 4小时内
+                                showErrorAlertDialog(null, getString(R.string.bind_apply_expired));
+                            } else {
+                                startBindService(passwd);
+                            }
                         } else if (opType == OPERATION_UNBIND) {
                             startUnbindService(passwd);
                         } else if (opType == OPERATION_CANCEL_APPROVE) {

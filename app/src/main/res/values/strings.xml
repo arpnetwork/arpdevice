@@ -101,6 +101,7 @@
     <string name="bind_unbind_msg">unbind</string>
     <string name="bind_cancel_approve_title">cancel approve</string>
     <string name="bind_cancel_approve_msg">cancel approve</string>
+    <string name="bind_change_bind_msg">Please unbind first and then bind new.</string>
 
     <!-- my earning -->
     <string name="exchange">Exchange</string>
