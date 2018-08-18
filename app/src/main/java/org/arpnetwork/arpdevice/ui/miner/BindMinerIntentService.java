@@ -200,7 +200,7 @@ public class BindMinerIntentService extends IntentService {
         } catch (IOException e) {
             gasLimit = new BigInteger("400000");
         }
-        String hexData = ARPBank.getTransactionHexData(ARPRegistry.CONTRACT_ADDRESS, BigInteger.ZERO, "0",
+        String hexData = ARPBank.getApproveTransactionHexData(ARPRegistry.CONTRACT_ADDRESS, BigInteger.ZERO, "0",
                 credentials, gasPrice, gasLimit);
         try {
             EthSendTransaction ethSendTransaction = EtherAPI.getWeb3J().ethSendRawTransaction(hexData).send();

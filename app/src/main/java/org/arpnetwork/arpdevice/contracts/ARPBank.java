@@ -130,36 +130,11 @@ public class ARPBank extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public static String getApproveFunctionData(String spender, BigInteger amount, BigInteger expired, String proxy) {
-        Function function = new Function(
-                FUNC_APPROVE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(spender),
-                        new Uint256(amount), new Uint256(expired), new Address(proxy)),
-                Collections.<TypeReference<?>>emptyList());
-        return FunctionEncoder.encode(function);
-    }
-
-    public static String getCashFunctionData(String from, BigInteger amount, Sign.SignatureData signatureData) {
-        Function function = new Function(FUNC_CASH,
-                Arrays.<Type>asList(new Address(from), new Uint256(amount),
-                        new Uint8(signatureData.getV()), new Bytes32(signatureData.getR()),
-                        new Bytes32(signatureData.getS())),
-                Collections.<TypeReference<?>>emptyList());
-        return FunctionEncoder.encode(function);
-    }
-
-    public static String getTransactionHexData(String data, Credentials credentials,
+    public static String getApproveTransactionHexData(String spender, BigInteger expired, String proxy, Credentials credentials,
             BigInteger gasPrice, BigInteger gasLimit) {
-        String hexData = TransactionAPI.getRawTransaction(gasPrice, gasLimit, CONTRACT_ADDRESS,
-                data, credentials);
-        return hexData;
-    }
-
-    public static String getTransactionHexData(String spender, BigInteger expired, String proxy, Credentials credentials,
-            BigInteger gasPrice, BigInteger gasLimit) {
-        String hexData = TransactionAPI.getRawTransaction(gasPrice, gasLimit, CONTRACT_ADDRESS,
-                getApproveFunctionData(spender, new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()), expired, proxy), credentials);
-        return hexData;
+        return getTransactionHexData(getApproveFunctionData(spender,
+                new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()), expired, proxy),
+                credentials, gasPrice, gasLimit);
     }
 
     public static void allowanceARP(String owner, String spender, OnValueResult<BankAllowanceTask.BankAllowance> onResult) {
@@ -172,12 +147,21 @@ public class ARPBank extends Contract {
         arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner);
     }
 
+    public static Transaction getApproveEstimateGasTrans(String proxy) {
+        String ownerAddress = Wallet.get().getPublicKey();
+        String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
+        BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
+        String data = getApproveFunctionData(spenderAddress, value,BigInteger.ZERO,proxy);
+
+        return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
+    }
+
     public static void estimateCashGasLimit(String from, BigInteger amount, Sign.SignatureData signatureData, final OnValueResult<BigInteger> onValueResult) {
         String cashFunctionString = getCashFunctionData(from, amount, signatureData);
         String ownerAddress = Wallet.get().getPublicKey();
         Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, cashFunctionString);
         TransactionGasEstimateTask estimateTask = new TransactionGasEstimateTask(transaction, onValueResult);
-        estimateTask.execute();
+        estimateTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public static void cash(Promise promise, Credentials credentials, BigInteger gasPrice,
@@ -189,12 +173,53 @@ public class ARPBank extends Contract {
         task.execute(transactionString);
     }
 
-    public static Transaction getApproveEstimateGasTrans(String proxy) {
-        String ownerAddress = Wallet.get().getPublicKey();
-        String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
-        BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
-        String data = getApproveFunctionData(spenderAddress, value,BigInteger.ZERO,proxy);
+    public static void withdrawAll(final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit,
+            final OnValueResult<String> onValueResult) {
+        balanceOf(Wallet.get().getPublicKey(), new OnValueResult<BigDecimal>() {
+            @Override
+            public void onValueResult(BigDecimal result) {
+                BigInteger amount = result.toBigInteger();
+                withdraw(amount, credentials, gasPrice, gasLimit, onValueResult);
+            }
+        });
+    }
 
-        return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
+    private static void withdraw(BigInteger amount, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit,
+            OnValueResult<String> onValueResult) {
+        String withdrawFunctionString = getWithdrawFunctionData(amount);
+        String transactionString = getTransactionHexData(withdrawFunctionString, credentials, gasPrice, gasLimit);
+        TransactionTask task = new TransactionTask(onValueResult);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, transactionString);
+    }
+
+    private static String getApproveFunctionData(String spender, BigInteger amount, BigInteger expired, String proxy) {
+        Function function = new Function(
+                FUNC_APPROVE,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(spender),
+                        new Uint256(amount), new Uint256(expired), new Address(proxy)),
+                Collections.<TypeReference<?>>emptyList());
+        return FunctionEncoder.encode(function);
+    }
+
+    private static String getCashFunctionData(String from, BigInteger amount, Sign.SignatureData signatureData) {
+        Function function = new Function(FUNC_CASH,
+                Arrays.<Type>asList(new Address(from), new Uint256(amount),
+                        new Uint8(signatureData.getV()), new Bytes32(signatureData.getR()),
+                        new Bytes32(signatureData.getS())),
+                Collections.<TypeReference<?>>emptyList());
+        return FunctionEncoder.encode(function);
+    }
+
+    private static String getWithdrawFunctionData(BigInteger amount) {
+        Function function = new Function(FUNC_WITHDRAW,
+                Arrays.<Type>asList(new Uint256(amount)),
+                Collections.<TypeReference<?>>emptyList());
+        return FunctionEncoder.encode(function);
+    }
+
+    private static String getTransactionHexData(String data, Credentials credentials,
+            BigInteger gasPrice, BigInteger gasLimit) {
+        return TransactionAPI.getRawTransaction(gasPrice, gasLimit, CONTRACT_ADDRESS,
+                data, credentials);
     }
 }
