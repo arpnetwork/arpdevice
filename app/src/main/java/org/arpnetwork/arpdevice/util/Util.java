@@ -167,6 +167,21 @@ public class Util {
         return (Long.parseLong(ip[0]) << 24) + (Long.parseLong(ip[1]) << 16) + (Long.parseLong(ip[2]) << 8) + Long.parseLong(ip[3]);
     }
 
+    public static String join(String join, String[] array) {
+        StringBuilder sb = new StringBuilder();
+        if (array != null) {
+            for (int i = 0, len = array.length; i < len; i++) {
+                sb.append(array[i]);
+
+                if (i < len - 1) {
+                    sb.append(join);
+                }
+            }
+        }
+
+        return sb.toString();
+    }
+
     public static byte[] stringToBytes32(String address) {
         String addrCleanPrefix = Numeric.cleanHexPrefix(address);
 

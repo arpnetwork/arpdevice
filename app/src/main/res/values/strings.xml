@@ -67,8 +67,9 @@
     <string name="bind_message">Bind miner need at least 500 ARPs to pay ethereum gas</string>
     <string name="bind_eth_format">%s ether about%.2f¥</string>
     <string name="bind_btn_approve">Approve</string>
-    <string name="miner_load">,load</string>
-    <string name="miner_bandwidth">,bandwidth</string>
+    <string name="miner_load">load%.2f%%</string>
+    <string name="miner_bandwidth">bandwidth%dMbps</string>
+    <string name="miner_comma">, </string>
     <string name="load_gas_failed">Load gas failed,please try again.</string>
     <string name="bind_handle">Binding is in process,please wait</string>
     <string name="bind_approving">Approve is in process,please wait</string>

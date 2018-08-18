@@ -54,6 +54,7 @@ import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.bean.GasInfo;
 import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
@@ -341,8 +342,7 @@ public class BindMinerFragment extends BaseFragment {
         List<Miner> miners = BindMinerHelper.getMinerList();
         for (int i = 0; i < miners.size(); i++) {
             Miner miner = miners.get(i);
-//            String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
-            String url = "https://easy-mock.com/mock/5afea0ae6ba6060f61c231d1/example/load";
+            String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
             loadMinerLoadInfo(i, url);
         }
         mAdapter.setData(miners);
@@ -352,19 +352,23 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void loadMinerLoadInfo(final int index, final String url) {
-        mOkHttpUtils.get(url, new SimpleCallback<String>() {
+        String nonce = AtomicNonce.getAndIncrement();
+
+        RPCRequest request = new RPCRequest();
+        request.setId(nonce);
+        request.setMethod(Config.API_SERVER_INFO);
+        request.putString(nonce);
+
+        String json = request.toJSON();
+
+        mOkHttpUtils.post(url, json, Config.API_SERVER_INFO, new SimpleCallback<MinerInfo>() {
             @Override
             public void onFailure(Request request, Exception e) {
             }
 
             @Override
-            public void onSuccess(Response response, String result) {
-                try {
-                    JSONObject jsonObject = new JSONObject(result); // {"load":"70%"}
-                    String load = jsonObject.optString("load");
-                    mAdapter.updateLoad(index, load);
-                } catch (JSONException ignored) {
-                }
+            public void onSuccess(Response response, MinerInfo result) {
+                mAdapter.updateLoad(index, result);
             }
 
             @Override

@@ -26,14 +26,18 @@ import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
+import org.arpnetwork.arpdevice.util.Util;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 final class MinerAdapter extends BaseAdapter {
     private Context mContext;
-    private List<Miner> mitems;
+    private List<Miner> mItems;
     private final LayoutInflater mInflater;
     private HashMap<String, Integer> mStateMap;
 
@@ -41,13 +45,13 @@ final class MinerAdapter extends BaseAdapter {
         mContext = context;
 
         mInflater = LayoutInflater.from(context);
-        mitems = new ArrayList<Miner>();
+        mItems = new ArrayList<Miner>();
         mStateMap = new HashMap<String, Integer>();
     }
 
     @Override
     public int getCount() {
-        return mitems == null ? 0 : mitems.size();
+        return mItems == null ? 0 : mItems.size();
     }
 
     @Override
@@ -57,14 +61,13 @@ final class MinerAdapter extends BaseAdapter {
 
     @Override
     public Miner getItem(int position) {
-        return mitems.get(position);
+        return mItems.get(position);
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Miner item = mitems.get(position);
-        String info = item.country + (TextUtils.isEmpty(item.load) ? "" : mContext.getString(R.string.miner_load) + item.load) +
-                mContext.getString(R.string.miner_bandwidth) + item.bandwidth;
+        Miner item = mItems.get(position);
+        String info = Util.join(mContext.getString(R.string.miner_comma), convertMinerInfo(item.minerInfo));
         ViewHolder viewHolder;
         if (convertView == null) {
             convertView = mInflater.inflate(R.layout.item_bind_miner, null);
@@ -118,33 +121,33 @@ final class MinerAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void setData(List<Miner> datas) {
-        if (datas != null && datas.size() > 0) {
-            mitems.addAll(datas);
+    public void setData(List<Miner> items) {
+        if (items != null && items.size() > 0) {
+            mItems.addAll(items);
 
             notifyDataSetChanged();
         }
     }
 
-    public void updateLoad(int index, String load) {
-        Miner miner = mitems.get(index);
-        miner.load = load;
+    public void updateLoad(int index, MinerInfo minerInfo) {
+        Miner miner = mItems.get(index);
+        miner.minerInfo = minerInfo;
 
         notifyDataSetChanged();
     }
 
     public boolean isBound(int index) {
-        if (index < 0 || index >= mitems.size()) {
+        if (index < 0 || index >= mItems.size()) {
             return false;
         }
-        Miner miner = mitems.get(index);
+        Miner miner = mItems.get(index);
         return mStateMap.get(miner.address) != null
                 && mStateMap.get(miner.address) == StateHolder.STATE_BIND_SUCCESS;
     }
 
     public void updateBindState(String address, int state) {
-        for (int i = 0; i < mitems.size(); i++) {
-            Miner miner = mitems.get(i);
+        for (int i = 0; i < mItems.size(); i++) {
+            Miner miner = mItems.get(i);
             if (miner.address.equals(address)) {
                 mStateMap.put(address, state);
 
@@ -152,6 +155,20 @@ final class MinerAdapter extends BaseAdapter {
                 break;
             }
         }
+    }
+
+    private String[] convertMinerInfo(MinerInfo minerInfo) {
+        if (minerInfo == null) return null;
+        List<String> items = new LinkedList<>();
+        if (!TextUtils.isEmpty(minerInfo.country)) {
+            items.add(minerInfo.country);
+        }
+        BigDecimal bigLoad = new BigDecimal(minerInfo.load);
+        double doubleLoad = bigLoad.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
+
+        items.add(String.format(mContext.getString(R.string.miner_load), doubleLoad));
+        items.add(String.format(mContext.getString(R.string.miner_bandwidth), minerInfo.bandwidth));
+        return items.toArray(new String[items.size()]);
     }
 
     private static final class ViewHolder {

@@ -26,12 +26,8 @@ public class Miner {
     public BigInteger port;
     public BigInteger size;
     public BigInteger expired;
-    public BigInteger amount;
 
-    public String name;
-    public String country;
-    public String bandwidth;
-    public String load;
+    public MinerInfo minerInfo;
 
     public String getIpString() {
         return ip == null ? null : Util.longToIp(ip.longValue());
@@ -59,21 +55,5 @@ public class Miner {
             return false;
         Miner pn = (Miner) o;
         return pn.address.equals(address);
-    }
-
-    @Override
-    public String toString() {
-        return "Miner{" +
-                "address='" + address + '\'' +
-                ", ip=" + getIpString() +
-                ", port=" + port +
-                ", size=" + size +
-                ", expired=" + expired +
-                ", amount=" + amount +
-                ", name='" + name + '\'' +
-                ", country='" + country + '\'' +
-                ", bandwidth='" + bandwidth + '\'' +
-                ", load='" + load + '\'' +
-                '}';
     }
 }
