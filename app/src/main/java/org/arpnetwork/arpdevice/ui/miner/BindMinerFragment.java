@@ -26,7 +26,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -55,6 +54,7 @@ import org.arpnetwork.arpdevice.ui.bean.GasInfo;
 import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
+import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
@@ -670,6 +670,7 @@ public class BindMinerFragment extends BaseFragment {
                     break;
 
                 case StateHolder.STATE_DEPOSIT_FAILED:
+                    showApproveView(R.string.bind_approve_failed);
                     break;
 
                 case StateHolder.STATE_BANK_APPROVE_SUCCESS:
@@ -678,6 +679,7 @@ public class BindMinerFragment extends BaseFragment {
                     break;
 
                 case StateHolder.STATE_BANK_APPROVE_FAILED:
+                    showApproveView(R.string.bind_approve_failed);
                     break;
 
                 case StateHolder.STATE_BIND_RUNNING:
@@ -718,15 +720,11 @@ public class BindMinerFragment extends BaseFragment {
 
                 case StateHolder.STATE_UNBIND_SUCCESS:
                     UIHelper.showToast(getActivity(), getString(R.string.unbind_success));
-                    showUnbindBtn(View.GONE);
-
-                    TaskInfo unbindSuccess = StateHolder.getTaskByState(StateHolder.STATE_UNBIND_SUCCESS);
-                    mAdapter.updateBindState(unbindSuccess.address, StateHolder.STATE_UNBIND_SUCCESS);
 
                     mBoundMiner = null;
                     StateHolder.clearAllState();
 
-                    loadBindState();
+                    finish();
                     break;
 
                 case StateHolder.STATE_UNBIND_FAILED:

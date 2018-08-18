@@ -78,7 +78,7 @@
     <string name="bind_apply_message">矿工授权额度是%s个ARP，申请绑定吗？</string>
     <string name="bind_apply_expired">申请绑定已过期</string>
     <string name="unbind">解绑</string>
-    <string name="unbind_success">解绑成功</string>
+    <string name="unbind_success">解绑成功，您可以到我的钱包页面取回押金</string>
     <string name="unbind_running">正在解绑</string>
     <string name="unbind_failed">解绑矿工失败，请重试</string>
     <!-- 绑定矿工 dialog btn text -->

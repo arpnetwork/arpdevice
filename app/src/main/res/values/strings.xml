@@ -80,7 +80,7 @@
     <string name="bind_apply_expired">apply for binding is expired</string>
     <string name="load_promise_failed">load miner info failed,please try again.</string>
     <string name="unbind">Unbind</string>
-    <string name="unbind_success">Unbind success</string>
+    <string name="unbind_success">Unbind success,you can go to my wallet to refund of your deposit</string>
     <string name="unbind_running">Unbind is in process</string>
     <string name="unbind_failed">Unbind failed,please try again</string>
     <!-- bind dialog btn text -->

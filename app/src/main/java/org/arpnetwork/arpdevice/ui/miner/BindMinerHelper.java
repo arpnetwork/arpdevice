@@ -36,6 +36,10 @@ public class BindMinerHelper {
             BigInteger serverCount = serverCount();
             for (int i = 0; i < serverCount.intValue(); i++) {
                 Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger> server = serverByIndex(BigInteger.valueOf(i));
+
+                if (!server.getValue5().equals(BigInteger.ZERO)) { // drop expired != 0
+                    continue;
+                }
                 Miner miner = new Miner();
                 miner.address = server.getValue1();
                 miner.ip = server.getValue2();
