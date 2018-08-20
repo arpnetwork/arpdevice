@@ -19,24 +19,27 @@ package org.arpnetwork.arpdevice.contracts.tasks;
 import android.os.AsyncTask;
 
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
+import org.arpnetwork.arpdevice.util.TransactionUtil;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.io.IOException;
 
-public class TransactionTask extends AsyncTask<String, String, String> {
-    private OnValueResult<String> onResult;
+public class TransactionTask extends AsyncTask<String, String, Boolean> {
+    private OnValueResult<Boolean> onResult;
 
-    public TransactionTask(OnValueResult<String> onValueResult) {
+    public TransactionTask(OnValueResult<Boolean> onValueResult) {
         onResult = onValueResult;
     }
 
     @Override
-    protected String doInBackground(String... param) {
-        String result;
+    protected Boolean doInBackground(String... param) {
+        Boolean result;
         String txHexData = param[0];
         try {
             EthSendTransaction transaction = EtherAPI.getWeb3J().ethSendRawTransaction(txHexData).send();
-            result = transaction.getTransactionHash();
+            TransactionReceipt transactionReceipt = TransactionUtil.waitForTransactionReceipt(transaction.getTransactionHash());
+            result = transactionReceipt.getStatus().equals("0x1");
         } catch (IOException e) {
             result = null;
         }
@@ -44,7 +47,7 @@ public class TransactionTask extends AsyncTask<String, String, String> {
     }
 
     @Override
-    protected void onPostExecute(String result) {
+    protected void onPostExecute(Boolean result) {
         if (!isCancelled() && onResult != null) {
             onResult.onValueResult(result);
         }

@@ -25,19 +25,27 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
+import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
+import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
+import org.web3j.crypto.Credentials;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 public class MyWalletFragment extends BaseFragment {
     private boolean alertShown = false;
+
+    private Button mWithdrawBtn;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -84,12 +92,44 @@ public class MyWalletFragment extends BaseFragment {
                 resetWallet();
             }
         });
+
+        mWithdrawBtn = (Button) findViewById(R.id.btn_withdraw);
+        mWithdrawBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                withdraw(Wallet.loadCredentials("12345678"), new BigInteger("20"));
+            }
+        });
+        final String deviceAddress = Wallet.get().getPublicKey();
+        ARPBank.balanceOf(deviceAddress, new OnValueResult<BigDecimal>() {
+            @Override
+            public void onValueResult(BigDecimal result) {
+                if (BindMinerHelper.getBound(deviceAddress) == null && result.doubleValue() > 0) {
+                    mWithdrawBtn.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+
     }
 
     private void resetWallet() {
         Intent intent = new Intent(getActivity(), WalletImporterActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void withdraw(Credentials credentials, BigInteger gasPrice) {
+        ARPBank.withdrawAll(credentials, gasPrice, new OnValueResult<Boolean>() {
+            @Override
+            public void onValueResult(Boolean result) {
+                if (result) {
+                    mWithdrawBtn.setVisibility(View.GONE);
+                    Toast.makeText(getContext(), getString(R.string.withdraw_success), Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), getString(R.string.withdraw_failed), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void setBalance(BigDecimal balance, TextView textView) {

@@ -55,7 +55,10 @@
     <string name="ETH_balance">ETH金额</string>
     <string name="loading_balance">正在加载</string>
     <string name="reset_wallet">更换钱包</string>
+    <string name="withdraw">取回押金</string>
     <string name="get_balance_error_msg">获取金额失败</string>
+    <string name="withdraw_success">取回成功</string>
+    <string name="withdraw_failed">取回失败</string>
 
     <!-- 绑定矿工 -->
     <string name="bind_miner_error_balance_insufficient">账户余额不足以支撑绑定矿工请求</string>

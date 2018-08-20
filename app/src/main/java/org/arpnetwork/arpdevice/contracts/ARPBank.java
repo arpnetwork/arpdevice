@@ -156,7 +156,8 @@ public class ARPBank extends Contract {
         return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
     }
 
-    public static void estimateCashGasLimit(String from, BigInteger amount, Sign.SignatureData signatureData, final OnValueResult<BigInteger> onValueResult) {
+    public static void estimateCashGasLimit(String from, BigInteger amount, Sign.SignatureData signatureData,
+            final OnValueResult<BigInteger> onValueResult) {
         String cashFunctionString = getCashFunctionData(from, amount, signatureData);
         String ownerAddress = Wallet.get().getPublicKey();
         Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, cashFunctionString);
@@ -164,8 +165,16 @@ public class ARPBank extends Contract {
         estimateTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
+    public static void estimateWithdrawGasLimit(BigInteger amount, final OnValueResult<BigInteger> onValueResult) {
+        String withdrawFunctionString = getWithdrawFunctionData(amount);
+        String ownerAddress = Wallet.get().getPublicKey();
+        Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, withdrawFunctionString);
+        TransactionGasEstimateTask estimateTask = new TransactionGasEstimateTask(transaction, onValueResult);
+        estimateTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
     public static void cash(Promise promise, Credentials credentials, BigInteger gasPrice,
-            BigInteger gasLimit, OnValueResult<String> onValueResult) {
+            BigInteger gasLimit, OnValueResult<Boolean> onValueResult) {
         String cashFunctionString = getCashFunctionData(promise.getFrom(), new BigInteger(promise.getAmount()),
                 VerifyAPI.getSignatureDataFromHexString(promise.getSign()));
         String transactionString = getTransactionHexData(cashFunctionString, credentials, gasPrice, gasLimit);
@@ -173,23 +182,29 @@ public class ARPBank extends Contract {
         task.execute(transactionString);
     }
 
-    public static void withdrawAll(final Credentials credentials, final BigInteger gasPrice, final BigInteger gasLimit,
-            final OnValueResult<String> onValueResult) {
+    public static void withdrawAll(final Credentials credentials, final BigInteger gasPrice,
+            final OnValueResult<Boolean> onValueResult) {
         balanceOf(Wallet.get().getPublicKey(), new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
-                BigInteger amount = result.toBigInteger();
-                withdraw(amount, credentials, gasPrice, gasLimit, onValueResult);
+                BigInteger amount = Convert.toWei(result, Convert.Unit.ETHER).toBigInteger();
+                withdraw(amount, credentials, gasPrice, onValueResult);
             }
         });
     }
 
-    private static void withdraw(BigInteger amount, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit,
-            OnValueResult<String> onValueResult) {
-        String withdrawFunctionString = getWithdrawFunctionData(amount);
-        String transactionString = getTransactionHexData(withdrawFunctionString, credentials, gasPrice, gasLimit);
-        TransactionTask task = new TransactionTask(onValueResult);
-        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, transactionString);
+    private static void withdraw(final BigInteger amount, final Credentials credentials, final BigInteger gasPrice,
+            final OnValueResult<Boolean> onValueResult) {
+        estimateWithdrawGasLimit(amount, new OnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                String withdrawFunctionString = getWithdrawFunctionData(amount);
+                String transactionString;
+                transactionString = getTransactionHexData(withdrawFunctionString, credentials, gasPrice, result);
+                TransactionTask task = new TransactionTask(onValueResult);
+                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, transactionString);
+            }
+        });
     }
 
     private static String getApproveFunctionData(String spender, BigInteger amount, BigInteger expired, String proxy) {
