@@ -164,17 +164,21 @@ public class OKHttpUtils {
     }
 
     void request(final Request request, final BaseCallback callback) {
-        callback.onBeforeRequest(request);
+        if (callback != null) {
+            callback.onBeforeRequest(request);
+        }
 
         getOkHttpClient().newCall(request).enqueue(new Callback() {
 
             @Override
             public void onFailure(Call call, IOException e) {
+                if (callback == null) return;
                 callbackFailure(callback, request, e);
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
+                if (callback == null) return;
                 callbackResponse(callback, response);
 
                 if (response.isSuccessful()) {
