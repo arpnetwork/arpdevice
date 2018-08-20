@@ -60,9 +60,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         setTitle(R.string.my);
         hideNavIcon();
 
-        int orderPrice = PreferenceManager.getInstance().getInt(Constant.ORDER_PRICE);
-        mOrderPrice = orderPrice >= 0 ? orderPrice : Config.ORDER_PRICE_DEFAULT;
-        DeviceInfo.get().setPrice(mOrderPrice);
+        mOrderPrice = DeviceInfo.get().getPrice();
     }
 
     @Override

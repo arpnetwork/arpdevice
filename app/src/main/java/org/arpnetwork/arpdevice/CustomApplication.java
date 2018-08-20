@@ -33,9 +33,10 @@ public class CustomApplication extends Application {
 
         sInstance = this;
 
-        DeviceInfo.init(this);
         PreferenceManager.init(this);
         NetworkHelper.init(getApplicationContext());
+
+        DeviceInfo.init(this);
     }
 
     @Override

@@ -72,7 +72,7 @@ public class DeviceInfo {
             info.systemVer = DeviceUtil.getSysUIVersion();
             info.connectivity = -1;
             info.telephony = 0;
-            info.price = new BigInteger("0");
+            info.price = Convert.toWei(String.valueOf(info.getPrice()), Convert.Unit.ETHER).toBigInteger();
             sInstance = info;
         }
     }
@@ -84,5 +84,10 @@ public class DeviceInfo {
     public void setPrice(int price) {
         this.price = Convert.toWei(String.valueOf(price), Convert.Unit.ETHER).toBigInteger();
         PreferenceManager.getInstance().putInt(Constant.ORDER_PRICE, price);
+    }
+
+    public int getPrice() {
+        int orderPrice = PreferenceManager.getInstance().getInt(Constant.ORDER_PRICE);
+        return orderPrice >= 0 ? orderPrice : Config.ORDER_PRICE_DEFAULT;
     }
 }
