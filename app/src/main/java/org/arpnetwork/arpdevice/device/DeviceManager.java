@@ -157,7 +157,7 @@ public class DeviceManager implements DeviceConnection.Listener {
                         try {
                             String addr = VerifyAPI.getSignatureAddress(mVerifyData.getSalt(), sign);
                             Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
-                            if (miner != null && Numeric.cleanHexPrefix(miner.address).equalsIgnoreCase(addr)) {
+                            if (miner != null && Numeric.cleanHexPrefix(miner.getAddress()).equalsIgnoreCase(addr)) {
                                 register();
                                 return;
                             }

@@ -347,7 +347,7 @@ public class BindMinerFragment extends BaseFragment {
         }
         mAdapter.setData(miners);
         if (mBoundMiner != null) {
-            mAdapter.updateBindState(mBoundMiner.address, StateHolder.STATE_BIND_SUCCESS);
+            mAdapter.updateBindState(mBoundMiner.getAddress(), StateHolder.STATE_BIND_SUCCESS);
         }
     }
 
@@ -446,7 +446,7 @@ public class BindMinerFragment extends BaseFragment {
                     public void onClick(DialogInterface dialog, int which) {
 
                         String owner = Wallet.get().getPublicKey();
-                        String spender = mAdapter.getItem(mClickPosition).address;
+                        String spender = mAdapter.getItem(mClickPosition).getAddress();
                         ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowanceTask.BankAllowance>() {
                             @Override
                             public void onValueResult(BankAllowanceTask.BankAllowance result) {
@@ -457,7 +457,7 @@ public class BindMinerFragment extends BaseFragment {
                                 } else {
                                     mBindPromise = bindPromise;
                                     Miner miner = mAdapter.getItem(mClickPosition);
-                                    showPayEthDialog(miner.address, getString(R.string.bind_message), OPERATION_BIND);
+                                    showPayEthDialog(miner.getAddress(), getString(R.string.bind_message), OPERATION_BIND);
                                 }
                             }
                         });
@@ -608,20 +608,20 @@ public class BindMinerFragment extends BaseFragment {
 
     private void startBindService(String passwd) {
         Intent mServiceIntent = getCommonIntent(passwd, OPERATION_BIND);
-        mServiceIntent.putExtra(KEY_ADDRESS, mAdapter.getItem(mClickPosition).address);
+        mServiceIntent.putExtra(KEY_ADDRESS, mAdapter.getItem(mClickPosition).getAddress());
         mServiceIntent.putExtra(KEY_BINDPROMISE, mBindPromise);
         getActivity().startService(mServiceIntent);
     }
 
     private void startUnbindService(String passwd) {
         Intent mServiceIntent = getCommonIntent(passwd, OPERATION_UNBIND);
-        mServiceIntent.putExtra(KEY_ADDRESS, mBoundMiner.address);
+        mServiceIntent.putExtra(KEY_ADDRESS, mBoundMiner.getAddress());
         getActivity().startService(mServiceIntent);
     }
 
     private void startCancelApproveService(String passwd) {
         Intent mServiceIntent = getCommonIntent(passwd, OPERATION_CANCEL_APPROVE);
-        mServiceIntent.putExtra(KEY_ADDRESS, mAdapter.getItem(mClickPosition).address);
+        mServiceIntent.putExtra(KEY_ADDRESS, mAdapter.getItem(mClickPosition).getAddress());
         getActivity().startService(mServiceIntent);
     }
 
@@ -695,7 +695,7 @@ public class BindMinerFragment extends BaseFragment {
                     mAdapter.updateBindState(taskSuccess.address, StateHolder.STATE_BIND_SUCCESS);
 
                     mBoundMiner = new Miner();
-                    mBoundMiner.address = taskSuccess.address;
+                    mBoundMiner.setAddress(taskSuccess.address);
                     break;
 
                 case StateHolder.STATE_BIND_FAILED:
@@ -706,7 +706,7 @@ public class BindMinerFragment extends BaseFragment {
                     break;
 
                 case StateHolder.STATE_BANK_CANCEL_APPROVE_SUCCESS:
-                    showPayEthDialog(mAdapter.getItem(mClickPosition).address, getString(R.string.bind_message), OPERATION_BIND);
+                    showPayEthDialog(mAdapter.getItem(mClickPosition).getAddress(), getString(R.string.bind_message), OPERATION_BIND);
                     break;
 
                 case StateHolder.STATE_BANK_CANCEL_APPROVE_FAILED:

@@ -21,13 +21,41 @@ import org.arpnetwork.arpdevice.util.Util;
 import java.math.BigInteger;
 
 public class Miner {
-    public String address;
-    public BigInteger ip;
-    public BigInteger port;
-    public BigInteger size;
-    public BigInteger expired;
+    private String address;
+    private BigInteger ip;
+    private BigInteger port;
+    private BigInteger size;
+    private BigInteger expired;
 
-    public MinerInfo minerInfo;
+    private MinerInfo minerInfo;
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public void setIp(BigInteger ip) {
+        this.ip = ip;
+    }
+
+    public void setSize(BigInteger size) {
+        this.size = size;
+    }
+
+    public void setPort(BigInteger port) {
+        this.port = port;
+    }
+
+    public void setExpired(BigInteger expired) {
+        this.expired = expired;
+    }
+
+    public void setMinerInfo(MinerInfo minerInfo) {
+        this.minerInfo = minerInfo;
+    }
+
+    public String getAddress() {
+        return address;
+    }
 
     public String getIpString() {
         return ip == null ? null : Util.longToIp(ip.longValue());
@@ -39,6 +67,18 @@ public class Miner {
 
     public int getPortTcpInt() {
         return port.intValue();
+    }
+
+    public BigInteger getSize() {
+        return size;
+    }
+
+    public BigInteger getExpired() {
+        return expired;
+    }
+
+    public MinerInfo getMinerInfo() {
+        return minerInfo;
     }
 
     @Override

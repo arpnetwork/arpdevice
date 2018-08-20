@@ -67,7 +67,7 @@ final class MinerAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Miner item = mItems.get(position);
-        String info = Util.join(mContext.getString(R.string.miner_comma), convertMinerInfo(item.minerInfo));
+        String info = Util.join(mContext.getString(R.string.miner_comma), convertMinerInfo(item.getMinerInfo()));
         ViewHolder viewHolder;
         if (convertView == null) {
             convertView = mInflater.inflate(R.layout.item_bind_miner, null);
@@ -85,11 +85,11 @@ final class MinerAdapter extends BaseAdapter {
             viewHolder = (ViewHolder) convertView.getTag();
         }
 
-        viewHolder.mainTitle.setText(item.address);
+        viewHolder.mainTitle.setText(item.getAddress());
         viewHolder.subTitle.setText(info);
-        if (mStateMap.containsKey(item.address)) {
+        if (mStateMap.containsKey(item.getAddress())) {
             viewHolder.bindState.setVisibility(View.VISIBLE);
-            int state = mStateMap.get(item.address);
+            int state = mStateMap.get(item.getAddress());
             switch (state) {
                 case StateHolder.STATE_BIND_RUNNING:
                     viewHolder.bindState.setText(mContext.getString(R.string.bind_running));
@@ -131,7 +131,7 @@ final class MinerAdapter extends BaseAdapter {
 
     public void updateLoad(int index, MinerInfo minerInfo) {
         Miner miner = mItems.get(index);
-        miner.minerInfo = minerInfo;
+        miner.setMinerInfo(minerInfo);
 
         notifyDataSetChanged();
     }
@@ -141,14 +141,14 @@ final class MinerAdapter extends BaseAdapter {
             return false;
         }
         Miner miner = mItems.get(index);
-        return mStateMap.get(miner.address) != null
-                && mStateMap.get(miner.address) == StateHolder.STATE_BIND_SUCCESS;
+        return mStateMap.get(miner.getAddress()) != null
+                && mStateMap.get(miner.getAddress()) == StateHolder.STATE_BIND_SUCCESS;
     }
 
     public void updateBindState(String address, int state) {
         for (int i = 0; i < mItems.size(); i++) {
             Miner miner = mItems.get(i);
-            if (miner.address.equals(address)) {
+            if (miner.getAddress().equals(address)) {
                 mStateMap.put(address, state);
 
                 notifyDataSetChanged();
