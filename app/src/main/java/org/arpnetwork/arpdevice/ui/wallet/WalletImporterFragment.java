@@ -98,14 +98,14 @@ public class WalletImporterFragment extends BaseFragment {
         String confirmedPassword = mEditConfirmedPassword.getText().toString().trim();
 
         if (checkInputs(privateKey, walletName, password, confirmedPassword)) {
-            showProgressBar(getString(R.string.importing), false);
+            showProgressDialog(getString(R.string.importing), false);
             Wallet.importWallet(getContext(), walletName, privateKey, password, new Wallet.Callback() {
                 @Override
                 public void onCompleted(final boolean success) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            hideProgressBar();
+                            hideProgressDialog();
                             int resId = success ? R.string.import_success : R.string.import_failed;
                             UIHelper.showToast(getContext(), resId);
                             if (success) {

@@ -25,14 +25,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
@@ -45,8 +43,7 @@ import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.config.Constant;
-import org.arpnetwork.arpdevice.dialog.PasswordDialog;
-import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
+import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
@@ -54,14 +51,11 @@ import org.arpnetwork.arpdevice.ui.bean.GasInfo;
 import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
-import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.web3j.crypto.Credentials;
 import org.web3j.utils.Convert;
 
@@ -105,11 +99,9 @@ public class BindMinerFragment extends BaseFragment {
 
     private int mClickPosition;
     private BindPromise mBindPromise;
-    private GasInfo mGasInfo;
     private String mGasTag = "gas_price";
-    private BigDecimal mGasPriceGWei;
-    private Dialog mShowPriceDialog;
-    private Dialog mInputPasswdDialog;
+    private BigInteger mGasPriceWei;
+    private BigInteger mGasUsed;
 
     private BindStateReceiver mBindStateReceiver;
 
@@ -132,7 +124,7 @@ public class BindMinerFragment extends BaseFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         initViews();
-        loadGasInfo();
+        startLoad();
     }
 
     @Override
@@ -177,7 +169,7 @@ public class BindMinerFragment extends BaseFragment {
                     if (mBoundMiner != null || StateHolder.getTaskByState(StateHolder.STATE_BIND_SUCCESS) != null) {
                         showMessageAlertDialog(null, getString(R.string.bind_change_bind_msg), getString(R.string.ok), null, null, null);
                     } else {
-                        checkBalance(Util.getEthCost(mGasInfo.getGasPriceGwei(), mGasInfo.getGasLimit()).doubleValue());
+                        loadGasInfo();
                     }
                 }
             }
@@ -234,28 +226,23 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void loadGasInfo() {
-        showApproveView(R.string.loading);
-
         mOkHttpUtils.get(Config.API_URL, mGasTag, new SimpleCallback<GasInfoResponse>() {
             @Override
             public void onFailure(Request request, Exception e) {
                 if (getActivity() != null) {
                     UIHelper.showToast(getActivity(), getString(R.string.load_gas_failed));
-                    finish();
                 }
             }
 
             @Override
             public void onSuccess(Response response, GasInfoResponse result) {
-                mGasInfo = result.data;
-                startLoad();
+                checkBalance(Util.getEthCost(result.data.getGasPriceGwei(), result.data.getGasLimit()).doubleValue());
             }
 
             @Override
             public void onError(Response response, int code, Exception e) {
                 if (getActivity() != null) {
                     UIHelper.showToast(getActivity(), getString(R.string.load_gas_failed));
-                    finish();
                 }
             }
         });
@@ -486,13 +473,6 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void showPayEthDialog(String title, String message, final int opType) {
-        if (mShowPriceDialog != null && mShowPriceDialog.isShowing()) return;
-
-        final BigDecimal min = mGasInfo.getGasPriceGwei();
-        final BigDecimal max = (mGasInfo.getGasPriceGwei().multiply(new BigDecimal("100")));
-        BigDecimal defaultValue = mGasInfo.getGasPriceGwei();
-        mGasPriceGWei = mGasInfo.getGasPriceGwei();
-
         String positiveText = getString(R.string.ok);
         switch (opType) {
             case OPERATION_ARP_APPROVE:
@@ -518,92 +498,33 @@ public class BindMinerFragment extends BaseFragment {
             case OPERATION_CANCEL_APPROVE:
                 positiveText = getString(R.string.bind_btn_cancel_approve);
                 break;
-
-            default:
-                break;
         }
 
-        final BigDecimal mEthSpend = Util.getEthCost(mGasInfo.getGasPriceGwei(), mGasInfo.getGasLimit());
-        double yuan = Util.getYuanCost(defaultValue, mGasInfo.getGasLimit(), mGasInfo.getEthToYuanRate());
-
-        final SeekBarDialog.Builder builder = new SeekBarDialog.Builder(getContext());
-        builder.setTitle(title)
-                .setMessage(message)
-                .setSeekValue(0, String.format(getString(R.string.bind_eth_format), mEthSpend, yuan))
-                .setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        if (fromUser) {
-                            // min + progress * (max - min) / 100;
-                            BigDecimal multiply = new BigDecimal(progress).multiply(max.subtract(min));
-                            BigDecimal divide = multiply.divide(new BigDecimal("100"));
-                            mGasPriceGWei = min.add(divide);
-                            BigDecimal mEthSpend = Util.getEthCost(mGasPriceGWei, mGasInfo.getGasLimit());
-                            double yuan = Util.getYuanCost(mGasPriceGWei, mGasInfo.getGasLimit(), mGasInfo.getEthToYuanRate());
-                            builder.setSeekValue(progress, String.format(getString(R.string.bind_eth_format), mEthSpend, yuan));
-                        }
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                    }
-                })
-                .setPositiveButton(positiveText, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        showInputPasswdDialog(opType);
-                    }
-                })
-                .setNegativeButton(getString(R.string.bind_btn_quit), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        getActivity().finish();
-                    }
-                });
-        mShowPriceDialog = builder.create();
-        mShowPriceDialog.show();
-    }
-
-    private void showInputPasswdDialog(final int opType) {
-        if (mInputPasswdDialog != null && mInputPasswdDialog.isShowing()) return;
-
-        final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
-        builder.setOnClickListener(new DialogInterface.OnClickListener() {
+        PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String passwd = builder.getPassword();
-                if (TextUtils.isEmpty(passwd)) {
-                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
-                } else {
-                    final Credentials credentials = Wallet.loadCredentials(passwd);
-                    if (credentials == null) {
-                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+            public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
+                mGasPriceWei = priceWei;
+                mGasUsed = gasUsed;
+                if (opType == OPERATION_BIND) {
+                    if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) { // 4小时内
+                        showErrorAlertDialog(null, getString(R.string.bind_apply_expired));
                     } else {
-                        dialog.dismiss();
-
-                        if (opType == OPERATION_BIND) {
-                            if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) { // 4小时内
-                                showErrorAlertDialog(null, getString(R.string.bind_apply_expired));
-                            } else {
-                                startBindService(passwd);
-                            }
-                        } else if (opType == OPERATION_UNBIND) {
-                            startUnbindService(passwd);
-                        } else if (opType == OPERATION_CANCEL_APPROVE) {
-                            startCancelApproveService(passwd);
-                        } else {
-                            startCommonService(passwd, opType);
-                        }
+                        startBindService(password);
                     }
+                } else if (opType == OPERATION_UNBIND) {
+                    startUnbindService(password);
+                } else if (opType == OPERATION_CANCEL_APPROVE) {
+                    startCancelApproveService(password);
+                } else {
+                    startCommonService(password, opType);
                 }
             }
+        }, title, message, positiveText, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                getActivity().finish();
+            }
         });
-        mInputPasswdDialog = builder.create();
-        mInputPasswdDialog.show();
     }
 
     private void startBindService(String passwd) {
@@ -633,14 +554,9 @@ public class BindMinerFragment extends BaseFragment {
         Intent mServiceIntent = new Intent(getActivity(), BindMinerIntentService.class);
         mServiceIntent.putExtra(KEY_OP, opType);
         mServiceIntent.putExtra(KEY_PASSWD, passwd);
-        mServiceIntent.putExtra(KEY_GASPRICE, getGasPrice().toString());
-        mServiceIntent.putExtra(KEY_GASLIMIT, mGasInfo.getGasLimit().toString());
+        mServiceIntent.putExtra(KEY_GASPRICE, mGasPriceWei.toString());
+        mServiceIntent.putExtra(KEY_GASLIMIT, mGasUsed.toString());
         return mServiceIntent;
-    }
-
-    private BigInteger getGasPrice() {
-        BigDecimal gas = Convert.toWei(mGasPriceGWei, Convert.Unit.GWEI);
-        return gas.toBigInteger();
     }
 
     private class BindStateReceiver extends BroadcastReceiver {

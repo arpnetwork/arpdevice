@@ -5,6 +5,7 @@
     <string name="cancel">Cancel</string>
     <string name="load_error">load failed,please try again</string>
     <string name="loading">Loading...</string>
+    <string name="handling">Operation is in process,please wait</string>
 
     <!-- dialog -->
     <string name="input_passwd_tip">Please input wallet password</string>
@@ -125,6 +126,8 @@
         <item quantity="one">%d second</item>
         <item quantity="other">%d seconds</item>
     </plurals>
+    <string name="pay_title">Pay eth gas</string>
+    <string name="pay_msg">This operation need to pay eth gas,do not repeat payment</string>
 
     <!-- receive order -->
     <string name="receive_order">Receive order</string>

@@ -109,17 +109,17 @@ public abstract class BaseFragment extends Fragment {
         return getView().findViewById(viewId);
     }
 
-    protected void showProgressBar(String msg) {
-        showProgressBar(msg, true);
+    protected void showProgressDialog(String msg) {
+        showProgressDialog(msg, true);
     }
 
-    protected void showProgressBar(String msg, boolean cancel) {
+    protected void showProgressDialog(String msg, boolean cancel) {
         mProgressDialog = ProgressDialog.show(getActivity(), null, msg);
         mProgressDialog.setCanceledOnTouchOutside(cancel);
         mProgressDialog.setCancelable(cancel);
     }
 
-    protected void hideProgressBar() {
+    protected void hideProgressDialog() {
         if (mProgressDialog != null) {
             mProgressDialog.dismiss();
             mProgressDialog = null;

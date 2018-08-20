@@ -182,7 +182,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                     UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
                 } else {
                     dialog.dismiss();
-                    showProgressBar("", false);
+                    showProgressDialog("", false);
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -190,7 +190,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    hideProgressBar();
+                                    hideProgressDialog();
                                     if (!SignUtil.signerExists()) {
                                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                     } else {

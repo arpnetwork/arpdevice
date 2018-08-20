@@ -30,9 +30,9 @@ import android.widget.Toast;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
-import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
@@ -97,19 +97,23 @@ public class MyWalletFragment extends BaseFragment {
         mWithdrawBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                withdraw(Wallet.loadCredentials("12345678"), new BigInteger("20"));
+                PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
+                    @Override
+                    public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
+                        withdraw(Wallet.loadCredentials(password), priceWei);
+                    }
+                });
             }
         });
         final String deviceAddress = Wallet.get().getPublicKey();
         ARPBank.balanceOf(deviceAddress, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
-                if (BindMinerHelper.getBound(deviceAddress) == null && result.doubleValue() > 0) {
+                if (BindMinerHelper.getBound(deviceAddress) == null && result != null && result.doubleValue() > 0) {
                     mWithdrawBtn.setVisibility(View.VISIBLE);
                 }
             }
         });
-
     }
 
     private void resetWallet() {
@@ -119,9 +123,11 @@ public class MyWalletFragment extends BaseFragment {
     }
 
     private void withdraw(Credentials credentials, BigInteger gasPrice) {
+        showProgressDialog(getString(R.string.handling));
         ARPBank.withdrawAll(credentials, gasPrice, new OnValueResult<Boolean>() {
             @Override
             public void onValueResult(Boolean result) {
+                hideProgressDialog();
                 if (result) {
                     mWithdrawBtn.setVisibility(View.GONE);
                     Toast.makeText(getContext(), getString(R.string.withdraw_success), Toast.LENGTH_SHORT).show();
@@ -141,7 +147,7 @@ public class MyWalletFragment extends BaseFragment {
     }
 
     private void showErrorAlertDialog() {
-        if (!alertShown) {
+        if (!alertShown && getContext() != null) {
             alertShown = true;
             new AlertDialog.Builder(getContext())
                     .setMessage(R.string.get_balance_error_msg)

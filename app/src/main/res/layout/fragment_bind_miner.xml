@@ -48,7 +48,6 @@
         <Button
             android:id="@+id/btn_unbind"
             style="@style/Button"
-            android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
             android:layout_marginTop="20dp"
             android:layout_weight="1"

@@ -51,7 +51,7 @@ public class TransactionAPI {
 
     public static BigInteger getTransactionGasLimit(Transaction transaction) throws IOException {
         EthEstimateGas gas = EtherAPI.getWeb3J().ethEstimateGas(transaction).send();
-        return gas.getAmountUsed();
+        return gas.hasError() ? new BigInteger("40000") : gas.getAmountUsed();
     }
 
     private static BigInteger getTransactionCount(String address) {
@@ -81,7 +81,7 @@ public class TransactionAPI {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        RawTransaction rawTransaction  = RawTransaction.createTransaction(
+        RawTransaction rawTransaction = RawTransaction.createTransaction(
                 nonce, gasPrice, gasLimit, contractAddress, data);
         return rawTransaction;
     }
