@@ -22,8 +22,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
@@ -32,6 +30,7 @@ import org.arpnetwork.arpdevice.contracts.tasks.BankBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionGasEstimateTask;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask;
+import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.abi.FunctionEncoder;
@@ -49,7 +48,6 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.tuples.generated.Tuple5;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Convert;
@@ -137,7 +135,7 @@ public class ARPBank extends Contract {
                 credentials, gasPrice, gasLimit);
     }
 
-    public static void allowanceARP(String owner, String spender, OnValueResult<BankAllowanceTask.BankAllowance> onResult) {
+    public static void allowanceARP(String owner, String spender, OnValueResult<BankAllowance> onResult) {
         BankAllowanceTask arpAllowanceTask = new BankAllowanceTask(onResult);
         arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner, spender);
     }
@@ -151,7 +149,7 @@ public class ARPBank extends Contract {
         String ownerAddress = Wallet.get().getPublicKey();
         String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
         BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
-        String data = getApproveFunctionData(spenderAddress, value,BigInteger.ZERO,proxy);
+        String data = getApproveFunctionData(spenderAddress, value, BigInteger.ZERO, proxy);
 
         return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
     }

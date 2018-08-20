@@ -20,6 +20,7 @@ import android.os.AsyncTask;
 
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
+import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -36,7 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class BankAllowanceTask extends AsyncTask<String, String, BankAllowanceTask.BankAllowance> {
+public class BankAllowanceTask extends AsyncTask<String, String, BankAllowance> {
     private OnValueResult<BankAllowance> onResult;
 
     public BankAllowanceTask(OnValueResult<BankAllowance> onValueResult) {
@@ -72,9 +73,14 @@ public class BankAllowanceTask extends AsyncTask<String, String, BankAllowanceTa
         Function function = new Function(ARPBank.FUNC_ALLOWANCE,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner),
                         new org.web3j.abi.datatypes.Address(spender)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {},
-                        new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {},
-                        new TypeReference<Address>() {}));
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
+                                                }, new TypeReference<Uint256>() {
+                                                },
+                        new TypeReference<Uint256>() {
+                        }, new TypeReference<Uint256>() {
+                        },
+                        new TypeReference<Address>() {
+                        }));
         String encodedFunction = FunctionEncoder.encode(function);
         EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(owner, ARPBank.CONTRACT_ADDRESS, encodedFunction),
@@ -90,24 +96,5 @@ public class BankAllowanceTask extends AsyncTask<String, String, BankAllowanceTa
         bankBalance.expired = (BigInteger) results.get(3).getValue();
         bankBalance.proxy = (String) results.get(4).getValue();
         return bankBalance;
-    }
-
-    public static class BankAllowance {
-        public BigInteger id;
-        public BigInteger amount;
-        public BigInteger paid;
-        public BigInteger expired;
-        public String proxy;
-
-        @Override
-        public String toString() {
-            return "BankBalance{" +
-                    "id=" + id +
-                    ", amount=" + amount +
-                    ", paid=" + paid +
-                    ", expired=" + expired +
-                    ", proxy='" + proxy + '\'' +
-                    '}';
-        }
     }
 }

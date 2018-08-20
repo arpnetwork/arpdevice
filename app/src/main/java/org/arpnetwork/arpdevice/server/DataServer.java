@@ -62,7 +62,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     private SendThread mAVDataThread;
     private int mQuality;
-    private boolean mReceiveDisconnect;
+    private boolean mStop;
     private TaskHelper mTaskHelper;
 
     private NettyConnection mConn;
@@ -101,10 +101,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void releaseDApp() {
-        DAppApi.clientDisconnected(mSession, mDApp);
-        mDApp = null;
+        if (mDApp != null) {
+            DAppApi.clientDisconnected(mSession, mDApp);
+            mDApp = null;
+        }
 
-        mReceiveDisconnect = true;
         stop();
     }
 
@@ -167,14 +168,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onClosed(NettyConnection conn) {
-        if (!mReceiveDisconnect) {
-            stop();
-        }
+        stop();
 
         if (mDApp != null) {
             DAppApi.clientDisconnected(mSession, mDApp);
         }
-        mReceiveDisconnect = false;
         mSession = null;
     }
 
@@ -292,7 +290,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void onReceiveDisconnect() {
-        mReceiveDisconnect = true;
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.DISCONNECT_RESP, 0, null);
         mConn.write(pkt);
 
@@ -329,28 +326,32 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void stop() {
-        if (mListener != null) {
-            mListener.onRecordStop();
+        if (!mStop) {
+            mStop = true;
+
+            if (mListener != null) {
+                mListener.onRecordStop();
+            }
+            if (mAVDataThread != null) {
+                mAVDataThread.interrupt();
+                mAVDataThread.cancel();
+                mAVDataThread = null;
+            }
+
+            // kill apk
+            if (mTaskHelper != null) {
+                mTaskHelper.killLaunchedApp();
+            }
+
+            mPacketQueue.clear();
+            mConn.closeConnection();
+
+            // fix client terminate with no touch up.
+            Touch.getInstance().sendTouch("r\n");
+
+            stopHeartbeatTimer();
+            stopHeartbeatTimeout();
         }
-        if (mAVDataThread != null) {
-            mAVDataThread.interrupt();
-            mAVDataThread.cancel();
-            mAVDataThread = null;
-        }
-
-        // kill apk
-        if (mTaskHelper != null) {
-            mTaskHelper.killLaunchedApp();
-        }
-
-        mPacketQueue.clear();
-        mConn.closeConnection();
-
-        // fix client terminate with no touch up.
-        Touch.getInstance().sendTouch("r\n");
-
-        stopHeartbeatTimer();
-        stopHeartbeatTimeout();
     }
 
     private static class DataServerHandler extends Handler {

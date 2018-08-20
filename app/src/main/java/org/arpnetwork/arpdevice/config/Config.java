@@ -31,4 +31,7 @@ public class Config {
     public static final int ORDER_PRICE_LOW = 0;
     public static final int ORDER_PRICE_HIGH = 100;
     public static final int ORDER_PRICE_DEFAULT = 1;
+
+    public static final int REQUEST_PAYMENT_INTERVAL = 9;
+    public static final float FEE_PERCENT = 0.05f;
 }

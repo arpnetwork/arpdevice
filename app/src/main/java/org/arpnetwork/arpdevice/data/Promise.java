@@ -22,6 +22,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.web3j.utils.Numeric;
+
+import java.math.BigInteger;
 
 public class Promise {
     private static final String KEY = "promise";
@@ -37,7 +40,7 @@ public class Promise {
     }
 
     public String getCid() {
-        return cid;
+        return Numeric.cleanHexPrefix(cid);
     }
 
     public void setFrom(String from) {
@@ -61,7 +64,17 @@ public class Promise {
     }
 
     public String getAmount() {
-        return amount;
+        return Numeric.cleanHexPrefix(amount);
+    }
+
+    public int compareAmount(Promise promise) {
+        BigInteger bigAmount;
+        if (amount != null) {
+            bigAmount = new BigInteger(Numeric.cleanHexPrefix(amount), 16);
+        } else {
+            bigAmount = new BigInteger("0");
+        }
+        return bigAmount.compareTo(new BigInteger(Numeric.cleanHexPrefix(promise.amount), 16));
     }
 
     public void setSign(String sign) {

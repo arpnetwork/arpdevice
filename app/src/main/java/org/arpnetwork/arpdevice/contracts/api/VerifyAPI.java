@@ -64,16 +64,31 @@ public class VerifyAPI {
     }
 
     /**
+     * Verify whether the sign is right
+     */
+    public static boolean verifySign(String data, String sign, String address) {
+        boolean res = false;
+        try {
+            String addr = getSignatureAddress(data, sign);
+            if (Numeric.cleanHexPrefix(address).equalsIgnoreCase(addr)) {
+                res = true;
+            }
+        } catch (Exception e) {
+        }
+        return res;
+    }
+
+    /**
      * Verify promise
      *
      * @param promise
      * @return
      */
     public static boolean isEffectivePromise(Promise promise) {
-        Uint256 cid = new Uint256(new BigInteger(promise.getCid()));
+        Uint256 cid = new Uint256(new BigInteger(promise.getCid(), 16));
         String from = Numeric.cleanHexPrefix(promise.getFrom());
         String sender = Numeric.cleanHexPrefix(promise.getTo());
-        Uint256 amount = new Uint256(new BigInteger(promise.getAmount()));
+        Uint256 amount = new Uint256(new BigInteger(promise.getAmount(), 16));
 
         StringBuilder builder = new StringBuilder();
         builder.append(TypeEncoder.encode(cid));

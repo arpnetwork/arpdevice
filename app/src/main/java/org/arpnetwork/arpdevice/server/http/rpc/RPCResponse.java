@@ -22,26 +22,28 @@ import org.json.JSONObject;
 public class RPCResponse {
     private static final String VERSION = "2.0";
 
-    private JSONObject response;
+    private String id;
+    private String jsonrpc;
+    private JSONObject result;
+    private JSONObject error;
 
     public RPCResponse() {
-        response = new JSONObject();
-        setVersion();
+        this.jsonrpc = VERSION;
     }
 
-    public void setId(String id) throws JSONException {
-        response.put("id", id);
+    public void setId(String id) {
+        this.id = id;
     }
 
-    public void setResult(JSONObject result) throws JSONException {
-        response.put("result", result);
+    public void setResult(JSONObject result) {
+        this.result = result;
     }
 
-    public void setError(JSONObject error) throws JSONException {
-        response.put("error", error);
+    public void setError(JSONObject error) {
+        this.error = error;
     }
 
-    public void setError(int code, String id, String message) {
+    public void setError(String id, int code, String message) {
         try {
             JSONObject error = new JSONObject();
             error.put("code", code);
@@ -53,14 +55,19 @@ public class RPCResponse {
         }
     }
 
-    public String getJSONString() {
-        return response.toString();
+    public JSONObject getResult() {
+        return result;
     }
 
-    private void setVersion() {
+    public String getJSONString() {
+        JSONObject response = new JSONObject();
         try {
-            response.put("jsonrpc", VERSION);
+            response.put("jsonrpc", jsonrpc);
+            response.put("id", id);
+            response.put("result", result);
+            response.put("error", error);
         } catch (JSONException e) {
         }
+        return response.toString();
     }
 }

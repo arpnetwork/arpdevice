@@ -26,16 +26,22 @@ import org.arpnetwork.arpdevice.server.http.rpc.RPCDispatcher;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCErrorCode;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCResponse;
+import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.web3j.utils.Numeric;
+
+import java.util.Locale;
 
 public class DefaultRPCDispatcher extends RPCDispatcher {
     private static final String TAG = DefaultRPCDispatcher.class.getSimpleName();
 
     private Context mContext;
     private AppManager mAppManager;
+    private PromiseHandler mPromiseHandler;
     private int mNonce;
 
     public DefaultRPCDispatcher(Context context) {
@@ -47,11 +53,15 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
         mAppManager = appManager;
     }
 
+    public void setPromiseHandler(PromiseHandler handler) {
+        mPromiseHandler = handler;
+    }
+
     @Override
     protected void doRequest(RPCRequest request, RPCResponse response) {
         DApp dApp = mAppManager.getDApp();
         if (dApp == null) {
-            response.setError(RPCErrorCode.INVALID_REQUEST, request.getId(), "Invalid request");
+            response.setError(request.getId(), RPCErrorCode.INVALID_REQUEST, "Invalid request");
             return;
         }
 
@@ -64,7 +74,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             String md5 = request.getString(3);
             String nonce = request.getString(4);
             String sign = request.getString(5);
-            String data = String.format("%s:%s:%s:%d:%s:%s:%s", method, packageName, url, filesize, md5, nonce, address);
+            String data = String.format(Locale.US, "%s:%s:%s:%d:%s:%s:%s", method, packageName, url, filesize, md5, nonce, address);
 
             if (verify(response, request.getId(), data, nonce, sign, address)) {
                 mAppManager.appInstall(mContext, packageName, url, filesize, md5);
@@ -91,28 +101,33 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
                 responseResult(response, request.getId(), nonce, address);
             }
         } else if ("account_pay".equals(method)) {
-            String promise = request.getString(0);
+            String promiseJson = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, promise, nonce, address);
+            String data = String.format("%s:%s:%s:%s", method, promiseJson, nonce, Wallet.get().getPublicKey());
 
-            if (verify(response, request.getId(), data, nonce, sign, address)) {
-                //FIXME: Receive a proof of token from dapp
-
-                responseResult(response, request.getId(), nonce, address);
+            Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
+            if (verify(response, request.getId(), data, nonce, sign, miner.getAddress())) {
+                if (mPromiseHandler.processPromise(promiseJson)) {
+                    responseResult(response, request.getId(), nonce, miner.getAddress());
+                } else {
+                    response.setError(request.getId(), RPCErrorCode.INVALID_PARAMS, "Invalid params");
+                }
+            } else {
+                Log.d(TAG, "verify failed");
             }
         } else {
-            response.setError(RPCErrorCode.METHOD_NOT_FOUND, request.getId(), "Method not found");
+            response.setError(request.getId(), RPCErrorCode.METHOD_NOT_FOUND, "Method not found");
         }
     }
 
     private boolean verify(RPCResponse response, String id, String data, String nonce, String sign, String address) {
-        if (!verifySign(data, sign, address)) {
-            response.setError(RPCErrorCode.INVALID_PARAMS, id, "Invalid sign");
+        if (!VerifyAPI.verifySign(data, sign, address)) {
+            response.setError(id, RPCErrorCode.INVALID_PARAMS, "Invalid sign");
             return false;
         }
         if (!verifyNonce(nonce)) {
-            response.setError(RPCErrorCode.INVALID_PARAMS, id, "Invalid nonce");
+            response.setError(id, RPCErrorCode.INVALID_PARAMS, "Invalid nonce");
             return false;
         }
         return true;
@@ -128,19 +143,6 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
         if (n > mNonce) {
             mNonce = n;
             res = true;
-        }
-        return res;
-    }
-
-    private boolean verifySign(String data, String sign, String address) {
-        boolean res = false;
-        try {
-            String addr = VerifyAPI.getSignatureAddress(data, sign);
-            if (Numeric.cleanHexPrefix(address).equalsIgnoreCase(addr)) {
-                res = true;
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Verify sign failed. e = " + e.toString());
         }
         return res;
     }

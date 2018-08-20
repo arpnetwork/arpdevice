@@ -18,12 +18,12 @@ package org.arpnetwork.arpdevice.app;
 
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.DApp;
+import org.arpnetwork.arpdevice.data.Result;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
-import org.json.JSONObject;
 import org.web3j.utils.Numeric;
 
 import java.util.Locale;
@@ -37,6 +37,7 @@ public class DAppApi {
     private static final String METHOD_APP_INSTALL = "app_notifyInstall";
     private static final String METHOD_CLIENT_CONNECTED = "client_connected";
     private static final String METHOD_CLIENT_DISCONNECTED = "client_disconnected";
+    private static final String METHOD_REQUEST_PAYMENT = "account_requestPayment";
 
     public static void appInstalled(final String pkg, int result, final DApp dApp) {
         String nonce = AtomicNonce.getAndIncrement();
@@ -61,7 +62,7 @@ public class DAppApi {
     public static void clientConnected(String session, final DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {
         String nonce = AtomicNonce.getAndIncrement();
 
-        RPCRequest request = new RPCRequest();
+        final RPCRequest request = new RPCRequest();
         request.setId(nonce);
         request.setMethod(METHOD_CLIENT_CONNECTED);
         request.putString(session);
@@ -74,27 +75,14 @@ public class DAppApi {
         String json = request.toJSON();
         String url = String.format(Locale.US, "http://%s:%d", dApp.ip, dApp.port);
 
-        new OKHttpUtils().post(url, json, METHOD_CLIENT_CONNECTED, new SimpleCallback<String>() {
+        new OKHttpUtils().post(url, json, METHOD_CLIENT_CONNECTED, new SimpleCallback<Result>() {
             @Override
-            public void onSuccess(Response response, String result) {
-                boolean success = false;
-                try {
-                    JSONObject object = new JSONObject(result);
-                    JSONObject res = object.getJSONObject("result");
-                    String nonce = res.getString("nonce");
-                    String sign = res.getString("sign");
-                    String data = String.format("%s:%s", nonce, Wallet.get().getPublicKey());
-                    String addr = VerifyAPI.getSignatureAddress(data, sign);
-                    if (addr != null && addr.equalsIgnoreCase(Numeric.cleanHexPrefix(dApp.address))) {
-                        if (successRunnable != null) {
-                            successRunnable.run();
-                        }
-                        success = true;
+            public void onSuccess(Response response, Result rpcResponse) {
+                if (verify(rpcResponse, dApp)) {
+                    if (successRunnable != null) {
+                        successRunnable.run();
                     }
-                } catch (Exception e) {
-                }
-
-                if (!success) {
+                } else {
                     if (failedRunnable != null) {
                         failedRunnable.run();
                     }
@@ -134,5 +122,67 @@ public class DAppApi {
         String url = String.format(Locale.US, "http://%s:%d", dApp.ip, dApp.port);
 
         new OKHttpUtils().post(url, json, METHOD_CLIENT_DISCONNECTED, null);
+    }
+
+    public static void requestPayment(final DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {
+        String amount = Numeric.prependHexPrefix(dApp.getUnitAmount().toString(16));
+        String nonce = AtomicNonce.getAndIncrement();
+
+        final RPCRequest request = new RPCRequest();
+        request.setId(nonce);
+        request.setMethod(METHOD_REQUEST_PAYMENT);
+        request.putString(amount);
+        request.putString(nonce);
+
+        String data = String.format(Locale.US, "%s:%s:%s:%s", METHOD_REQUEST_PAYMENT, amount, nonce, dApp.address);
+        String sign = SignUtil.sign(data);
+        request.putString(sign);
+
+        String json = request.toJSON();
+        String url = String.format(Locale.US, "http://%s:%d", dApp.ip, dApp.port);
+
+        new OKHttpUtils().post(url, json, METHOD_REQUEST_PAYMENT, new SimpleCallback<Result>() {
+            @Override
+            public void onSuccess(Response response, Result result) {
+                if (verify(result, dApp)) {
+                    if (successRunnable != null) {
+                        successRunnable.run();
+                    }
+                } else {
+                    if (failedRunnable != null) {
+                        failedRunnable.run();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+                if (failedRunnable != null) {
+                    failedRunnable.run();
+                }
+            }
+
+            @Override
+            public void onError(Response response, int code, Exception e) {
+                if (failedRunnable != null) {
+                    failedRunnable.run();
+                }
+            }
+        });
+    }
+
+    private static boolean verify(Result result, DApp dApp) {
+        boolean success = false;
+        try {
+            String nonce = result.getNonce();
+            String sign = result.getSign();
+            String data = String.format("%s:%s", nonce, Wallet.get().getPublicKey());
+            String addr = VerifyAPI.getSignatureAddress(data, sign);
+            if (addr != null && addr.equalsIgnoreCase(Numeric.cleanHexPrefix(dApp.address))) {
+                success = true;
+            }
+        } catch (Exception e) {
+        }
+        return success;
     }
 }

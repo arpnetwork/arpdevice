@@ -16,8 +16,28 @@
 
 package org.arpnetwork.arpdevice.data;
 
+import org.arpnetwork.arpdevice.config.Config;
+
+import java.math.BigInteger;
+
 public class DApp {
     public String address;
     public String ip;
     public int port;
+    public BigInteger price;
+
+    public BigInteger getUnitAmount() {
+        return getAmount(Config.REQUEST_PAYMENT_INTERVAL);
+    }
+
+    public BigInteger getAmount(int second) {
+        return price.multiply(new BigInteger(String.valueOf(second)))
+                .divide(new BigInteger("3600"));
+    }
+
+    public boolean priceValid() {
+        String p = String.format("%.0f", DeviceInfo.get().getPrice() * Math.pow(10, 18));
+        BigInteger devicePrice = new BigInteger(p);
+        return price != null && devicePrice.compareTo(price) <= 0;
+    }
 }

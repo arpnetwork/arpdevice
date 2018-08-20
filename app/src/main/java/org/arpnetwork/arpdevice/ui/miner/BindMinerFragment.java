@@ -17,7 +17,6 @@
 package org.arpnetwork.arpdevice.ui.miner;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -40,14 +39,13 @@ import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
-import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
+import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
-import org.arpnetwork.arpdevice.ui.bean.GasInfo;
 import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
@@ -56,7 +54,6 @@ import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
-import org.web3j.crypto.Credentials;
 import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
@@ -282,9 +279,9 @@ public class BindMinerFragment extends BaseFragment {
     private void loadBankAllowance() {
         String owner = Wallet.get().getPublicKey();
         String spender = ARPRegistry.CONTRACT_ADDRESS;
-        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowanceTask.BankAllowance>() {
+        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
             @Override
-            public void onValueResult(BankAllowanceTask.BankAllowance result) {
+            public void onValueResult(BankAllowance result) {
                 if (result != null && Convert.fromWei(result.amount.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
                     loadData();
                 } else {
@@ -434,9 +431,9 @@ public class BindMinerFragment extends BaseFragment {
 
                         String owner = Wallet.get().getPublicKey();
                         String spender = mAdapter.getItem(mClickPosition).getAddress();
-                        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowanceTask.BankAllowance>() {
+                        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
                             @Override
-                            public void onValueResult(BankAllowanceTask.BankAllowance result) {
+                            public void onValueResult(BankAllowance result) {
                                 if (result != null && Convert.fromWei(result.amount.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
                                     // TODO: 提示旧凭证兑换 取消兑换状态判断？
                                     // 兑换后 解除授权，再执行绑定

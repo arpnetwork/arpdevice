@@ -56,8 +56,6 @@ public class DeviceManager implements DeviceConnection.Listener {
     private static final int MSG_SPEED = 1;
     private static final int MSG_DEVICE = 2;
 
-    private static final String HOST = "dev.arpnetwork.org";
-    private static final int PORT = 8000;
     private static final int HEARTBEAT_INTERVAL = 30000;
 
     private DeviceConnection mConnection;
@@ -98,8 +96,9 @@ public class DeviceManager implements DeviceConnection.Listener {
      * Connect to a server
      */
     public void connect() {
+        Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
         mConnection = new DeviceConnection(this);
-        mConnection.connect(HOST, PORT);
+        mConnection.connect(miner.getIpString(), miner.getPortTcpInt());
     }
 
     /**
@@ -149,51 +148,36 @@ public class DeviceManager implements DeviceConnection.Listener {
         String json = msg.toJson();
         if (!TextUtils.isEmpty(json)) {
             Response response = mGson.fromJson(json, Response.class);
-            if (response.id == VERIFIED) {
-                if (response.result == 0) {
-                    VerifyResponse res = mGson.fromJson(json, VerifyResponse.class);
-                    if (res.data != null) {
-                        String sign = res.data.getSign();
-                        try {
-                            String addr = VerifyAPI.getSignatureAddress(mVerifyData.getSalt(), sign);
-                            Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
-                            if (miner != null && Numeric.cleanHexPrefix(miner.getAddress()).equalsIgnoreCase(addr)) {
-                                register();
-                                return;
+            switch (response.id) {
+                case VERIFIED:
+                    onVerified(response.result, json);
+                    break;
+                case REGISTERED:
+                    onRegister(response.result);
+                    break;
+                case DEVICE_ASSIGNED:
+                    final DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mOnManageDeviceListener != null) {
+                                mOnManageDeviceListener.onDeviceAssigned(res.data);
                             }
-                        } catch (SignatureException e) {
                         }
-                    }
-                    handleError(response.result, "Verify miner failed");
-                } else {
-                    handleError(response.result, "Verify device failed");
-                }
-            } else if (response.id == REGISTERED) {
-                if (response.result == 0) {
-                    mRegistered = true;
-                    startHeartbeat();
-                } else {
-                    handleError(response.result, "Incompatible protocol");
-                }
-            } else if (response.id == DEVICE_ASSIGNED) {
-                final DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mOnManageDeviceListener != null) {
-                            mOnManageDeviceListener.onDeviceAssigned(res.data);
+                    });
+                    break;
+                case DEVICE_RELEASED:
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mOnManageDeviceListener != null) {
+                                mOnManageDeviceListener.onDeviceReleased();
+                            }
                         }
-                    }
-                });
-            } else if (response.id == DEVICE_RELEASED) {
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mOnManageDeviceListener != null) {
-                            mOnManageDeviceListener.onDeviceReleased();
-                        }
-                    }
-                });
+                    });
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -216,6 +200,36 @@ public class DeviceManager implements DeviceConnection.Listener {
             if (mSpeedDataBuf != null) {
                 mSpeedDataBuf.writeBytes(msg.getData());
             }
+        }
+    }
+
+    private void onVerified(int result, String json) {
+        if (result == 0) {
+            VerifyResponse res = mGson.fromJson(json, VerifyResponse.class);
+            if (res.data != null) {
+                String sign = res.data.getSign();
+                try {
+                    String addr = VerifyAPI.getSignatureAddress(mVerifyData.getSalt(), sign);
+                    Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
+                    if (miner != null && Numeric.cleanHexPrefix(miner.getAddress()).equalsIgnoreCase(addr)) {
+                        register();
+                        return;
+                    }
+                } catch (SignatureException e) {
+                }
+            }
+            handleError(result, "Verify miner failed");
+        } else {
+            handleError(result, "Verify device failed");
+        }
+    }
+
+    private void onRegister(int result) {
+        if (result == 0) {
+            mRegistered = true;
+            startHeartbeat();
+        } else {
+            handleError(result, "Incompatible protocol");
         }
     }
 
