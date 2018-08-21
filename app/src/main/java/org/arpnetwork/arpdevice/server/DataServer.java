@@ -101,11 +101,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     public void releaseDApp() {
-        if (mDApp != null) {
-            DAppApi.clientDisconnected(mSession, mDApp);
-            mDApp = null;
-        }
-
+        mDApp = null;
         stop();
     }
 
