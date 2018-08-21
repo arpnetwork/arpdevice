@@ -20,9 +20,11 @@ import org.arpnetwork.arpdevice.contracts.tasks.ETHBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jFactory;
+import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.http.HttpService;
 
 import java.math.BigDecimal;
+import java.util.concurrent.ExecutionException;
 
 public class EtherAPI {
     private static String ETHER_NODE = "http://dev.arpnetwork.org:8545";
@@ -34,5 +36,10 @@ public class EtherAPI {
     public static void getEtherBalance(String address, OnValueResult<BigDecimal> onResult) {
         ETHBalanceTask ethBalanceTask = new ETHBalanceTask(onResult);
         ethBalanceTask.execute(address);
+    }
+
+    public static long getTransferDate(String blockHash) throws ExecutionException, InterruptedException {
+        EthBlock.Block ethBlock = getWeb3J().ethGetBlockByHash(blockHash, false).sendAsync().get().getBlock();
+        return ethBlock.getTimestamp().longValue() * 1000;
     }
 }
