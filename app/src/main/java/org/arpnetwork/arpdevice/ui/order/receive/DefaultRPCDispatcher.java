@@ -34,7 +34,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.web3j.utils.Numeric;
 
+import java.math.BigInteger;
 import java.util.Locale;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public class DefaultRPCDispatcher extends RPCDispatcher {
     private static final String TAG = DefaultRPCDispatcher.class.getSimpleName();
@@ -42,11 +45,11 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     private Context mContext;
     private AppManager mAppManager;
     private PromiseHandler mPromiseHandler;
-    private int mNonce;
+    private ConcurrentMap<String, BigInteger> mNonceMap;
 
     public DefaultRPCDispatcher(Context context) {
         mContext = context;
-        mNonce = -1;
+        mNonceMap = new ConcurrentHashMap<>();
     }
 
     public void setAppManager(AppManager appManager) {
@@ -65,7 +68,9 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             return;
         }
 
-        String address = dApp.address;
+        String dappAddr = dApp.address;
+        String walletAddr = Wallet.get().getAddress();
+
         String method = request.getMethod();
         if ("app_install".equals(method)) {
             String packageName = request.getString(0);
@@ -74,47 +79,45 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             String md5 = request.getString(3);
             String nonce = request.getString(4);
             String sign = request.getString(5);
-            String data = String.format(Locale.US, "%s:%s:%s:%d:%s:%s:%s", method, packageName, url, filesize, md5, nonce, address);
+            String data = String.format(Locale.US, "%s:%s:%s:%d:%s:%s:%s", method, packageName, url, filesize, md5, nonce, walletAddr);
 
-            if (verify(response, request.getId(), data, nonce, sign, address)) {
+            if (verify(response, request.getId(), data, nonce, sign, dappAddr)) {
                 mAppManager.appInstall(mContext, packageName, url, filesize, md5);
-                responseResult(response, request.getId(), nonce, address);
+                responseResult(response, request.getId(), nonce, dappAddr);
             }
         } else if ("app_uninstall".equals(method)) {
             String packageName = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, address);
+            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, walletAddr);
 
-            if (verify(response, request.getId(), data, nonce, sign, address)) {
+            if (verify(response, request.getId(), data, nonce, sign, dappAddr)) {
                 mAppManager.uninstallApp(packageName);
-                responseResult(response, request.getId(), nonce, address);
+                responseResult(response, request.getId(), nonce, dappAddr);
             }
         } else if ("app_start".equals(method)) {
             String packageName = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, address);
+            String data = String.format("%s:%s:%s:%s", method, packageName, nonce, walletAddr);
 
-            if (verify(response, request.getId(), data, nonce, sign, address)) {
+            if (verify(response, request.getId(), data, nonce, sign, dappAddr)) {
                 mAppManager.startApp(packageName);
-                responseResult(response, request.getId(), nonce, address);
+                responseResult(response, request.getId(), nonce, dappAddr);
             }
         } else if ("account_pay".equals(method)) {
             String promiseJson = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, promiseJson, nonce, Wallet.get().getAddress());
+            String data = String.format("%s:%s:%s:%s", method, promiseJson, nonce, walletAddr);
 
-            Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
+            Miner miner = BindMinerHelper.getBound(walletAddr);
             if (verify(response, request.getId(), data, nonce, sign, miner.getAddress())) {
                 if (mPromiseHandler.processPromise(promiseJson)) {
                     responseResult(response, request.getId(), nonce, miner.getAddress());
                 } else {
                     response.setError(request.getId(), RPCErrorCode.INVALID_PARAMS, "Invalid params");
                 }
-            } else {
-                Log.d(TAG, "verify failed");
             }
         } else {
             response.setError(request.getId(), RPCErrorCode.METHOD_NOT_FOUND, "Method not found");
@@ -126,22 +129,27 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             response.setError(id, RPCErrorCode.INVALID_PARAMS, "Invalid sign");
             return false;
         }
-        if (!verifyNonce(nonce)) {
+        if (!verifyNonce(nonce, address)) {
             response.setError(id, RPCErrorCode.INVALID_PARAMS, "Invalid nonce");
             return false;
         }
         return true;
     }
 
-    private boolean verifyNonce(String nonce) {
+    private boolean verifyNonce(String nonce, String address) {
         boolean res = false;
-        int n = -1;
+        BigInteger n = null;
         try {
-            n = Integer.parseInt(Numeric.cleanHexPrefix(nonce), 16);
-        } catch (NumberFormatException e) {
+            n = new BigInteger(Numeric.cleanHexPrefix(nonce), 16);
+        } catch (Exception e) {
         }
-        if (n > mNonce) {
-            mNonce = n;
+
+        BigInteger localNonce = mNonceMap.get(address);
+        if (localNonce == null) {
+            localNonce = new BigInteger("-1");
+        }
+        if (n != null && n.compareTo(localNonce) > 0) {
+            mNonceMap.put(address, n);
             res = true;
         }
         return res;
