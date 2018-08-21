@@ -266,7 +266,7 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void loadBindState() {
-        String address = Wallet.get().getPublicKey();
+        String address = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(address);
         if (miner != null) {
             mBoundMiner = miner;
@@ -277,7 +277,7 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void loadBankAllowance() {
-        String owner = Wallet.get().getPublicKey();
+        String owner = Wallet.get().getAddress();
         String spender = ARPRegistry.CONTRACT_ADDRESS;
         ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
             @Override
@@ -292,7 +292,7 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void loadBankBalanceOf() {
-        String owner = Wallet.get().getPublicKey();
+        String owner = Wallet.get().getAddress();
         ARPBank.balanceOf(owner, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
@@ -306,7 +306,7 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void loadARPAllowance() {
-        String owner = Wallet.get().getPublicKey();
+        String owner = Wallet.get().getAddress();
         String spender = ARPBank.CONTRACT_ADDRESS;
         ARPContract.allowanceARP(owner, spender, new OnValueResult<BigDecimal>() {
             @Override
@@ -367,7 +367,7 @@ public class BindMinerFragment extends BaseFragment {
         RPCRequest request = new RPCRequest();
         request.setId(nonce);
         request.setMethod(Config.API_SERVER_VOUVHER);
-        request.putString(Wallet.get().getPublicKey());
+        request.putString(Wallet.get().getAddress());
         request.putString(nonce);
 
         String json = request.toJSON();
@@ -397,7 +397,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private void checkBalance(final double ethCost) {
         // check balance before binding miner
-        final String address = Wallet.get().getPublicKey();
+        final String address = Wallet.get().getAddress();
         EtherAPI.getEtherBalance(address, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
@@ -429,7 +429,7 @@ public class BindMinerFragment extends BaseFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
 
-                        String owner = Wallet.get().getPublicKey();
+                        String owner = Wallet.get().getAddress();
                         String spender = mAdapter.getItem(mClickPosition).getAddress();
                         ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
                             @Override

@@ -104,9 +104,9 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             String promiseJson = request.getString(0);
             String nonce = request.getString(1);
             String sign = request.getString(2);
-            String data = String.format("%s:%s:%s:%s", method, promiseJson, nonce, Wallet.get().getPublicKey());
+            String data = String.format("%s:%s:%s:%s", method, promiseJson, nonce, Wallet.get().getAddress());
 
-            Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
+            Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
             if (verify(response, request.getId(), data, nonce, sign, miner.getAddress())) {
                 if (mPromiseHandler.processPromise(promiseJson)) {
                     responseResult(response, request.getId(), nonce, miner.getAddress());

@@ -70,7 +70,7 @@ public class MyWalletFragment extends BaseFragment {
         nameText.setText(myWallet.getName());
 
         final TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
-        ARPContract.getArpBalance(myWallet.getPublicKey(), new OnValueResult<BigDecimal>() {
+        ARPContract.getArpBalance(myWallet.getAddress(), new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
                 setBalance(result, arpBalanceText);
@@ -78,7 +78,7 @@ public class MyWalletFragment extends BaseFragment {
         });
 
         final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);
-        EtherAPI.getEtherBalance(myWallet.getPublicKey(), new OnValueResult<BigDecimal>() {
+        EtherAPI.getEtherBalance(myWallet.getAddress(), new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
                 setBalance(result, ethBalanceText);
@@ -105,7 +105,7 @@ public class MyWalletFragment extends BaseFragment {
                 });
             }
         });
-        final String deviceAddress = Wallet.get().getPublicKey();
+        final String deviceAddress = Wallet.get().getAddress();
         ARPBank.balanceOf(deviceAddress, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {

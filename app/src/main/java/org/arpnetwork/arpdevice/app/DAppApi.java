@@ -176,7 +176,7 @@ public class DAppApi {
         try {
             String nonce = result.getNonce();
             String sign = result.getSign();
-            String data = String.format("%s:%s", nonce, Wallet.get().getPublicKey());
+            String data = String.format("%s:%s", nonce, Wallet.get().getAddress());
             String addr = VerifyAPI.getSignatureAddress(data, sign);
             if (addr != null && addr.equalsIgnoreCase(Numeric.cleanHexPrefix(dApp.address))) {
                 success = true;

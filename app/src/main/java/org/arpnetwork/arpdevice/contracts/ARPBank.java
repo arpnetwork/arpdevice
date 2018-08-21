@@ -146,7 +146,7 @@ public class ARPBank extends Contract {
     }
 
     public static Transaction getApproveEstimateGasTrans(String proxy) {
-        String ownerAddress = Wallet.get().getPublicKey();
+        String ownerAddress = Wallet.get().getAddress();
         String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
         BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
         String data = getApproveFunctionData(spenderAddress, value, BigInteger.ZERO, proxy);
@@ -157,7 +157,7 @@ public class ARPBank extends Contract {
     public static void estimateCashGasLimit(String from, BigInteger amount, Sign.SignatureData signatureData,
             final OnValueResult<BigInteger> onValueResult) {
         String cashFunctionString = getCashFunctionData(from, amount, signatureData);
-        String ownerAddress = Wallet.get().getPublicKey();
+        String ownerAddress = Wallet.get().getAddress();
         Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, cashFunctionString);
         TransactionGasEstimateTask estimateTask = new TransactionGasEstimateTask(transaction, onValueResult);
         estimateTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -165,7 +165,7 @@ public class ARPBank extends Contract {
 
     public static void estimateWithdrawGasLimit(BigInteger amount, final OnValueResult<BigInteger> onValueResult) {
         String withdrawFunctionString = getWithdrawFunctionData(amount);
-        String ownerAddress = Wallet.get().getPublicKey();
+        String ownerAddress = Wallet.get().getAddress();
         Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, withdrawFunctionString);
         TransactionGasEstimateTask estimateTask = new TransactionGasEstimateTask(transaction, onValueResult);
         estimateTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
@@ -182,7 +182,7 @@ public class ARPBank extends Contract {
 
     public static void withdrawAll(final Credentials credentials, final BigInteger gasPrice,
             final OnValueResult<Boolean> onValueResult) {
-        balanceOf(Wallet.get().getPublicKey(), new OnValueResult<BigDecimal>() {
+        balanceOf(Wallet.get().getAddress(), new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
                 BigInteger amount = Convert.toWei(result, Convert.Unit.ETHER).toBigInteger();

@@ -96,7 +96,7 @@ public class DeviceManager implements DeviceConnection.Listener {
      * Connect to a server
      */
     public void connect() {
-        Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
+        Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
         mConnection = new DeviceConnection(this);
         mConnection.connect(miner.getIpString(), miner.getPortTcpInt());
     }
@@ -210,7 +210,7 @@ public class DeviceManager implements DeviceConnection.Listener {
                 String sign = res.data.getSign();
                 try {
                     String addr = VerifyAPI.getSignatureAddress(mVerifyData.getSalt(), sign);
-                    Miner miner = BindMinerHelper.getBound(Wallet.get().getPublicKey());
+                    Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
                     if (miner != null && Numeric.cleanHexPrefix(miner.getAddress()).equalsIgnoreCase(addr)) {
                         register();
                         return;

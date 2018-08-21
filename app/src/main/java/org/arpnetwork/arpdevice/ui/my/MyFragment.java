@@ -30,7 +30,6 @@ import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
@@ -43,7 +42,6 @@ import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
-import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -205,7 +203,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private boolean isMinerBound() {
-        return BindMinerHelper.getBound(Wallet.get().getPublicKey()) != null;
+        return BindMinerHelper.getBound(Wallet.get().getAddress()) != null;
     }
 
     @Override

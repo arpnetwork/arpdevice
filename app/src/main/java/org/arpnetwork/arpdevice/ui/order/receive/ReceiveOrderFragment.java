@@ -60,15 +60,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private static final int PERIOD = 3600000;
 
-    private int mQuality;
     private DeviceManager mDeviceManager;
     private HttpServer mHttpServer;
+    private AppManager mAppManager;
+    private DApp mDApp;
+    private Timer mTimer;
+
+    private BigInteger mReceivedAmount = new BigInteger("0");
+    private int mQuality;
     private int mTotalTime;
     private boolean mRetryRequestPayment;
-    private BigInteger mReceivedAmount = new BigInteger("0");
-
-    private Timer mTimer;
-    private DApp mDApp;
 
     private Handler mHandler = new Handler();
 
@@ -113,35 +114,15 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         DataServer.getInstance().setTaskHelper(taskHelper);
         DataServer.getInstance().startServer();
 
-        final AppManager appManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
+        mAppManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
 
         mDeviceManager = new DeviceManager();
-        mDeviceManager.setOnDeviceAssignedListener(new DeviceManager.OnManageDeviceListener() {
-            @Override
-            public void onDeviceAssigned(DApp dApp) {
-                if (dApp.priceValid()) {
-                    mDApp = dApp;
-                    appManager.setDApp(dApp);
-                    DataServer.getInstance().setDApp(dApp);
-
-                    postRequestPayment(dApp);
-                } else {
-                    finish();
-                }
-            }
-
-            @Override
-            public void onDeviceReleased() {
-                mDApp = null;
-                appManager.clear();
-                DataServer.getInstance().releaseDApp();
-            }
-        });
+        mDeviceManager.setOnDeviceAssignedListener(mOnManageDeviceListener);
         mDeviceManager.setOnErrorListener(mOnErrorListener);
         mDeviceManager.connect();
 
         DefaultRPCDispatcher defaultRPCDispatcher = new DefaultRPCDispatcher(getContext());
-        defaultRPCDispatcher.setAppManager(appManager);
+        defaultRPCDispatcher.setAppManager(mAppManager);
         defaultRPCDispatcher.setPromiseHandler(new PromiseHandler(this));
         startHttpServer(defaultRPCDispatcher);
 
@@ -200,7 +181,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void loadAllowance() {
-        String spender = Wallet.get().getPublicKey();
+        String spender = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(spender);
         ARPBank.allowanceARP(miner.getAddress(), spender, new OnValueResult<BankAllowance>() {
             @Override
@@ -310,6 +291,28 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onException(Throwable cause) {
+        }
+    };
+
+    private DeviceManager.OnManageDeviceListener mOnManageDeviceListener = new DeviceManager.OnManageDeviceListener() {
+        @Override
+        public void onDeviceAssigned(DApp dApp) {
+            if (dApp.priceValid()) {
+                mDApp = dApp;
+                mAppManager.setDApp(dApp);
+                DataServer.getInstance().setDApp(dApp);
+
+                postRequestPayment(dApp);
+            } else {
+                finish();
+            }
+        }
+
+        @Override
+        public void onDeviceReleased() {
+            mDApp = null;
+            mAppManager.clear();
+            DataServer.getInstance().releaseDApp();
         }
     };
 

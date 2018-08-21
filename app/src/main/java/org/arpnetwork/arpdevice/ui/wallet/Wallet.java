@@ -30,10 +30,10 @@ public class Wallet {
     public static final String KEYSTORE_PATH = "keystore_path";
 
     private static final String NAME = "name";
-    private static final String PUBLIC_KEY = "public_key";
+    private static final String ADDRESS = "address";
 
     private String name;
-    private String publicKey;
+    private String address;
 
     public interface Callback {
         void onCompleted(boolean success);
@@ -42,28 +42,28 @@ public class Wallet {
     public Wallet() {
     }
 
-    public Wallet(String name, String publicKey) {
+    public Wallet(String name, String address) {
         this.name = name;
-        this.publicKey = publicKey;
+        this.address = address;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getPublicKey() {
-        return publicKey;
+    public String getAddress() {
+        return address;
     }
 
     public void save() {
         PreferenceManager.getInstance().putString(NAME, name);
-        PreferenceManager.getInstance().putString(PUBLIC_KEY, publicKey);
+        PreferenceManager.getInstance().putString(ADDRESS, address);
     }
 
     public static Wallet get() {
         Wallet wallet = new Wallet();
         wallet.name = PreferenceManager.getInstance().getString(NAME);
-        wallet.publicKey = PreferenceManager.getInstance().getString(PUBLIC_KEY);
+        wallet.address = PreferenceManager.getInstance().getString(ADDRESS);
         return wallet;
     }
 
