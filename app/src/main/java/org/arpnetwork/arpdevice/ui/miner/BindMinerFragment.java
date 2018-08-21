@@ -327,7 +327,7 @@ public class BindMinerFragment extends BaseFragment {
         for (int i = 0; i < miners.size(); i++) {
             Miner miner = miners.get(i);
             String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
-            loadMinerLoadInfo(i, url);
+            loadMinerLoadInfo(i, url, miner.getAddress());
         }
         mAdapter.setData(miners);
         if (mBoundMiner != null) {
@@ -335,8 +335,8 @@ public class BindMinerFragment extends BaseFragment {
         }
     }
 
-    private void loadMinerLoadInfo(final int index, final String url) {
-        String nonce = AtomicNonce.getAndIncrement();
+    private void loadMinerLoadInfo(final int index, final String url, String address) {
+        String nonce = AtomicNonce.getAndIncrement(address);
 
         RPCRequest request = new RPCRequest();
         request.setId(nonce);
@@ -361,8 +361,8 @@ public class BindMinerFragment extends BaseFragment {
         });
     }
 
-    public void loadPromiseForBind(String url) {
-        String nonce = AtomicNonce.getAndIncrement();
+    public void loadPromiseForBind(String url, String address) {
+        String nonce = AtomicNonce.getAndIncrement(address);
 
         RPCRequest request = new RPCRequest();
         request.setId(nonce);
@@ -412,7 +412,7 @@ public class BindMinerFragment extends BaseFragment {
                             } else {
                                 Miner miner = mAdapter.getItem(mClickPosition);
                                 String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
-                                loadPromiseForBind(url);
+                                loadPromiseForBind(url, miner.getAddress());
                             }
                         }
                     });

@@ -19,21 +19,29 @@ package org.arpnetwork.arpdevice.app;
 import android.text.TextUtils;
 
 import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 
 public class AtomicNonce {
-    private static final String NONCE = "nonce";
 
-    public static String getAndIncrement() {
-        String nonce = PreferenceManager.getInstance().getString(NONCE);
+    public static void sync(String nonce, String address) {
+        increment(Numeric.cleanHexPrefix(nonce), address);
+    }
+
+    public static String getAndIncrement(String address) {
+        String nonce = PreferenceManager.getInstance().getString(address);
         if (TextUtils.isEmpty(nonce)) {
             nonce = "1";
         }
 
+        increment(nonce, address);
+        return Numeric.prependHexPrefix(nonce);
+    }
+
+    private static void increment(String nonce, String address) {
         BigInteger bigNonce = new BigInteger(nonce, 16);
         bigNonce = bigNonce.add(new BigInteger("1", 16));
-        PreferenceManager.getInstance().putString(NONCE, bigNonce.toString(16));
-        return String.format("0x%s", nonce);
+        PreferenceManager.getInstance().putString(address, bigNonce.toString(16));
     }
 }

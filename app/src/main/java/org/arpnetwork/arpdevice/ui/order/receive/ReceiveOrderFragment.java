@@ -296,13 +296,23 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private DeviceManager.OnManageDeviceListener mOnManageDeviceListener = new DeviceManager.OnManageDeviceListener() {
         @Override
-        public void onDeviceAssigned(DApp dApp) {
+        public void onDeviceAssigned(final DApp dApp) {
             if (dApp.priceValid()) {
                 mDApp = dApp;
                 mAppManager.setDApp(dApp);
                 DataServer.getInstance().setDApp(dApp);
 
-                postRequestPayment(dApp);
+                DAppApi.getNonce(Wallet.get().getAddress(), dApp, new Runnable() {
+                    @Override
+                    public void run() {
+                        postRequestPayment(dApp);
+                    }
+                }, new Runnable() {
+                    @Override
+                    public void run() {
+                        finish();
+                    }
+                });
             } else {
                 finish();
             }

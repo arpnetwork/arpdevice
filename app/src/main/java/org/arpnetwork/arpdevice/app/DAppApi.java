@@ -34,13 +34,48 @@ import okhttp3.Response;
 public class DAppApi {
     private static final String TAG = DAppApi.class.getSimpleName();
 
+    private static final String METHOD_NONCE_GET = "nonce_get";
     private static final String METHOD_APP_INSTALL = "app_notifyInstall";
     private static final String METHOD_CLIENT_CONNECTED = "client_connected";
     private static final String METHOD_CLIENT_DISCONNECTED = "client_disconnected";
     private static final String METHOD_REQUEST_PAYMENT = "account_requestPayment";
 
+    public static void getNonce(final String address, final DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {
+        RPCRequest request = new RPCRequest();
+        request.setId("0x01");
+        request.setMethod(METHOD_NONCE_GET);
+        request.putString(address);
+
+        String json = request.toJSON();
+        String url = String.format(Locale.US, "http://%s:%d", dApp.ip, dApp.port);
+
+        new OKHttpUtils().post(url, json, METHOD_NONCE_GET, new SimpleCallback<Result>() {
+            @Override
+            public void onSuccess(Response response, Result result) {
+                AtomicNonce.sync(result.getNonce(), dApp.address);
+                if (successRunnable != null) {
+                    successRunnable.run();
+                }
+            }
+
+            @Override
+            public void onFailure(Request request, Exception e) {
+                if (failedRunnable != null) {
+                    failedRunnable.run();
+                }
+            }
+
+            @Override
+            public void onError(Response response, int code, Exception e) {
+                if (failedRunnable != null) {
+                    failedRunnable.run();
+                }
+            }
+        });
+    }
+
     public static void appInstalled(final String pkg, int result, final DApp dApp) {
-        String nonce = AtomicNonce.getAndIncrement();
+        String nonce = AtomicNonce.getAndIncrement(dApp.address);
 
         RPCRequest request = new RPCRequest();
         request.setId(null);
@@ -60,7 +95,7 @@ public class DAppApi {
     }
 
     public static void clientConnected(String session, final DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {
-        String nonce = AtomicNonce.getAndIncrement();
+        String nonce = AtomicNonce.getAndIncrement(dApp.address);
 
         final RPCRequest request = new RPCRequest();
         request.setId(nonce);
@@ -106,7 +141,7 @@ public class DAppApi {
     }
 
     public static void clientDisconnected(String session, DApp dApp) {
-        String nonce = AtomicNonce.getAndIncrement();
+        String nonce = AtomicNonce.getAndIncrement(dApp.address);
 
         RPCRequest request = new RPCRequest();
         request.setId(nonce);
@@ -126,7 +161,7 @@ public class DAppApi {
 
     public static void requestPayment(final DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {
         String amount = Numeric.prependHexPrefix(dApp.getUnitAmount().toString(16));
-        String nonce = AtomicNonce.getAndIncrement();
+        String nonce = AtomicNonce.getAndIncrement(dApp.address);
 
         final RPCRequest request = new RPCRequest();
         request.setId(nonce);
