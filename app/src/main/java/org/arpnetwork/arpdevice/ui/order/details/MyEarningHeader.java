@@ -19,6 +19,7 @@ package org.arpnetwork.arpdevice.ui.order.details;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -30,25 +31,28 @@ public class MyEarningHeader extends LinearLayout {
     private TextView mExchanged;
     private Button mExchangeBtn;
 
-    public MyEarningHeader(Context context) {
-        super(context);
-
-        init();
+    public MyEarningHeader(Context context, OnClickListener onClickListener) {
+        this(context, null, onClickListener);
     }
 
-    public MyEarningHeader(Context context, AttributeSet attr) {
+    public MyEarningHeader(Context context, AttributeSet attr, OnClickListener onClickListener) {
         super(context, attr);
 
-        init();
+        init(onClickListener);
     }
 
-    private void init() {
+    private void init(View.OnClickListener onClickListener) {
         LayoutInflater.from(getContext()).inflate(R.layout.header_my_earning, this, true);
 
         mUnexchanged = findViewById(R.id.tv_unexchanged);
+        mUnexchanged.setText(String.format(getResources().getString(R.string.unexchanged), 0.0));
+
         mExchanged = findViewById(R.id.tv_exchanged);
+        mExchanged.setText(String.format(getResources().getString(R.string.exchanged), 0.0));
+
         mExchangeBtn = findViewById(R.id.btn_exchange);
         mExchangeBtn.setEnabled(false);
+        mExchangeBtn.setOnClickListener(onClickListener);
     }
 
     public void setData(EarningData data) {
@@ -56,6 +60,12 @@ public class MyEarningHeader extends LinearLayout {
         mExchanged.setText(String.format(getResources().getString(R.string.exchanged), data.exchanged));
         if (data.unexchanged > 0) {
             mExchangeBtn.setEnabled(true);
+        }
+        TextView recordTitle = findViewById(R.id.tv_record);
+        if (data.earningList != null && data.earningList.size() > 0) {
+            recordTitle.setVisibility(VISIBLE);
+        } else {
+            recordTitle.setVisibility(GONE);
         }
     }
 }

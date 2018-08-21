@@ -113,7 +113,7 @@
     <string name="exchanged">Exchanged:%.2f ARP</string>
     <string name="unexchanged">Unexchanged:%.2f ARP</string>
     <string name="exchanged_records">Exchanged records</string>
-    <string name="earning_detail_format">Earnings:%.2fARP, Order Amount:%d\nService Duration:%s</string>
+    <string name="earning_detail_format">Earnings:%.2fARP, Miner:%s</string>
     <plurals name="duration_hour">
         <item quantity="one">%d hour</item>
         <item quantity="other">%d hours</item>

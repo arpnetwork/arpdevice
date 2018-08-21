@@ -61,8 +61,12 @@ public class MyEarningFragment extends BaseFragment {
         footerView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.content_padding)));
         footerView.setBackgroundResource(R.color.window_background_light_gray);
 
-        mHeaderView = new MyEarningHeader(getContext());
-        mHeaderView.setVisibility(View.GONE);
+        mHeaderView = new MyEarningHeader(getContext(), new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: click at exchange button
+            }
+        });
 
         mAdapter = new MyEarningAdapter(getContext());
         ListView listView = (ListView) findViewById(R.id.listview);

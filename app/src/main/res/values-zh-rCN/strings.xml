@@ -112,7 +112,7 @@
     <string name="exchanged">已兑换：%.2f ARP</string>
     <string name="unexchanged">未兑换：%.2f ARP</string>
     <string name="exchanged_records">兑换记录</string>
-    <string name="earning_detail_format">收入：%.2fARP，接单数：%d\n服务时间：%s</string>
+    <string name="earning_detail_format">收入：%.2fARP，矿工：%s</string>
     <plurals name="duration_hour">
         <item quantity="other">%d 小时</item>
     </plurals>

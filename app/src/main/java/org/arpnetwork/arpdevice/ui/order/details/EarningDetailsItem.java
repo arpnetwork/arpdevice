@@ -61,8 +61,7 @@ public class EarningDetailsItem extends LinearLayout {
     public void setData(Earning earning) {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         mDateView.setText(format.format(new Date(earning.time)));
-        String duration = Util.getDurationString(getContext(), earning.duration);
-        mIncomeView.setText(String.format(getResources().getString(R.string.earning_detail_format), earning.earning, earning.count, duration));
+        mIncomeView.setText(String.format(getResources().getString(R.string.earning_detail_format), earning.earning, earning.minerAddress));
     }
 
     public void setFirstOrLastItem(boolean firstItem, boolean lastItem) {

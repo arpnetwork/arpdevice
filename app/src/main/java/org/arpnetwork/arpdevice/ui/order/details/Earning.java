@@ -18,7 +18,6 @@ package org.arpnetwork.arpdevice.ui.order.details;
 
 public class Earning {
     public float earning;
-    public int count;
     public long time;
-    public long duration;
+    public String minerAddress;
 }
