@@ -22,7 +22,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
@@ -33,9 +36,12 @@ import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.TypeEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
+import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Bytes32;
@@ -45,8 +51,12 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.Web3j;
 
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.RemoteCall;
+import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
@@ -234,5 +244,18 @@ public class ARPBank extends Contract {
             BigInteger gasPrice, BigInteger gasLimit) {
         return TransactionAPI.getRawTransaction(gasPrice, gasLimit, CONTRACT_ADDRESS,
                 data, credentials);
+    }
+
+    public static List getTransactionList(String address, BigInteger earliestBlock) throws ExecutionException, InterruptedException {
+        Event event = new Event("Cashing",
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
+        EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(earliestBlock), DefaultBlockParameterName.LATEST, CONTRACT_ADDRESS);
+        ethFilter.addSingleTopic(EventEncoder.encode(event));
+        Address add = new Address(address);
+        String optTopicAddress = "0x" + TypeEncoder.encode(add);
+        ethFilter.addOptionalTopics(optTopicAddress);
+        EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();
+        return ethLog.getLogs();
     }
 }
