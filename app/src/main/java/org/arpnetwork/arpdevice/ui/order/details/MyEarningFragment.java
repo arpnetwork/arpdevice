@@ -24,7 +24,19 @@ import android.widget.AbsListView;
 import android.widget.ListView;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.contracts.ARPBank;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+import org.spongycastle.util.encoders.Hex;
+import org.web3j.protocol.core.methods.response.Log;
+import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class MyEarningFragment extends BaseFragment {
     private MyEarningAdapter mAdapter;
@@ -98,9 +110,58 @@ public class MyEarningFragment extends BaseFragment {
             return;
         }
 
-        mLoading = true;
-        //FIXME: load data from ethereum network
+        EarningData earningData = new EarningData();
+        // FIXME：set history earning
+        earningData.exchanged = 0;
+        earningData.unexchanged = 0;
 
+        mLoading = true;
+
+        // FIXME: set record
+        List<Earning> earningList = new ArrayList<>();
+        List<Log> transactionList = null;
+        try {
+            // FIXME: check logs from the latest block of history record
+            transactionList = ARPBank.getTransactionList(Wallet.get().getAddress(), new BigInteger("0"));
+        } catch (ExecutionException e) {
+        } catch (InterruptedException e) {
+        }
+
+        if (transactionList != null && transactionList.size() > 0) {
+            for (Log log : transactionList) {
+                Earning newEarning = getEarningByLog(log);
+                earningList.add(0, newEarning);
+                earningData.exchanged += newEarning.earning;
+            }
+        }
+
+        earningData.earningList = earningList;
+        mHeaderView.setData(earningData);
+        mAdapter.setData(earningData.earningList);
         mLoading = false;
+    }
+
+    private Earning getEarningByLog(Log log) {
+        long logDate = 0;
+        try {
+            logDate = EtherAPI.getTransferDate(log.getBlockHash());
+        } catch (ExecutionException ignore) {
+        } catch (InterruptedException ignore) {
+        }
+
+        byte[] data = Hex.decode(Numeric.cleanHexPrefix(log.getData()));
+        byte[] amountByte = new byte[32];
+        System.arraycopy(data, 32, amountByte, 0, 32);
+        BigInteger amount = new BigInteger(amountByte);
+
+        byte[] topic = Hex.decode(Numeric.cleanHexPrefix(log.getTopics().get(2)));
+        byte[] addressByte = new byte[20];
+        System.arraycopy(topic, 12, addressByte, 0, 20);
+
+        Earning earning = new Earning();
+        earning.time = logDate;
+        earning.earning = Convert.fromWei(amount.toString(), Convert.Unit.ETHER).floatValue();
+        earning.minerAddress = "0x" + Hex.toHexString(addressByte);
+        return earning;
     }
 }
