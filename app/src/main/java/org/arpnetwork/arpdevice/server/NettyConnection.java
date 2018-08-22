@@ -120,13 +120,15 @@ public class NettyConnection {
     }
 
     public synchronized void shutdown() {
-        mChannelFuture.removeListener(mChannelFutureListener);
-        try {
-            mChannelFuture.sync().channel().close().sync();
-        } catch (InterruptedException ignored) {
+        if (mChannelFuture != null) {
+            mChannelFuture.removeListener(mChannelFutureListener);
+            try {
+                mChannelFuture.sync().channel().close().sync();
+            } catch (InterruptedException ignored) {
+            }
+            mWorkerGroup.shutdownGracefully();
+            mBossGroup.shutdownGracefully();
         }
-        mWorkerGroup.shutdownGracefully();
-        mBossGroup.shutdownGracefully();
     }
 
     public void closeConnection() {

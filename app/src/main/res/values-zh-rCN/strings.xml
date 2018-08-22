@@ -126,6 +126,9 @@
     <string name="pay_msg">该操作需要支付油费，请勿重复支付</string>
 
     <!-- 接单 -->
+    <string name="start_service_failed">启动服务失败</string>
+    <string name="incompatible_protocol">App版本过低</string>
+    <string name="verify_failed">验证失败</string>
     <string name="receive_order">开始接单</string>
     <string name="receive_order_tips">接到单后请勿触碰屏幕，否则将会退出接到的订单，影响您的收入和他人体验</string>
     <string name="exit_order">退出接单</string>

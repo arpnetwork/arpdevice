@@ -25,7 +25,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AppManager;
@@ -49,7 +48,6 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
-import org.arpnetwork.arpdevice.util.UIHelper;
 
 import java.math.BigInteger;
 import java.util.Timer;
@@ -78,9 +76,14 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onCreate(savedInstanceState);
 
         setTitle(R.string.receive_order);
-
         getBaseActivity().setOnBackListener(mOnBackListener);
-        startDeviceService();
+
+        loadAllowance(new Runnable() {
+            @Override
+            public void run() {
+                startDeviceService();
+            }
+        });
     }
 
     @Override
@@ -121,10 +124,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mDeviceManager.setOnErrorListener(mOnErrorListener);
         mDeviceManager.connect();
 
-        DefaultRPCDispatcher defaultRPCDispatcher = new DefaultRPCDispatcher(getContext());
-        defaultRPCDispatcher.setAppManager(mAppManager);
-        defaultRPCDispatcher.setPromiseHandler(new PromiseHandler(this));
-        startHttpServer(defaultRPCDispatcher);
+        DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext());
+        dispatcher.setAppManager(mAppManager);
+        dispatcher.setPromiseHandler(new PromiseHandler(this));
+        startHttpServer(dispatcher);
 
         startTimer();
     }
@@ -145,6 +148,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             mHttpServer = new HttpServer(Config.HTTP_SERVER_PORT, dispatcher);
             mHttpServer.start();
         } catch (Exception e) {
+            showAlertDialog(getString(R.string.start_service_failed));
         }
     }
 
@@ -155,8 +159,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void startRecordIfNeeded() {
-        if (Touch.getInstance().isRecording()) return;
-        Touch.getInstance().startRecord(mQuality);
+        if (!Touch.getInstance().isRecording()) {
+            Touch.getInstance().startRecord(mQuality);
+        }
     }
 
     private void stopRecord() {
@@ -168,9 +173,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                loadAllowance();
+                loadAllowance(null);
             }
-        }, 0, PERIOD);
+        }, PERIOD, PERIOD);
     }
 
     private void stopTimer() {
@@ -180,7 +185,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     }
 
-    private void loadAllowance() {
+    private void loadAllowance(final Runnable successRunnable) {
         String spender = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(spender);
         ARPBank.allowanceARP(miner.getAddress(), spender, new OnValueResult<BankAllowance>() {
@@ -189,8 +194,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 if (result != null) {
                     if (!TextUtils.isEmpty(result.proxy)
                             && (result.proxy.equals("0x0000000000000000000000000000000000000000") || result.proxy.equals(ARPRegistry.CONTRACT_ADDRESS))
-                            && (result.expired.longValue() == 0 || result.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))) {
+                            && (result.expired.longValue() == 0 || result.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))
+                            && result.amount.subtract(result.paid).compareTo(new BigInteger("0")) > 0) {
                         result.save();
+
+                        if (successRunnable != null) {
+                            successRunnable.run();
+                        }
                     } else {
                         finish();
                     }
@@ -208,7 +218,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
                     requestPayment(dApp);
                 } else {
-                    DataServer.getInstance().releaseDApp();
+                    releaseDApp();
                 }
             }
         }, Config.REQUEST_PAYMENT_INTERVAL * 1000);
@@ -226,6 +236,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 if (!mRetryRequestPayment) {
                     DAppApi.requestPayment(dApp, null, this);
                     mRetryRequestPayment = true;
+                } else {
+                    releaseDApp();
                 }
             }
         });
@@ -242,6 +254,25 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             }
         }
         return true;
+    }
+
+    private void releaseDApp() {
+        mDApp = null;
+        mAppManager.clear();
+        DataServer.getInstance().releaseDApp();
+    }
+
+    private void showAlertDialog(String msg) {
+        new AlertDialog.Builder(getContext())
+                .setMessage(msg)
+                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .create()
+                .show();
     }
 
     private void showExitDialog() {
@@ -310,7 +341,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 }, new Runnable() {
                     @Override
                     public void run() {
-                        finish();
+                        releaseDApp();
                     }
                 });
             } else {
@@ -320,19 +351,17 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onDeviceReleased() {
-            mDApp = null;
-            mAppManager.clear();
-            DataServer.getInstance().releaseDApp();
+            releaseDApp();
         }
     };
 
     private DeviceManager.OnErrorListener mOnErrorListener = new DeviceManager.OnErrorListener() {
         @Override
-        public void onError(int code, final String msg) {
+        public void onError(int code, final int msgResId) {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    UIHelper.showToast(getContext(), msg, Toast.LENGTH_SHORT);
+                    showAlertDialog(getString(msgResId));
                 }
             });
         }

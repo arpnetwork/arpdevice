@@ -22,6 +22,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DApp;
@@ -76,7 +77,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     }
 
     public interface OnErrorListener {
-        void onError(int code, String msg);
+        void onError(int code, int msg);
     }
 
     public DeviceManager() {
@@ -218,10 +219,8 @@ public class DeviceManager implements DeviceConnection.Listener {
                 } catch (SignatureException e) {
                 }
             }
-            handleError(result, "Verify miner failed");
-        } else {
-            handleError(result, "Verify device failed");
         }
+        handleError(result, R.string.verify_failed);
     }
 
     private void onRegister(int result) {
@@ -229,11 +228,11 @@ public class DeviceManager implements DeviceConnection.Listener {
             mRegistered = true;
             startHeartbeat();
         } else {
-            handleError(result, "Incompatible protocol");
+            handleError(result, R.string.incompatible_protocol);
         }
     }
 
-    private void handleError(int result, String msg) {
+    private void handleError(int result, int msg) {
         close();
         if (mOnErrorListener != null) {
             mOnErrorListener.onError(result, msg);
