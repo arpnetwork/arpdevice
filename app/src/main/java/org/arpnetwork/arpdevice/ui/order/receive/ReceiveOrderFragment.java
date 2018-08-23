@@ -64,7 +64,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private DApp mDApp;
     private Timer mTimer;
 
-    private BigInteger mReceivedAmount = new BigInteger("0");
+    private BigInteger mLastAmount = BigInteger.ZERO;
+    private BigInteger mReceivedAmount = BigInteger.ZERO;
     private int mQuality;
     private int mTotalTime;
     private boolean mRetryRequestPayment;
@@ -78,6 +79,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
 
+        Promise promise = Promise.get();
+        if (promise != null) {
+            mLastAmount = new BigInteger(promise.getAmount(), 16);
+        }
         loadAllowance(new Runnable() {
             @Override
             public void run() {
@@ -253,7 +258,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mTotalTime > 0) {
             BigInteger totalAmount = mDApp.getAmount(mTotalTime)
                     .multiply(new BigInteger(String.valueOf((int) ((1 - Config.FEE_PERCENT) * 100))))
-                    .divide(new BigInteger("100"));
+                    .divide(new BigInteger("100"))
+                    .add(mLastAmount);
             if (mReceivedAmount.compareTo(totalAmount) < 0) {
                 return false;
             }

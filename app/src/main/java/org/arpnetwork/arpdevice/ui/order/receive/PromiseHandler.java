@@ -57,6 +57,11 @@ public class PromiseHandler {
         String walletAddr = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(walletAddr);
         BankAllowance allowance = BankAllowance.get();
+        Promise lastPromise = Promise.get();
+        BigInteger lastAmount = BigInteger.ZERO;
+        if (lastPromise != null) {
+            lastAmount = new BigInteger(lastPromise.getAmount(), 16);
+        }
 
         if (!TextUtils.isEmpty(promise.getCid())
                 && !TextUtils.isEmpty(promise.getFrom())
@@ -66,7 +71,8 @@ public class PromiseHandler {
                 && Numeric.cleanHexPrefix(promise.getFrom()).equals(Numeric.cleanHexPrefix(miner.getAddress()))
                 && Numeric.cleanHexPrefix(promise.getTo()).equals(Numeric.cleanHexPrefix(walletAddr))
                 && VerifyAPI.isEffectivePromise(promise)
-                && new BigInteger(promise.getAmount(), 16).compareTo(allowance.amount) <= 0) {
+                && new BigInteger(promise.getAmount(), 16).compareTo(allowance.amount) <= 0
+                && new BigInteger(promise.getAmount(), 16).compareTo(lastAmount) > 0) {
             res = true;
         }
         return res;
