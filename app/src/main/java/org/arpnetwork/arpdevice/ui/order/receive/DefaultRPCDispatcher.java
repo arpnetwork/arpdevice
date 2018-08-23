@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.ui.order.receive;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.arpnetwork.arpdevice.app.AppManager;
@@ -72,7 +73,9 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
         String walletAddr = Wallet.get().getAddress();
 
         String method = request.getMethod();
-        if ("app_install".equals(method)) {
+        if ("device_ping".equals(method)) {
+            responseResult(response, request.getId(), null, null);
+        } else if ("app_install".equals(method)) {
             String packageName = request.getString(0);
             String url = request.getString(1);
             int filesize = request.getInt(2);
@@ -158,8 +161,10 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     private void responseResult(RPCResponse response, String id, String nonce, String address) {
         try {
             JSONObject result = new JSONObject();
-            result.put("nonce", nonce);
-            result.put("sign", SignUtil.sign(String.format("%s:%s", nonce, address)));
+            if (!TextUtils.isEmpty(nonce)) {
+                result.put("nonce", nonce);
+                result.put("sign", SignUtil.sign(String.format("%s:%s", nonce, address)));
+            }
 
             response.setId(id);
             response.setResult(result);
