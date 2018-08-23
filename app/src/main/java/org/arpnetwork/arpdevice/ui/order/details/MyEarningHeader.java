@@ -51,21 +51,21 @@ public class MyEarningHeader extends LinearLayout {
         mExchanged.setText(String.format(getResources().getString(R.string.exchanged), 0.0));
 
         mExchangeBtn = findViewById(R.id.btn_exchange);
-        mExchangeBtn.setEnabled(false);
         mExchangeBtn.setOnClickListener(onClickListener);
     }
 
     public void setData(EarningData data) {
         mUnexchanged.setText(String.format(getResources().getString(R.string.unexchanged), data.unexchanged));
         mExchanged.setText(String.format(getResources().getString(R.string.exchanged), data.exchanged));
-        if (data.unexchanged > 0) {
-            mExchangeBtn.setEnabled(true);
-        }
         TextView recordTitle = findViewById(R.id.tv_record);
         if (data.earningList != null && data.earningList.size() > 0) {
             recordTitle.setVisibility(VISIBLE);
         } else {
             recordTitle.setVisibility(GONE);
         }
+    }
+
+    public void setUnexchanged(float unexchanged) {
+        mUnexchanged.setText(String.format(getResources().getString(R.string.unexchanged), unexchanged));
     }
 }

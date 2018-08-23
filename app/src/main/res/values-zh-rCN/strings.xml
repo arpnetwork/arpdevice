@@ -124,6 +124,9 @@
     </plurals>
     <string name="pay_title">支付以太坊油费</string>
     <string name="pay_msg">该操作需要支付油费，请勿重复支付</string>
+    <string name="exchange_failed">兑换失败，请稍后重试</string>
+    <string name="exchange_tip_no_promise">无凭证可兑换</string>
+    <string name="exchange_tip_exchanging">兑换中</string>
 
     <!-- 接单 -->
     <string name="start_service_failed">启动服务失败</string>

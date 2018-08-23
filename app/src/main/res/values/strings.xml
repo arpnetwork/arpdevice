@@ -128,6 +128,9 @@
     </plurals>
     <string name="pay_title">Pay eth gas</string>
     <string name="pay_msg">This operation need to pay eth gas,do not repeat payment</string>
+    <string name="exchange_failed">Exchange failed, please try again.</string>
+    <string name="exchange_tip_no_promise">Nothing to exchange</string>
+    <string name="exchange_tip_exchanging">Exchanging</string>
 
     <!-- receive order -->
     <string name="start_service_failed">Start service failed</string>

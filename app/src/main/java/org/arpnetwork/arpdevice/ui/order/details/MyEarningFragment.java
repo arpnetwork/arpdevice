@@ -22,17 +22,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.ListView;
+import android.widget.Toast;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
+import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.data.BankAllowance;
+import org.arpnetwork.arpdevice.data.Promise;
+import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
+import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +85,32 @@ public class MyEarningFragment extends BaseFragment {
         mHeaderView = new MyEarningHeader(getContext(), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: click at exchange button
+                final Promise promise = Promise.get();
+                if (promise == null) {
+                    Toast.makeText(getContext(), getString(R.string.exchange_tip_no_promise),Toast.LENGTH_SHORT)
+                            .show();
+//                } else if () { // Fixme: handle exchanging
+                } else {
+                    PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
+                        @Override
+                        public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
+                            ARPBank.cash(promise, Wallet.loadCredentials(password), priceWei, gasUsed, new OnValueResult<Boolean>() {
+                                @Override
+                                public void onValueResult(Boolean result) {
+                                    if (result) {
+                                        if (mHeaderView != null) {
+                                            loadData();
+                                        }
+                                    } else {
+                                        Toast.makeText(CustomApplication.sInstance,
+                                                getString(R.string.exchange_failed), Toast.LENGTH_SHORT)
+                                                .show();
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
             }
         });
 
@@ -138,6 +172,7 @@ public class MyEarningFragment extends BaseFragment {
         earningData.earningList = earningList;
         mHeaderView.setData(earningData);
         mAdapter.setData(earningData.earningList);
+        getUnexchange();
         mLoading = false;
     }
 
@@ -163,5 +198,22 @@ public class MyEarningFragment extends BaseFragment {
         earning.earning = Convert.fromWei(amount.toString(), Convert.Unit.ETHER).floatValue();
         earning.minerAddress = "0x" + Hex.toHexString(addressByte);
         return earning;
+    }
+
+    private void getUnexchange() {
+        final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
+        String address = Wallet.get().getAddress();
+        Miner miner = BindMinerHelper.getBound(address);
+
+        if (miner != null) {
+            ARPBank.allowanceARP(miner.getAddress(), Wallet.get().getAddress(), new OnValueResult<BankAllowance>() {
+                @Override
+                public void onValueResult(BankAllowance result) {
+                    BigInteger unexchanged = amount.subtract(result.paid);
+                    float show = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
+                    mHeaderView.setUnexchanged(show);
+                }
+            });
+        }
     }
 }

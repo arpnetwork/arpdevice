@@ -61,6 +61,7 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
 
 
 /**
@@ -183,7 +184,7 @@ public class ARPBank extends Contract {
 
     public static void cash(Promise promise, Credentials credentials, BigInteger gasPrice,
             BigInteger gasLimit, OnValueResult<Boolean> onValueResult) {
-        String cashFunctionString = getCashFunctionData(promise.getFrom(), new BigInteger(promise.getAmount()),
+        String cashFunctionString = getCashFunctionData(Numeric.cleanHexPrefix(promise.getFrom()), new BigInteger(promise.getAmount(), 16),
                 VerifyAPI.getSignatureDataFromHexString(promise.getSign()));
         String transactionString = getTransactionHexData(cashFunctionString, credentials, gasPrice, gasLimit);
         TransactionTask task = new TransactionTask(onValueResult);
@@ -255,6 +256,7 @@ public class ARPBank extends Contract {
         Address add = new Address(address);
         String optTopicAddress = "0x" + TypeEncoder.encode(add);
         ethFilter.addOptionalTopics(optTopicAddress);
+
         EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();
         return ethLog.getLogs();
     }
