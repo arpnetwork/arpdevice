@@ -20,6 +20,7 @@ public class Config {
     public static final boolean DEBUG = false;
 
     public static final String PROTOCOL_VERSION = "1.0";
+    public static final String DEFAULT_BLOCKNUMBER = "0";
 
     public static final String API_URL = "https://easy-mock.com/mock/5afea0ae6ba6060f61c231d1/example";
     public static final String API_SERVER_INFO = "server_info";

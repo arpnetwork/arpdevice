@@ -27,6 +27,7 @@ import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.TransactionUtil;
@@ -96,6 +97,8 @@ public class BindMinerIntentService extends IntentService {
                 boolean result = unbindDevice(Wallet.loadCredentials(password),
                         new BigInteger(gasPrice), new BigInteger(gasLimit));
                 if (result) {
+                    Promise.clear();
+
                     StateHolder.clearAllState();
                     CustomApplication.sInstance.stopMonitorService();
 

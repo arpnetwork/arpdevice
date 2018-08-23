@@ -104,4 +104,9 @@ public class Promise {
         }
         return null;
     }
+
+    public static void clear() {
+        PreferenceManager.getInstance().putString(KEY, "");
+    }
+    
 }

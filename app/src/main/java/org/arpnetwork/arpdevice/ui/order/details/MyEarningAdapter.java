@@ -21,26 +21,28 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import org.arpnetwork.arpdevice.database.EarningRecord;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MyEarningAdapter extends BaseAdapter {
     private Context mContext;
-    private List<Earning> mList;
+    private List<EarningRecord> mList;
 
     public MyEarningAdapter(Context context) {
         mContext = context;
-        mList = new ArrayList<Earning>();
+        mList = new ArrayList<EarningRecord>();
     }
 
-    public void setData(List<Earning> list) {
+    public void setData(List<EarningRecord> list) {
         mList.clear();
         mList.addAll(list);
         notifyDataSetChanged();
     }
 
-    public void addData(List<Earning> list) {
-        mList.addAll(list);
+    public void addData(List<EarningRecord> list) {
+        mList.addAll(0, list);
         notifyDataSetChanged();
     }
 
@@ -50,7 +52,7 @@ public class MyEarningAdapter extends BaseAdapter {
     }
 
     @Override
-    public Earning getItem(int position) {
+    public EarningRecord getItem(int position) {
         return mList.get(position);
     }
 

@@ -27,6 +27,12 @@ repositories {
     flatDir {
         dirs 'libs'
     }
+
+    //activeandroid start
+    mavenCentral()
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+    //activeandroid end
+    maven { url "https://raw.githubusercontent.com/umeng/mvn-repo-umeng/master/repository" }
 }
 
 
@@ -39,6 +45,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.3.1'
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'org.web3j:core:3.3.1-android'
+    implementation 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
 
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     testImplementation 'junit:junit:4.12'

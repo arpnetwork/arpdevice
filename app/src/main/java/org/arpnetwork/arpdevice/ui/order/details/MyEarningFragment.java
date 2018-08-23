@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.ui.order.details;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,16 +27,20 @@ import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask2;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
+import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+import org.arpnetwork.arpdevice.util.UIHelper;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.utils.Convert;
@@ -44,13 +49,18 @@ import org.web3j.utils.Numeric;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MyEarningFragment extends BaseFragment {
     private MyEarningAdapter mAdapter;
     private MyEarningHeader mHeaderView;
+
     private boolean mLoading;
+    private boolean mFirstLoad = true;
+    private float exchanged;
+    private BigInteger mUnexchanged;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -86,25 +96,41 @@ public class MyEarningFragment extends BaseFragment {
             @Override
             public void onClick(View v) {
                 final Promise promise = Promise.get();
-                if (promise == null) {
-                    Toast.makeText(getContext(), getString(R.string.exchange_tip_no_promise),Toast.LENGTH_SHORT)
-                            .show();
-//                } else if () { // Fixme: handle exchanging
+                if (promise == null || mUnexchanged.compareTo(BigInteger.ZERO) == 0) {
+                    UIHelper.showToast(getContext(), getString(R.string.exchange_tip_no_promise), Toast.LENGTH_SHORT);
+                } else if (EarningRecord.find(EarningRecord.STATE_PENDING) != null) {
+                    UIHelper.showToast(CustomApplication.sInstance,
+                            getString(R.string.exchange_tip_exchanging), Toast.LENGTH_SHORT);
                 } else {
                     PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
                         @Override
                         public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
-                            ARPBank.cash(promise, Wallet.loadCredentials(password), priceWei, gasUsed, new OnValueResult<Boolean>() {
+                            ARPBank.cash(promise, Wallet.loadCredentials(password), priceWei, gasUsed, new TransactionTask2.OnTransactionCallback<Boolean>() {
+                                @Override
+                                public void onTxHash(String txHash) {
+                                    final EarningRecord localRecord = savePendingToDb(txHash);
+                                    mHeaderView.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            List<EarningRecord> local = new ArrayList<>(1);
+                                            local.add(localRecord);
+                                            mAdapter.addData(local);
+                                        }
+                                    });
+                                }
+
                                 @Override
                                 public void onValueResult(Boolean result) {
                                     if (result) {
                                         if (mHeaderView != null) {
-                                            loadData();
+                                            refreshData();
+                                        } else {
+                                            UIHelper.showToast(CustomApplication.sInstance,
+                                                    getString(R.string.exchange_success), Toast.LENGTH_SHORT);
                                         }
                                     } else {
-                                        Toast.makeText(CustomApplication.sInstance,
-                                                getString(R.string.exchange_failed), Toast.LENGTH_SHORT)
-                                                .show();
+                                        UIHelper.showToast(CustomApplication.sInstance,
+                                                getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
                                     }
                                 }
                             });
@@ -139,44 +165,95 @@ public class MyEarningFragment extends BaseFragment {
         listView.setAdapter(mAdapter);
     }
 
+    private EarningRecord savePendingToDb(String txHash) {
+        final EarningRecord localRecord = new EarningRecord();
+        localRecord.state = EarningRecord.STATE_PENDING;
+        localRecord.time = System.currentTimeMillis();
+        localRecord.earning = mUnexchanged.toString();
+        localRecord.transactionHash = txHash;
+        localRecord.minerAddress = Promise.get().getFrom();
+        localRecord.saveRecord();
+
+        return localRecord;
+    }
+
+    private void refreshData() {
+        loadNextRemote();
+        List<EarningRecord> oneTime = EarningRecord.findAll();
+        for (EarningRecord record : oneTime) {
+            if (record.state == EarningRecord.STATE_SUCCESS) {
+                exchanged += record.getEarning();
+            }
+        }
+        mAdapter.setData(oneTime);
+        mHeaderView.setData(exchanged, mAdapter.getCount() > 0);
+        getUnexchange();
+    }
+
     private void loadData() {
         if (mLoading) {
             return;
         }
 
-        EarningData earningData = new EarningData();
-        // FIXME：set history earning
-        earningData.exchanged = 0;
-        earningData.unexchanged = 0;
+        List<EarningRecord> oneTime;
+        if (mFirstLoad) {
+            mFirstLoad = false;
+            if (EarningRecord.findTop() != null) {
+                oneTime = EarningRecord.findAll();
+                for (EarningRecord record : oneTime) {
+                    if (record.state == EarningRecord.STATE_SUCCESS) {
+                        exchanged += record.getEarning();
+                    }
+                }
+                if (EarningRecord.find(EarningRecord.STATE_PENDING) != null) {
+                    loadNextRemote(); // Update state.
+                }
+            } else {
+                oneTime = loadNextRemote();
+            }
+        } else {
+            oneTime = loadNextRemote();
+        }
 
         mLoading = true;
 
-        // FIXME: set record
-        List<Earning> earningList = new ArrayList<>();
+        mAdapter.addData(oneTime);
+        mHeaderView.setData(exchanged, mAdapter.getCount() > 0);
+        getUnexchange();
+        mLoading = false;
+    }
+
+    private List<EarningRecord> loadNextRemote() {
+        EarningRecord top = EarningRecord.findTopWithState(EarningRecord.STATE_SUCCESS);
+        BigInteger topNextNumber = new BigInteger(Config.DEFAULT_BLOCKNUMBER);
+        if (top != null && !TextUtils.isEmpty(top.blockNumber)) {
+            topNextNumber = Numeric.toBigInt(top.blockNumber).add(BigInteger.ONE);
+        }
+        List<EarningRecord> result = getRemoteAndSave(topNextNumber);
+        Collections.reverse(result);
+        return result;
+    }
+
+    private List<EarningRecord> getRemoteAndSave(BigInteger blockNumber) {
+        List<EarningRecord> records = new ArrayList<>();
         List<Log> transactionList = null;
         try {
-            // FIXME: check logs from the latest block of history record
-            transactionList = ARPBank.getTransactionList(Wallet.get().getAddress(), new BigInteger("0"));
+            transactionList = ARPBank.getTransactionList(Wallet.get().getAddress(), blockNumber);
         } catch (ExecutionException e) {
         } catch (InterruptedException e) {
         }
 
         if (transactionList != null && transactionList.size() > 0) {
             for (Log log : transactionList) {
-                Earning newEarning = getEarningByLog(log);
-                earningList.add(0, newEarning);
-                earningData.exchanged += newEarning.earning;
+                EarningRecord newEarning = getEarningByLog(log);
+                exchanged += newEarning.getEarning();
+                records.add(newEarning);
             }
         }
-
-        earningData.earningList = earningList;
-        mHeaderView.setData(earningData);
-        mAdapter.setData(earningData.earningList);
-        getUnexchange();
-        mLoading = false;
+        return records;
     }
 
-    private Earning getEarningByLog(Log log) {
+    private EarningRecord getEarningByLog(Log log) {
         long logDate = 0;
         try {
             logDate = EtherAPI.getTransferDate(log.getBlockHash());
@@ -193,24 +270,29 @@ public class MyEarningFragment extends BaseFragment {
         byte[] addressByte = new byte[20];
         System.arraycopy(topic, 12, addressByte, 0, 20);
 
-        Earning earning = new Earning();
+        EarningRecord earning = EarningRecord.get(log.getTransactionHash());
         earning.time = logDate;
-        earning.earning = Convert.fromWei(amount.toString(), Convert.Unit.ETHER).floatValue();
+        earning.earning = amount.toString();
         earning.minerAddress = "0x" + Hex.toHexString(addressByte);
+        earning.blockNumber = log.getBlockNumberRaw();
+        earning.state = EarningRecord.STATE_SUCCESS;
+        earning.saveRecord();
+
         return earning;
     }
 
     private void getUnexchange() {
+        if (Promise.get() == null) return;
+
         final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
         String address = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(address);
-
         if (miner != null) {
             ARPBank.allowanceARP(miner.getAddress(), Wallet.get().getAddress(), new OnValueResult<BankAllowance>() {
                 @Override
                 public void onValueResult(BankAllowance result) {
-                    BigInteger unexchanged = amount.subtract(result.paid);
-                    float show = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
+                    mUnexchanged = amount.subtract(result.paid);
+                    float show = Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue();
                     mHeaderView.setUnexchanged(show);
                 }
             });

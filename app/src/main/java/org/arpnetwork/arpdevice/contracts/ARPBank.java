@@ -33,6 +33,7 @@ import org.arpnetwork.arpdevice.contracts.tasks.BankBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionGasEstimateTask;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask;
+import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask2;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
@@ -183,11 +184,11 @@ public class ARPBank extends Contract {
     }
 
     public static void cash(Promise promise, Credentials credentials, BigInteger gasPrice,
-            BigInteger gasLimit, OnValueResult<Boolean> onValueResult) {
+            BigInteger gasLimit, TransactionTask2.OnTransactionCallback<Boolean> onValueResult) {
         String cashFunctionString = getCashFunctionData(Numeric.cleanHexPrefix(promise.getFrom()), new BigInteger(promise.getAmount(), 16),
                 VerifyAPI.getSignatureDataFromHexString(promise.getSign()));
         String transactionString = getTransactionHexData(cashFunctionString, credentials, gasPrice, gasLimit);
-        TransactionTask task = new TransactionTask(onValueResult);
+        TransactionTask2 task = new TransactionTask2(onValueResult);
         task.execute(transactionString);
     }
 
@@ -247,14 +248,14 @@ public class ARPBank extends Contract {
                 data, credentials);
     }
 
-    public static List getTransactionList(String address, BigInteger earliestBlock) throws ExecutionException, InterruptedException {
+    public static List getTransactionList(String address, BigInteger earliestBlockNumber) throws ExecutionException, InterruptedException {
         Event event = new Event("Cashing",
                 Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
-        EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(earliestBlock), DefaultBlockParameterName.LATEST, CONTRACT_ADDRESS);
+        EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(earliestBlockNumber), DefaultBlockParameterName.LATEST, CONTRACT_ADDRESS);
         ethFilter.addSingleTopic(EventEncoder.encode(event));
-        Address add = new Address(address);
-        String optTopicAddress = "0x" + TypeEncoder.encode(add);
+        Address addr = new Address(address);
+        String optTopicAddress = "0x" + TypeEncoder.encode(addr);
         ethFilter.addOptionalTopics(optTopicAddress);
 
         EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();

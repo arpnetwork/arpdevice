@@ -59,5 +59,15 @@
             android:name=".ui.miner.MonitorService"
             android:exported="false" />
 
+        <meta-data
+            android:name="AA_DB_NAME"
+            android:value="arpdevice.db" />
+        <meta-data
+            android:name="AA_DB_VERSION"
+            android:value="1" />
+        <meta-data
+            android:name="AA_MODELS"
+            android:value="org.arpnetwork.arpdevice.database.EarningRecord" />
+
     </application>
 </manifest>

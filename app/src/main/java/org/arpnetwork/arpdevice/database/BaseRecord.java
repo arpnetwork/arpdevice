@@ -14,10 +14,29 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.order.details;
+package org.arpnetwork.arpdevice.database;
 
-public class Earning {
-    public float earning;
-    public long time;
-    public String minerAddress;
+import com.activeandroid.Model;
+import com.activeandroid.annotation.Column;
+
+public abstract class BaseRecord extends Model {
+    @Column(name = "create_at")
+    public long createAt;
+
+    @Column(name = "update_at")
+    public long updateAt;
+
+    public BaseRecord() {
+        createAt = System.currentTimeMillis();
+        updateAt = createAt;
+    }
+
+    public boolean isNewRecord() {
+        return getId() == null;
+    }
+
+    public Long saveRecord() {
+        updateAt = System.currentTimeMillis();
+        return save();
+    }
 }

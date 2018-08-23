@@ -20,6 +20,8 @@ import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 
+import com.activeandroid.ActiveAndroid;
+
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.miner.MonitorService;
@@ -37,6 +39,7 @@ public class CustomApplication extends Application {
 
         PreferenceManager.init(this);
         NetworkHelper.init(getApplicationContext());
+        ActiveAndroid.initialize(this);
 
         DeviceInfo.init(this);
     }

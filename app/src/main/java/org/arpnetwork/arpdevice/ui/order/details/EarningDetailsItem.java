@@ -25,7 +25,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.util.Util;
+import org.arpnetwork.arpdevice.database.EarningRecord;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -34,6 +34,7 @@ import java.util.Date;
 public class EarningDetailsItem extends LinearLayout {
     private TextView mDateView;
     private TextView mIncomeView;
+    private TextView mStateView;
     private View mDivider;
     private LinearLayout mItemLayout;
 
@@ -54,14 +55,20 @@ public class EarningDetailsItem extends LinearLayout {
 
         mDateView = findViewById(R.id.tv_earning_date);
         mIncomeView = findViewById(R.id.tv_earning_income);
+        mStateView = findViewById(R.id.tv_earning_state);
         mDivider = findViewById(R.id.divider);
         mItemLayout = findViewById(R.id.layout_item);
     }
 
-    public void setData(Earning earning) {
+    public void setData(EarningRecord earning) {
         DateFormat format = new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
         mDateView.setText(format.format(new Date(earning.time)));
-        mIncomeView.setText(String.format(getResources().getString(R.string.earning_detail_format), earning.earning, earning.minerAddress));
+        String state = "";
+        if (earning.state == EarningRecord.STATE_PENDING) {
+            state = getContext().getString(R.string.exchange_tip_exchanging);
+        }
+        mStateView.setText(state);
+        mIncomeView.setText(String.format(getResources().getString(R.string.earning_detail_format), earning.getEarning(), earning.minerAddress));
     }
 
     public void setFirstOrLastItem(boolean firstItem, boolean lastItem) {

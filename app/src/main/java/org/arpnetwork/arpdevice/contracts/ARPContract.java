@@ -25,7 +25,7 @@ import java.util.Arrays;
 
 public class ARPContract extends Contract {
     public static final String CONTRACT_ADDRESS = "0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922";
-    public static final String APPROVE_ARP_NUMBER = "5000";
+    public static final String APPROVE_ARP_NUMBER = "500";
 
     private ARPContract(Web3j web3j, Credentials credentials,
             BigInteger gasPrice, BigInteger gasLimit) {

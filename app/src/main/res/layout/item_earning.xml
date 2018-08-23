@@ -21,9 +21,23 @@
         android:paddingRight="@dimen/content_padding"
         android:paddingTop="@dimen/content_padding_top">
 
-        <TextView
-            android:id="@+id/tv_earning_date"
-            style="@style/MyItemLabel" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_earning_date"
+                style="@style/MyItemLabel"
+                android:layout_alignParentLeft="true"
+                android:text="2018-09-09 20:39:30" />
+
+            <TextView
+                android:id="@+id/tv_earning_state"
+                style="@style/MyItemLabel"
+                android:layout_alignParentRight="true"
+                android:textColor="@color/colorPrimary" />
+        </RelativeLayout>
 
         <TextView
             android:id="@+id/tv_earning_income"
