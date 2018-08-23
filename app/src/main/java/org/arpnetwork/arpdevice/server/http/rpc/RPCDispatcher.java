@@ -27,7 +27,9 @@ public abstract class RPCDispatcher extends Dispatcher {
     protected void doRequest(Request request, Response response) {
         RPCResponse rpcResponse = new RPCResponse();
         try {
-            doRequest(new RPCRequest(request.getContent()), rpcResponse);
+            RPCRequest rpcRequest = new RPCRequest(request.getContent());
+            rpcRequest.setRemoteAddress(request.getRemoteAddress());
+            doRequest(rpcRequest, rpcResponse);
         } catch (JSONException e) {
             rpcResponse.setError(null, RPCErrorCode.INVALID_JSON, "Invalid json");
         }

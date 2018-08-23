@@ -64,7 +64,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     @Override
     protected void doRequest(RPCRequest request, RPCResponse response) {
         DApp dApp = mAppManager.getDApp();
-        if (dApp == null) {
+        if (dApp == null || !checkRemoteAddress(request, dApp)) {
             response.setError(request.getId(), RPCErrorCode.INVALID_REQUEST, "Invalid request");
             return;
         }
@@ -125,6 +125,15 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
         } else {
             response.setError(request.getId(), RPCErrorCode.METHOD_NOT_FOUND, "Method not found");
         }
+    }
+
+    private boolean checkRemoteAddress(RPCRequest request, DApp dApp) {
+        String remoteAddress = request.getRemoteAddress();
+        Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
+        if (remoteAddress.equals(dApp.ip) || remoteAddress.equals(miner.getIpString())) {
+            return true;
+        }
+        return false;
     }
 
     private boolean verify(RPCResponse response, String id, String data, String nonce, String sign, String address) {

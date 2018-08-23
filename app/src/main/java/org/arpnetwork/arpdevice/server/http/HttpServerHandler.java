@@ -19,6 +19,7 @@ package org.arpnetwork.arpdevice.server.http;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.InetSocketAddress;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,10 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter {
             Request request = new Request();
             request.setMethod(mMethod);
             request.setUri(mUri);
+            if (ctx.channel().remoteAddress() instanceof InetSocketAddress) {
+                InetSocketAddress socketAddress = (InetSocketAddress) ctx.channel().remoteAddress();
+                request.setRemoteAddress(socketAddress.getAddress().getHostAddress());
+            }
 
             if (mMethod == HttpMethod.GET) {
                 request.setContent(getRequestParams(mUri));
