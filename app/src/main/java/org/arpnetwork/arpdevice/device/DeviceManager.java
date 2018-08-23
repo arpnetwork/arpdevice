@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.data.ReleaseDeviceReq;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Req;
@@ -109,6 +110,13 @@ public class DeviceManager implements DeviceConnection.Listener {
         if (mConnection != null) {
             mConnection.close();
         }
+    }
+
+    /**
+     * Device releases itself
+     */
+    public void releaseDevice() {
+        send(new ReleaseDeviceReq());
     }
 
     /**

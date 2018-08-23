@@ -225,26 +225,31 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void requestPayment(final DApp dApp) {
-        DAppApi.requestPayment(dApp, new Runnable() {
+        final Runnable successRunnable = new Runnable() {
             @Override
             public void run() {
                 mRetryRequestPayment = false;
             }
-        }, new Runnable() {
+        };
+        Runnable failedRunnable = new Runnable() {
             @Override
             public void run() {
                 if (!mRetryRequestPayment) {
-                    DAppApi.requestPayment(dApp, null, this);
+                    DAppApi.requestPayment(dApp, successRunnable, this);
                     mRetryRequestPayment = true;
                 } else {
                     releaseDApp();
                 }
             }
-        });
+        };
+        DAppApi.requestPayment(dApp, successRunnable, failedRunnable);
         postRequestPayment(dApp);
     }
 
     private boolean checkPromiseAmount() {
+        if (mDApp == null) {
+            return false;
+        }
         if (mTotalTime > 0) {
             BigInteger totalAmount = mDApp.getAmount(mTotalTime)
                     .multiply(new BigInteger(String.valueOf((int) ((1 - Config.FEE_PERCENT) * 100))))
@@ -257,6 +262,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void releaseDApp() {
+        mDeviceManager.releaseDevice();
+        mHandler.removeCallbacksAndMessages(null);
         mDApp = null;
         mAppManager.clear();
         DataServer.getInstance().releaseDApp();
@@ -294,8 +301,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mReceivedAmount = new BigInteger(promise.getAmount(), 16);
 
         if (!checkPromiseAmount()) {
-            DataServer.getInstance().releaseDApp();
-            mHandler.removeCallbacksAndMessages(null);
+            finish();
         }
     }
 
