@@ -137,6 +137,7 @@
     <string name="start_service_failed">Start service failed</string>
     <string name="incompatible_protocol">App version is too low</string>
     <string name="verify_failed">Verify failed</string>
+    <string name="low_upload_speed">The upload speed is too low to receive the order</string>
     <string name="receive_order">Receive order</string>
     <string name="receive_order_tips">Do not touch the screen after receiving the order, otherwise you will withdraw from the order, affecting your income and other people\'s experience.</string>
     <string name="exit_order">Exit order</string>

@@ -25,6 +25,7 @@ import com.google.gson.Gson;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.ReleaseDeviceReq;
+import org.arpnetwork.arpdevice.data.SpeedResponse;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Req;
@@ -54,6 +55,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     public static final int REGISTERED = 4;
     public static final int DEVICE_ASSIGNED = 6;
     public static final int DEVICE_RELEASED = 7;
+    public static final int SPEED_RESULT = 9;
 
     private static final int MSG_SPEED = 1;
     private static final int MSG_DEVICE = 2;
@@ -184,6 +186,12 @@ public class DeviceManager implements DeviceConnection.Listener {
                             }
                         }
                     });
+                    break;
+                case SPEED_RESULT:
+                    SpeedResponse speedResponse = mGson.fromJson(json, SpeedResponse.class);
+                    if (speedResponse.data != null && speedResponse.data.getUploadSpeed() < 2 * 1024 * 1024) {
+                        handleError(0, R.string.low_upload_speed);
+                    }
                     break;
                 default:
                     break;

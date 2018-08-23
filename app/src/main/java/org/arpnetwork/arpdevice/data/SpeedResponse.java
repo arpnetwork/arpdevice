@@ -16,32 +16,5 @@
 
 package org.arpnetwork.arpdevice.data;
 
-import com.google.gson.annotations.SerializedName;
-
-import org.arpnetwork.arpdevice.util.Util;
-
-public class SpeedData {
-    private String hash;
-
-    @SerializedName("upload_speed")
-    private long uploadSpeed;
-
-    @SerializedName("download_speed")
-    private long downloadSpeed;
-
-    public SpeedData(byte[] data) {
-        this.hash = Util.md5(data);
-    }
-
-    public String getHash() {
-        return hash;
-    }
-
-    public long getDownloadSpeed() {
-        return downloadSpeed;
-    }
-
-    public long getUploadSpeed() {
-        return uploadSpeed;
-    }
+public class SpeedResponse extends Response<SpeedData> {
 }
