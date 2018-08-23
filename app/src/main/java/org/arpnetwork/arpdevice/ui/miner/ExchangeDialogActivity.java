@@ -18,24 +18,14 @@ package org.arpnetwork.arpdevice.ui.miner;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.contracts.ARPBank;
-import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask2;
-import org.arpnetwork.arpdevice.data.BankAllowance;
-import org.arpnetwork.arpdevice.data.Promise;
-import org.arpnetwork.arpdevice.database.EarningRecord;
-import org.arpnetwork.arpdevice.dialog.PayEthDialog;
-import org.arpnetwork.arpdevice.ui.wallet.Wallet;
-import org.arpnetwork.arpdevice.util.UIHelper;
+import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
@@ -86,48 +76,13 @@ public class ExchangeDialogActivity extends Activity {
         ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PayEthDialog.showPayEthDialog(ExchangeDialogActivity.this, getString(R.string.exchange), new PayEthDialog.OnPayListener() {
-                    @Override
-                    public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
-                        final Promise promise = Promise.get();
-                        ARPBank.cash(promise, Wallet.loadCredentials(password), priceWei, gasUsed, new TransactionTask2.OnTransactionCallback<Boolean>() {
-                            @Override
-                            public void onTxHash(String txHash) {
-                                savePendingToDb(txHash, unExchanged);
-                            }
-
-                            @Override
-                            public void onValueResult(Boolean result) {
-                                if (result) {
-                                    UIHelper.showToast(CustomApplication.sInstance,
-                                            getString(R.string.exchange_success), Toast.LENGTH_SHORT);
-                                } else {
-                                    UIHelper.showToast(CustomApplication.sInstance,
-                                            getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
-                                }
-                            }
-                        });
-                    }
-                }, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
+                Intent intent = new Intent();
+                intent.setClass(ExchangeDialogActivity.this, MyEarningActivity.class);
+                startActivity(intent);
             }
         });
 
     }
 
-    private EarningRecord savePendingToDb(String txHash, BigInteger mUnexchanged) {
-        final EarningRecord localRecord = new EarningRecord();
-        localRecord.state = EarningRecord.STATE_PENDING;
-        localRecord.time = System.currentTimeMillis();
-        localRecord.earning = mUnexchanged.toString();
-        localRecord.transactionHash = txHash;
-        localRecord.minerAddress = Promise.get().getFrom();
-        localRecord.saveRecord();
 
-        return localRecord;
-    }
 }

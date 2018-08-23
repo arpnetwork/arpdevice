@@ -41,6 +41,8 @@ import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.data.Promise;
+import org.arpnetwork.arpdevice.dialog.MessageDialog;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
@@ -49,6 +51,7 @@ import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
+import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
@@ -176,25 +179,55 @@ public class BindMinerFragment extends BaseFragment {
         mUnbindBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /*// TODO: 提示凭证兑换
-                showMessageAlertDialog("兑换", "Message", "去兑换", "放弃兑换", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Log.d(TAG, "去兑换");
-                    }
-                }, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });*/
-                // TODO: 兑换成功调用
                 if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
                     return;
                 }
-                showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
+                getUnexchange();
             }
         });
+    }
+
+    private void getUnexchange() {
+        if (Promise.get() == null) {
+            showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
+        }
+
+        final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
+        String spender = Wallet.get().getAddress();
+        if (mBoundMiner != null) {
+            ARPBank.allowanceARP(mBoundMiner.getAddress(), spender, new OnValueResult<BankAllowance>() {
+                @Override
+                public void onValueResult(BankAllowance result) {
+                    if (getActivity() == null) return;
+
+                    BigInteger unexchanged = amount.subtract(result.paid);
+                    if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+                        String message = String.format(getString(R.string.exchange_change_miner_msg), unexchanged);
+                        MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
+                        builder.setTitle(getString(R.string.exchange_change_miner_title))
+                                .setMessage(message)
+                                .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        Intent intent = new Intent();
+                                        intent.setClass(getActivity(), MyEarningActivity.class);
+                                        startActivity(intent);
+                                    }
+                                })
+                                .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        finish();
+                                    }
+                                })
+                                .create()
+                                .show();
+                    } else {
+                        showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
+                    }
+                }
+            });
+        }
     }
 
     private void showApproveView(int stateTextId) {
@@ -429,23 +462,9 @@ public class BindMinerFragment extends BaseFragment {
                 .setPositiveButton(R.string.bind_apply, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
-                        String owner = Wallet.get().getAddress();
-                        String spender = mAdapter.getItem(mClickPosition).getAddress();
-                        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
-                            @Override
-                            public void onValueResult(BankAllowance result) {
-                                if (result != null && Convert.fromWei(result.amount.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
-                                    // TODO: 提示旧凭证兑换 取消兑换状态判断？
-                                    // 兑换后 解除授权，再执行绑定
-                                    showPayEthDialog(getString(R.string.bind_cancel_approve_title), getString(R.string.bind_cancel_approve_msg), OPERATION_CANCEL_APPROVE);
-                                } else {
-                                    mBindPromise = bindPromise;
-                                    Miner miner = mAdapter.getItem(mClickPosition);
-                                    showPayEthDialog(miner.getAddress(), getString(R.string.bind_message), OPERATION_BIND);
-                                }
-                            }
-                        });
+                        mBindPromise = bindPromise;
+                        Miner miner = mAdapter.getItem(mClickPosition);
+                        showPayEthDialog(miner.getAddress(), getString(R.string.bind_message), OPERATION_BIND);
                     }
                 })
                 .show();

@@ -143,12 +143,12 @@
     <string name="exit_order">Exit order</string>
     <string name="confirm_to_exit">Confirm to exit receiving order?</string>
 
-    <!-- exange -->
+    <!-- exchange -->
     <string name="exchange_tip_title">Please exchange your promise soon</string>
     <string name="exchange_tip_msg">You have accumulated %s ARP,the bound miner expired is %s</string>
     <string name="exchange_tip_cancel">Pending exchange</string>
-    <string name="exchange_change_minner_title">Please exchange your promise before change your miner</string>
-    <string name="exchange_change_minner_msg">You have accumulated %s ARP,please exchange your promise. if you cancel the exchange,the promise will become invalid automatically</string>
-    <string name="exchange_change_minner_cancel">放弃兑换</string>
+    <string name="exchange_change_miner_title">Please exchange your promise before change your miner</string>
+    <string name="exchange_change_miner_msg">You have accumulated %s ARP,please exchange your promise. if you cancel the exchange,the promise will become invalid automatically</string>
+    <string name="exchange_change_miner_cancel">Abandon</string>
 
 </resources>

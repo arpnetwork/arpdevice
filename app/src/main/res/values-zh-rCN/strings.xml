@@ -139,11 +139,11 @@
     <string name="exit_order">退出接单</string>
     <string name="confirm_to_exit">确定退出接单?</string>
 
-    <!-- exange -->
+    <!-- exchange -->
     <string name="exchange_tip_title">请尽快兑换凭证</string>
     <string name="exchange_tip_msg">您已经累积%s个ARP凭证，绑定的矿工有效期为%s，是否兑换</string>
     <string name="exchange_tip_cancel">暂不兑换</string>
-    <string name="exchange_change_minner_title">更换矿工前请先将凭证兑换ARP</string>
-    <string name="exchange_change_minner_msg">您已经累积%s个ARP凭证，请在更换矿工前兑换，如选择放弃兑换，该凭证自动作废</string>
-    <string name="exchange_change_minner_cancel">放弃兑换</string>
+    <string name="exchange_change_miner_title">更换矿工前请先将凭证兑换ARP</string>
+    <string name="exchange_change_miner_msg">您已经累积%s个ARP凭证，请在更换矿工前兑换，如选择放弃兑换，该凭证自动作废</string>
+    <string name="exchange_change_miner_cancel">放弃兑换</string>
 </resources>

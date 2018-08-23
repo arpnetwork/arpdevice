@@ -73,7 +73,7 @@ public class MonitorService extends Service {
             if (miner.getExpired().compareTo(BigInteger.ZERO) > 0) {
                 String amount = Promise.get().getAmount();
                 if (!TextUtils.isEmpty(amount)) {
-                    getUnexchange();
+                    getUnexchange(miner);
                 }
             }
         }
@@ -83,26 +83,25 @@ public class MonitorService extends Service {
         ExchangeDialogActivity.launch(CustomApplication.sInstance, args);
     }
 
-    private void getUnexchange() {
+    private void getUnexchange(final Miner miner) {
         if (Promise.get() == null) return;
-        final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
-        String address = Wallet.get().getAddress();
-        final Miner miner = BindMinerHelper.getBound(address);
 
-        if (miner != null) {
-            ARPBank.allowanceARP(miner.getAddress(), Wallet.get().getAddress(), new OnValueResult<BankAllowance>() {
-                @Override
-                public void onValueResult(BankAllowance result) {
-                    BigInteger unexchanged = amount.subtract(result.paid);
-                    if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
-                        Message message = new Message();
-                        message.what = 1;
-                        message.obj = miner.getExpired().longValue() + "#" + unexchanged;
-                        mHandler.sendMessage(message);
-                    }
+        final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
+
+        String owner = miner.getAddress();
+        String spender = Wallet.get().getAddress();
+        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
+            @Override
+            public void onValueResult(BankAllowance result) {
+                BigInteger unexchanged = amount.subtract(result.paid);
+                if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+                    Message message = new Message();
+                    message.what = 1;
+                    message.obj = miner.getExpired().longValue() + "#" + unexchanged;
+                    mHandler.sendMessage(message);
                 }
-            });
-        }
+            }
+        });
     }
 
     @Override
