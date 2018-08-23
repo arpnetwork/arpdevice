@@ -102,8 +102,8 @@
     <string name="bind_bank_deposit_msg">BankDeposit</string>
     <string name="bind_arp_approve_title">ARPApprove</string>
     <string name="bind_arp_approve_msg">Approve need 5000 ARPs to bind miner(Approve doesn\'t cost ARP but cost eth gas）</string>
-    <string name="bind_unbind_title">unbind</string>
-    <string name="bind_unbind_msg">unbind</string>
+    <string name="bind_unbind_title">Unbind</string>
+    <string name="bind_unbind_msg">Unbind need to cost eth gas</string>
     <string name="bind_cancel_approve_title">cancel approve</string>
     <string name="bind_cancel_approve_msg">cancel approve</string>
     <string name="bind_change_bind_msg">Please unbind first and then bind new.</string>
@@ -128,6 +128,7 @@
     </plurals>
     <string name="pay_title">Pay eth gas</string>
     <string name="pay_msg">This operation need to pay eth gas,do not repeat payment</string>
+    <string name="exchange_success">Exchange success</string>
     <string name="exchange_failed">Exchange failed, please try again.</string>
     <string name="exchange_tip_no_promise">Nothing to exchange</string>
     <string name="exchange_tip_exchanging">Exchanging</string>
@@ -140,5 +141,13 @@
     <string name="receive_order_tips">Do not touch the screen after receiving the order, otherwise you will withdraw from the order, affecting your income and other people\'s experience.</string>
     <string name="exit_order">Exit order</string>
     <string name="confirm_to_exit">Confirm to exit receiving order?</string>
+
+    <!-- exange -->
+    <string name="exchange_tip_title">Please exchange your promise soon</string>
+    <string name="exchange_tip_msg">You have accumulated %s ARP,the bound miner expired is %s</string>
+    <string name="exchange_tip_cancel">Pending exchange</string>
+    <string name="exchange_change_minner_title">Please exchange your promise before change your miner</string>
+    <string name="exchange_change_minner_msg">You have accumulated %s ARP,please exchange your promise. if you cancel the exchange,the promise will become invalid automatically</string>
+    <string name="exchange_change_minner_cancel">放弃兑换</string>
 
 </resources>

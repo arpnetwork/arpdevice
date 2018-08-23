@@ -272,6 +272,7 @@ public class BindMinerFragment extends BaseFragment {
             mBoundMiner = miner;
             loadData();
         } else {
+            showApproveView(R.string.bind_approving);
             loadBankAllowance();
         }
     }
@@ -395,13 +396,13 @@ public class BindMinerFragment extends BaseFragment {
         });
     }
 
-    private void checkBalance(final double ethCost) {
+    private void checkBalance(final double bindDeviceEthCost) {
         // check balance before binding miner
         final String address = Wallet.get().getAddress();
         EtherAPI.getEtherBalance(address, new OnValueResult<BigDecimal>() {
             @Override
             public void onValueResult(BigDecimal result) {
-                if (result.doubleValue() < ethCost) {
+                if (result.doubleValue() < bindDeviceEthCost) {
                     showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
                 } else {
                     ARPContract.getArpBalance(address, new OnValueResult<BigDecimal>() {
@@ -635,8 +636,6 @@ public class BindMinerFragment extends BaseFragment {
                     UIHelper.showToast(getActivity(), getString(R.string.unbind_success));
 
                     mBoundMiner = null;
-                    StateHolder.clearAllState();
-
                     finish();
                     break;
 

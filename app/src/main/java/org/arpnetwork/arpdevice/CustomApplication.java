@@ -18,9 +18,11 @@ package org.arpnetwork.arpdevice;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.Intent;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.ui.miner.MonitorService;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 
@@ -63,5 +65,15 @@ public class CustomApplication extends Application {
         NetworkHelper.fini();
 
         System.exit(0);
+    }
+
+    public void startMonitorService() {
+        Intent startServiceIntent = new Intent(this, MonitorService.class);
+        startService(startServiceIntent);
+    }
+
+    public void stopMonitorService() {
+        Intent startServiceIntent = new Intent(this, MonitorService.class);
+        stopService(startServiceIntent);
     }
 }

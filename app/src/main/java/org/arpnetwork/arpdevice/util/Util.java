@@ -35,6 +35,10 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Random;
 
 public class Util {
@@ -189,6 +193,13 @@ public class Util {
         byte[] address32 = new byte[32];
         System.arraycopy(bytes, 0, address32, 32 - bytes.length, bytes.length);
         return address32;
+    }
+
+    public static String getDateTime(String pattern, long times) {
+        DateFormat format = new SimpleDateFormat(pattern, Locale.US);
+        String dateTime = format.format(new Date(times * 1000));
+
+        return dateTime;
     }
 
     public static String getDurationString(Context context, long duration) {

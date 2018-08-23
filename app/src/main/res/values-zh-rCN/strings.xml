@@ -100,9 +100,9 @@
     <string name="bind_bank_deposit_title">存ARP到ARP Bank</string>
     <string name="bind_bank_deposit_msg">需要预先存ARP500个到ARP Bank</string>
     <string name="bind_arp_approve_title">ARPApprove</string>
-    <string name="bind_arp_approve_msg">需要预授权5000个ARP才能绑定矿工（预授权不扣ARP但需要支付以太坊油费）</string>
+    <string name="bind_arp_approve_msg">需要预授权500个ARP才能绑定矿工（预授权不扣ARP但需要支付以太坊油费）</string>
     <string name="bind_unbind_title">解绑</string>
-    <string name="bind_unbind_msg">解绑</string>
+    <string name="bind_unbind_msg">解绑需要支付以太坊油费</string>
     <string name="bind_cancel_approve_title">取消授权</string>
     <string name="bind_cancel_approve_msg">取消授权</string>
     <string name="bind_change_bind_msg">请先解绑再绑定新矿工</string>
@@ -124,6 +124,7 @@
     </plurals>
     <string name="pay_title">支付以太坊油费</string>
     <string name="pay_msg">该操作需要支付油费，请勿重复支付</string>
+    <string name="exchange_success">兑换成功</string>
     <string name="exchange_failed">兑换失败，请稍后重试</string>
     <string name="exchange_tip_no_promise">无凭证可兑换</string>
     <string name="exchange_tip_exchanging">兑换中</string>
@@ -136,4 +137,12 @@
     <string name="receive_order_tips">接到单后请勿触碰屏幕，否则将会退出接到的订单，影响您的收入和他人体验</string>
     <string name="exit_order">退出接单</string>
     <string name="confirm_to_exit">确定退出接单?</string>
+
+    <!-- exange -->
+    <string name="exchange_tip_title">请尽快兑换凭证</string>
+    <string name="exchange_tip_msg">您已经累积%s个ARP凭证，绑定的矿工有效期为%s，是否兑换</string>
+    <string name="exchange_tip_cancel">暂不兑换</string>
+    <string name="exchange_change_minner_title">更换矿工前请先将凭证兑换ARP</string>
+    <string name="exchange_change_minner_msg">您已经累积%s个ARP凭证，请在更换矿工前兑换，如选择放弃兑换，该凭证自动作废</string>
+    <string name="exchange_change_minner_cancel">放弃兑换</string>
 </resources>

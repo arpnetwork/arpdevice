@@ -46,8 +46,18 @@
             android:name=".ui.order.receive.ReceiveOrderActivity"
             android:screenOrientation="portrait" />
 
+        <activity
+            android:name=".ui.miner.ExchangeDialogActivity"
+            android:label=""
+            android:theme="@style/Dialog" />
+
         <service
             android:name=".ui.miner.BindMinerIntentService"
             android:exported="false" />
+
+        <service
+            android:name=".ui.miner.MonitorService"
+            android:exported="false" />
+
     </application>
 </manifest>

@@ -20,6 +20,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.Nullable;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
@@ -95,6 +96,9 @@ public class BindMinerIntentService extends IntentService {
                 boolean result = unbindDevice(Wallet.loadCredentials(password),
                         new BigInteger(gasPrice), new BigInteger(gasLimit));
                 if (result) {
+                    StateHolder.clearAllState();
+                    CustomApplication.sInstance.stopMonitorService();
+
                     mBroadcaster.broadcastWithState(STATE_UNBIND_SUCCESS, type, address);
                 } else {
                     mBroadcaster.broadcastWithState(STATE_UNBIND_FAILED, type, address);
@@ -111,6 +115,8 @@ public class BindMinerIntentService extends IntentService {
                 boolean result = bindDevice(address, bindPromise, Wallet.loadCredentials(password),
                         new BigInteger(gasPrice), new BigInteger(gasLimit));
                 if (result) {
+                    CustomApplication.sInstance.startMonitorService();
+
                     mBroadcaster.broadcastWithState(STATE_BIND_SUCCESS, type, address);
                 } else {
                     mBroadcaster.broadcastWithState(STATE_BIND_FAILED, type, address);

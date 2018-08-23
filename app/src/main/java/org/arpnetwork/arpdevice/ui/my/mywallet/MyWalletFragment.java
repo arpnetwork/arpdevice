@@ -127,6 +127,7 @@ public class MyWalletFragment extends BaseFragment {
         ARPBank.withdrawAll(credentials, gasPrice, new OnValueResult<Boolean>() {
             @Override
             public void onValueResult(Boolean result) {
+                if (getActivity() == null) return;
                 hideProgressDialog();
                 if (result) {
                     mWithdrawBtn.setVisibility(View.GONE);

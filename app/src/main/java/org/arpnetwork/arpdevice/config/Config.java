@@ -34,4 +34,7 @@ public class Config {
 
     public static final int REQUEST_PAYMENT_INTERVAL = 9;
     public static final float FEE_PERCENT = 0.05f;
+
+    public static final int MONITOR_MINER_INTERVAL = 1 * 60 * 60 * 1000;
+
 }

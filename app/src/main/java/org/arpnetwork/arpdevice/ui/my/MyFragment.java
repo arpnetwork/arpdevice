@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
@@ -59,6 +60,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         hideNavIcon();
 
         mOrderPrice = DeviceInfo.get().getPrice();
+        CustomApplication.sInstance.startMonitorService();
     }
 
     @Override
@@ -77,6 +79,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public void onDestroy() {
         super.onDestroy();
 
+        CustomApplication.sInstance.stopMonitorService();
         getActivity().getApplication().onTerminate();
     }
 

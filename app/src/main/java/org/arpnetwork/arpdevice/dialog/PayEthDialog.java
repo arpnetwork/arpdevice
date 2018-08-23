@@ -58,6 +58,10 @@ public class PayEthDialog {
         showPayEthDialog(context, callback, context.getString(R.string.pay_title), context.getString(R.string.pay_msg), null, null);
     }
 
+    public static void showPayEthDialog(final Activity context, String positiveText, OnPayListener callback, final DialogInterface.OnClickListener negativeListener) {
+        showPayEthDialog(context, callback, context.getString(R.string.pay_title), context.getString(R.string.pay_msg), positiveText, negativeListener);
+    }
+
     public static void showPayEthDialog(final Activity context, String positiveText, OnPayListener callback) {
         showPayEthDialog(context, callback, context.getString(R.string.pay_title), context.getString(R.string.pay_msg), positiveText, null);
     }
