@@ -290,7 +290,11 @@ public class MyEarningFragment extends BaseFragment {
         Miner miner = BindMinerHelper.getBound(address);
         if (miner != null) {
             BankAllowance allowance = ARPBank.allowanceARP(miner.getAddress(), Wallet.get().getAddress());
-            mUnexchanged = amount.subtract(allowance.paid);
+            if (amount.compareTo(allowance.paid) > 0) {
+                mUnexchanged = amount.subtract(allowance.paid);
+            } else {
+                mUnexchanged = new BigInteger("0");
+            }
             float show = Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue();
             mHeaderView.setUnexchanged(show);
         }
