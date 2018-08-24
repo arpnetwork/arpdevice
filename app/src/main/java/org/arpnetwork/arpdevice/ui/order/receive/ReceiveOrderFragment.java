@@ -199,7 +199,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private void loadAllowance(final Runnable successRunnable) {
         String spender = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(spender);
-        BankAllowance allowance = ARPBank.allowanceARP(miner.getAddress(), spender);
+        BankAllowance allowance = ARPBank.allowance(miner.getAddress(), spender);
         if (allowance != null) {
             Promise promise = Promise.get();
             if (promise != null && new BigInteger(promise.getCid()).compareTo(allowance.id) != 0) {

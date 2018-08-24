@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.contracts;
 
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.math.BigInteger;
@@ -48,32 +49,18 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Sign;
-import org.web3j.protocol.Web3j;
 
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.DefaultBlockParameterNumber;
-import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthLog;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
-import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
-
-/**
- * <p>Auto generated code.
- * <p><strong>Do not modify!</strong>
- * <p>Please use the <a href="https://docs.web3j.io/command_line.html">web3j command line tools</a>,
- * or the org.web3j.codegen.SolidityFunctionWrapperGenerator in the
- * <a href="https://github.com/web3j/web3j/tree/master/codegen">codegen module</a> to update.
- * <p>
- * <p>Generated with web3j version 3.5.0.
- */
-public class ARPBank extends Contract {
+public class ARPBank {
     private static final String TAG = Contract.class.getSimpleName();
     public static final String CONTRACT_ADDRESS = "0x19ea440d8a78a06be54ffca6a8564197bd1b443a";
     private static final String BINARY = null;
@@ -108,39 +95,10 @@ public class ARPBank extends Contract {
 
     public static final String FUNC_ALLOWANCE = "allowance";
 
-    protected ARPBank(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
-        super(BINARY, contractAddress, web3j, credentials, gasPrice, gasLimit);
-    }
+    public static final String EVENT_CASHING = "Cashing";
 
-    protected ARPBank(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
-        super(BINARY, contractAddress, web3j, transactionManager, gasPrice, gasLimit);
-    }
-
-    public static ARPBank load(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
-        return new ARPBank(contractAddress, web3j, credentials, gasPrice, gasLimit);
-    }
-
-    public static ARPBank load(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
-        return new ARPBank(contractAddress, web3j, transactionManager, gasPrice, gasLimit);
-    }
-
-    public RemoteCall<TransactionReceipt> deposit(BigInteger _value) {
-        return executeRemoteCallTransaction(getDepositFunction(_value));
-    }
-
-    public RemoteCall<TransactionReceipt> cancelApprovalBySpender(String owner) {
-        return executeRemoteCallTransaction(getCancelApprovalBySpenderFunction(owner));
-    }
-
-    public static String getApproveTransactionHexData(String spender, BigInteger expired, String proxy, Credentials credentials,
-            BigInteger gasPrice, BigInteger gasLimit) {
-        return getTransactionHexData(getApproveFunctionData(spender,
-                new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()), expired, proxy),
-                credentials, gasPrice, gasLimit);
-    }
-
-    public static BankAllowance allowanceARP(String owner, String spender) {
-        Function function = getAllowanceFunctionData(owner, spender);
+    public static BankAllowance allowance(String owner, String spender) {
+        Function function = getAllowanceFunction(owner, spender);
         EthCall response = null;
         try {
             response = EtherAPI.getWeb3J().ethCall(
@@ -148,7 +106,7 @@ public class ARPBank extends Contract {
                     DefaultBlockParameterName.LATEST)
                     .sendAsync().get();
         } catch (Exception e) {
-            Log.e(TAG, "allowanceARP(" + owner + ", "  + spender + "), error:" + e.getCause());
+            Log.e(TAG, "allowance(" + owner + ", "  + spender + "), error:" + e.getCause());
         }
         List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
@@ -163,7 +121,7 @@ public class ARPBank extends Contract {
     }
 
     public static BigInteger balanceOf(String owner) {
-        Function function = getBalanceOfFunctionData(owner);
+        Function function = getBalanceOfFunction(owner);
         EthCall response = null;
         try {
             response = EtherAPI.getWeb3J().ethCall(
@@ -179,24 +137,24 @@ public class ARPBank extends Contract {
         return balance.getValue();
     }
 
-    public static Transaction getApproveEstimateGasTrans(String proxy) {
-        String ownerAddress = Wallet.get().getAddress();
-        String spenderAddress = ARPRegistry.CONTRACT_ADDRESS;
-        BigInteger value = new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString());
-        String data = getApproveFunctionData(spenderAddress, value, BigInteger.ZERO, proxy);
-
-        return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
+    public static void approve(String spender, BigInteger expired, String proxy, Credentials credentials,
+            BigInteger gasPrice, OnValueResult<Boolean> onValueResult) {
+        String functionString = getApproveFunctionData(spender,
+                new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()), expired, proxy);
+        BigInteger gasLimit = estimateApproveGasLimit(spender, expired, proxy);
+        sendTransaction(functionString, credentials, gasPrice, gasLimit, onValueResult);
     }
 
-    public static BigInteger estimateCashGasLimit(String owner, String spender, BigInteger amount,
-            Sign.SignatureData signatureData) {
-        String cashFunctionString = getCashFunctionData(owner, spender, amount, signatureData);
-        return TransactionAPI.estimateFunctionGasLimit(cashFunctionString, CONTRACT_ADDRESS);
+    public static void deposit(BigInteger value, Credentials credentials, BigInteger gasPrice, final OnValueResult<Boolean> onValueResult) {
+        String functionString = FunctionEncoder.encode(getDepositFunction(value));
+        BigInteger gasLimit = estimateDepositGasLimit(value);
+        sendTransaction(functionString, credentials, gasPrice, gasLimit, onValueResult);
     }
 
-    public static BigInteger estimateWithdrawGasLimit(BigInteger amount) {
-        String withdrawFunctionString = getWithdrawFunctionData(amount);
-        return TransactionAPI.estimateFunctionGasLimit(withdrawFunctionString, CONTRACT_ADDRESS);
+    public static void withdrawAll(final Credentials credentials, final BigInteger gasPrice,
+            final OnValueResult<Boolean> onValueResult) {
+        BigInteger amount = balanceOf(Wallet.get().getAddress());
+        withdraw(amount, credentials, gasPrice, onValueResult);
     }
 
     public static void cash(Promise promise, String spender, Credentials credentials, BigInteger gasPrice,
@@ -213,9 +171,34 @@ public class ARPBank extends Contract {
         task.execute(transactionString);
     }
 
+    public static void cancelApprovalBySpender(String owner, Credentials credentials, BigInteger gasPrice, final OnValueResult<Boolean> onValueResult) {
+        String functionString = FunctionEncoder.encode(getCancelApprovalBySpenderFunction(owner));
+        BigInteger gasLimit = estimateCancelApprovalBySpenderGasLimit(owner);
+        sendTransaction(functionString, credentials, gasPrice, gasLimit, onValueResult);
+    }
+
+    // estimate gas limit
+
+    public static BigInteger estimateApproveGasLimit(String spender, BigInteger expired, String proxy) {
+        String  functionString = getApproveFunctionData(spender,
+                new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()), expired, proxy);
+        return  TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
+    }
+
     public static BigInteger estimateDepositGasLimit(BigInteger value) {
         String depositFunctionString = FunctionEncoder.encode(getDepositFunction(value));
         return TransactionAPI.estimateFunctionGasLimit(depositFunctionString, CONTRACT_ADDRESS);
+    }
+
+    public static BigInteger estimateWithdrawGasLimit(BigInteger amount) {
+        String withdrawFunctionString = getWithdrawFunctionData(amount);
+        return TransactionAPI.estimateFunctionGasLimit(withdrawFunctionString, CONTRACT_ADDRESS);
+    }
+
+    public static BigInteger estimateCashGasLimit(String owner, String spender, BigInteger amount,
+            Sign.SignatureData signatureData) {
+        String cashFunctionString = getCashFunctionData(owner, spender, amount, signatureData);
+        return TransactionAPI.estimateFunctionGasLimit(cashFunctionString, CONTRACT_ADDRESS);
     }
 
     public static BigInteger estimateCancelApprovalBySpenderGasLimit(String owner) {
@@ -223,18 +206,25 @@ public class ARPBank extends Contract {
         return TransactionAPI.estimateFunctionGasLimit(cancelApprovalBySpenderString, CONTRACT_ADDRESS);
     }
 
-    public static void withdrawAll(final Credentials credentials, final BigInteger gasPrice,
-            final OnValueResult<Boolean> onValueResult) {
-        BigInteger amount = balanceOf(Wallet.get().getAddress());
-        withdraw(amount, credentials, gasPrice, onValueResult);
-    }
+    // event
 
-    private static void sendTransaction(String functionString, Credentials credentials,
-            BigInteger gasPrice, BigInteger gasLimit,
-            OnValueResult<Boolean> onValueResult) {
-        String transactionString = getTransactionHexData(functionString, credentials, gasPrice, gasLimit);
-        TransactionTask task = new TransactionTask(onValueResult);
-        task.execute(transactionString);
+    public static List getTransactionList(String address, BigInteger earliestBlockNumber) throws ExecutionException, InterruptedException {
+        Event event = new Event(EVENT_CASHING,
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {
+                }, new TypeReference<Address>() {
+                }),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
+                }, new TypeReference<Uint256>() {
+                }));
+        EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(earliestBlockNumber), DefaultBlockParameterName.LATEST, CONTRACT_ADDRESS);
+        ethFilter.addSingleTopic(EventEncoder.encode(event));
+        ethFilter.addNullTopic();
+        Address spender = new Address(address);
+        String optTopicAddress = "0x" + TypeEncoder.encode(spender);
+        ethFilter.addOptionalTopics(optTopicAddress);
+
+        EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();
+        return ethLog.getLogs();
     }
 
     private static void withdraw(final BigInteger amount, final Credentials credentials, final BigInteger gasPrice,
@@ -244,11 +234,44 @@ public class ARPBank extends Contract {
         sendTransaction(functionString, credentials, gasPrice, gasLimit, onValueResult);
     }
 
+    private static Function getBalanceOfFunction(String owner) {
+        return new Function(FUNC_BALANCEOF,
+                Arrays.<Type>asList(new Address(owner)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
+    }
+
+    private static Function getAllowanceFunction(String owner, String spender) {
+        return new Function(ARPBank.FUNC_ALLOWANCE,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner),
+                        new org.web3j.abi.datatypes.Address(spender)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
+                                                }, new TypeReference<Uint256>() {
+                                                },
+                        new TypeReference<Uint256>() {
+                        }, new TypeReference<Uint256>() {
+                        },
+                        new TypeReference<Address>() {
+                        }));
+    }
+
     private static String getApproveFunctionData(String spender, BigInteger amount, BigInteger expired, String proxy) {
         Function function = new Function(
                 FUNC_APPROVE,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(spender),
                         new Uint256(amount), new Uint256(expired), new Address(proxy)),
+                Collections.<TypeReference<?>>emptyList());
+        return FunctionEncoder.encode(function);
+    }
+
+    private static Function getDepositFunction(BigInteger value) {
+        return new Function(FUNC_DEPOSIT,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(value)),
+                Collections.<TypeReference<?>>emptyList());
+    }
+
+    private static String getWithdrawFunctionData(BigInteger amount) {
+        Function function = new Function(FUNC_WITHDRAW,
+                Arrays.<Type>asList(new Uint256(amount)),
                 Collections.<TypeReference<?>>emptyList());
         return FunctionEncoder.encode(function);
     }
@@ -268,61 +291,17 @@ public class ARPBank extends Contract {
                 Collections.<TypeReference<?>>emptyList());
     }
 
-    private static Function getDepositFunction(BigInteger value) {
-        return new Function(FUNC_DEPOSIT,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(value)),
-                Collections.<TypeReference<?>>emptyList());
-    }
-
-    private static String getWithdrawFunctionData(BigInteger amount) {
-        Function function = new Function(FUNC_WITHDRAW,
-                Arrays.<Type>asList(new Uint256(amount)),
-                Collections.<TypeReference<?>>emptyList());
-        return FunctionEncoder.encode(function);
-    }
-
-    private static Function getBalanceOfFunctionData(String owner) {
-        return new Function(FUNC_BALANCEOF,
-                Arrays.<Type>asList(new Address(owner)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
-    }
-
-    private static Function getAllowanceFunctionData(String owner, String spender) {
-        return new Function(ARPBank.FUNC_ALLOWANCE,
-                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner),
-                        new org.web3j.abi.datatypes.Address(spender)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
-                                                }, new TypeReference<Uint256>() {
-                                                },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Address>() {
-                        }));
-    }
-
     private static String getTransactionHexData(String data, Credentials credentials,
             BigInteger gasPrice, BigInteger gasLimit) {
         return TransactionAPI.getRawTransaction(gasPrice, gasLimit, CONTRACT_ADDRESS,
                 data, credentials);
     }
 
-    public static List getTransactionList(String address, BigInteger earliestBlockNumber) throws ExecutionException, InterruptedException {
-        Event event = new Event("Cashing",
-                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {
-                }, new TypeReference<Address>() {
-                }),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }));
-        EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(earliestBlockNumber), DefaultBlockParameterName.LATEST, CONTRACT_ADDRESS);
-        ethFilter.addSingleTopic(EventEncoder.encode(event));
-        ethFilter.addNullTopic();
-        Address spender = new Address(address);
-        String optTopicAddress = "0x" + TypeEncoder.encode(spender);
-        ethFilter.addOptionalTopics(optTopicAddress);
-
-        EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();
-        return ethLog.getLogs();
+    private static void sendTransaction(String functionString, Credentials credentials,
+            BigInteger gasPrice, BigInteger gasLimit,
+            OnValueResult<Boolean> onValueResult) {
+        String transactionString = getTransactionHexData(functionString, credentials, gasPrice, gasLimit);
+        TransactionTask task = new TransactionTask(onValueResult);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, transactionString);
     }
 }

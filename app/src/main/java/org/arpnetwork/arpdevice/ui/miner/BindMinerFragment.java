@@ -190,12 +190,13 @@ public class BindMinerFragment extends BaseFragment {
     private void getUnexchange() {
         if (Promise.get() == null) {
             showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
+            return;
         }
 
         final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
         String spender = Wallet.get().getAddress();
         if (mBoundMiner != null) {
-            BankAllowance allowance = ARPBank.allowanceARP(mBoundMiner.getAddress(), spender);
+            BankAllowance allowance = ARPBank.allowance(mBoundMiner.getAddress(), spender);
             BigInteger unexchanged = amount.subtract(allowance.paid);
                 if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
                 String message = String.format(getString(R.string.exchange_change_miner_msg), unexchanged);
@@ -307,7 +308,7 @@ public class BindMinerFragment extends BaseFragment {
     private void loadBankAllowance() {
         String owner = Wallet.get().getAddress();
         String spender = ARPRegistry.CONTRACT_ADDRESS;
-        BankAllowance allowance = ARPBank.allowanceARP(owner, spender);
+        BankAllowance allowance = ARPBank.allowance(owner, spender);
 
         if (allowance != null && Convert.fromWei(allowance.amount.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
             loadData();

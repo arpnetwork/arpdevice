@@ -27,14 +27,13 @@ import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
-import org.arpnetwork.arpdevice.util.TransactionUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Sign;
-import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
@@ -85,7 +84,7 @@ public class BindMinerIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        int type = intent.getExtras().getInt(KEY_OP);
+        final int type = intent.getExtras().getInt(KEY_OP);
         String password = intent.getExtras().getString(KEY_PASSWD);
         String gasPrice = intent.getExtras().getString(KEY_GASPRICE);
         String gasLimit = intent.getExtras().getString(KEY_GASLIMIT);
@@ -142,25 +141,34 @@ public class BindMinerIntentService extends IntentService {
             case OPERATION_BANK_APPROVE: {
                 mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_RUNNING, type, null);
 
-                boolean result = bankApprove(Wallet.loadCredentials(password), new BigInteger(gasPrice));
-                if (result) {
-                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_SUCCESS, type, null);
-                } else {
-                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_FAILED, type, null);
-                }
+                ARPBank.approve(ARPRegistry.CONTRACT_ADDRESS, BigInteger.ZERO, "0",
+                        Wallet.loadCredentials(password), new BigInteger(gasPrice), new OnValueResult<Boolean>() {
+                            @Override
+                            public void onValueResult(Boolean result) {
+                                if (result) {
+                                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_SUCCESS, type, null);
+                                } else {
+                                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_FAILED, type, null);
+                                }
+                            }
+                        });
                 break;
             }
 
             case OPERATION_BANK_DEPOSIT: {
                 mBroadcaster.broadcastWithState(STATE_DEPOSIT_RUNNING, type, null);
 
-                boolean result = deposit(new BigInteger(Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toString()),
-                        Wallet.loadCredentials(password), new BigInteger(gasPrice), new BigInteger(gasLimit));
-                if (result) {
-                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_SUCCESS, type, null);
-                } else {
-                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_FAILED, type, null);
-                }
+                ARPBank.deposit(new BigInteger(Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toString()),
+                        Wallet.loadCredentials(password), new BigInteger(gasPrice), new OnValueResult<Boolean>() {
+                            @Override
+                            public void onValueResult(Boolean result) {
+                                if (result) {
+                                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_SUCCESS, type, null);
+                                } else {
+                                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_FAILED, type, null);
+                                }
+                            }
+                        });
                 break;
             }
 
@@ -168,12 +176,16 @@ public class BindMinerIntentService extends IntentService {
                 String address = intent.getExtras().getString(KEY_ADDRESS);
                 mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_RUNNING, type, null);
 
-                boolean result = cancelApprovalBySpender(address, Wallet.loadCredentials(password), new BigInteger(gasPrice), new BigInteger(gasLimit));
-                if (result) {
-                    mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_SUCCESS, type, null);
-                } else {
-                    mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_FAILED, type, null);
-                }
+                ARPBank.cancelApprovalBySpender(address, Wallet.loadCredentials(password), new BigInteger(gasPrice), new OnValueResult<Boolean>() {
+                    @Override
+                    public void onValueResult(Boolean result) {
+                        if (result) {
+                            mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_SUCCESS, type, null);
+                        } else {
+                            mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_FAILED, type, null);
+                        }
+                    }
+                });
                 break;
             }
 
@@ -201,38 +213,6 @@ public class BindMinerIntentService extends IntentService {
         return result;
     }
 
-    private boolean bankApprove(Credentials credentials, BigInteger gasPrice) {
-        boolean result;
-        BigInteger gasLimit;
-        try {
-            gasLimit = TransactionAPI.getTransactionGasLimit(ARPBank.getApproveEstimateGasTrans("0"));
-        } catch (IOException e) {
-            gasLimit = new BigInteger("400000");
-        }
-        String hexData = ARPBank.getApproveTransactionHexData(ARPRegistry.CONTRACT_ADDRESS, BigInteger.ZERO, "0",
-                credentials, gasPrice, gasLimit);
-        try {
-            EthSendTransaction ethSendTransaction = EtherAPI.getWeb3J().ethSendRawTransaction(hexData).send();
-            TransactionReceipt transactionReceipt = TransactionUtil.waitForTransactionReceipt(ethSendTransaction.getTransactionHash());
-            result = transactionReceipt != null;
-        } catch (IOException e) {
-            result = false;
-        }
-        return result;
-    }
-
-    private boolean deposit(BigInteger value, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
-        boolean success = false;
-        ARPBank arpBank = ARPBank.load(ARPBank.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
-                credentials, gasPrice, gasLimit);
-        try {
-            TransactionReceipt depositReceipt = arpBank.deposit(value).send();
-            success = isStatusOK(depositReceipt.getStatus());
-        } catch (Exception e) {
-        }
-        return success;
-    }
-
     private boolean bindDevice(String address, BindPromise bindPromise, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         boolean success = false;
         ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
@@ -243,18 +223,6 @@ public class BindMinerIntentService extends IntentService {
 
             TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(), bindPromise.getExpired(), bindPromise.getSignExpired(), new BigInteger(String.valueOf(signatureData.getV())), signatureData.getR(), signatureData.getS()).send();
             success = isStatusOK(bindDeviceReceipt.getStatus());
-        } catch (Exception e) {
-        }
-        return success;
-    }
-
-    private boolean cancelApprovalBySpender(String minerAddress, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
-        boolean success = false;
-        ARPBank arpBank = ARPBank.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
-                credentials, gasPrice, gasLimit);
-        try {
-            TransactionReceipt receipt = arpBank.cancelApprovalBySpender(minerAddress).send();
-            success = isStatusOK(receipt.getStatus());
         } catch (Exception e) {
         }
         return success;

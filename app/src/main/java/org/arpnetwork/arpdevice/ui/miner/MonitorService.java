@@ -90,7 +90,7 @@ public class MonitorService extends Service {
 
         String owner = miner.getAddress();
         String spender = Wallet.get().getAddress();
-        BankAllowance allowance = ARPBank.allowanceARP(owner, spender);
+        BankAllowance allowance = ARPBank.allowance(owner, spender);
         BigInteger unexchanged = amount.subtract(allowance.paid);
         if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
             Message message = new Message();
