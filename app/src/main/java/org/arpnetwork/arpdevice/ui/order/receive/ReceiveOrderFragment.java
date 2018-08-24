@@ -203,6 +203,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             @Override
             public void onValueResult(BankAllowance result) {
                 if (result != null) {
+                    Promise promise = Promise.get();
+                    if (promise != null && new BigInteger(promise.getCid()).compareTo(result.id) != 0) {
+                        Promise.clear();
+                    }
+
                     if (!TextUtils.isEmpty(result.proxy)
                             && (result.proxy.equals("0x0000000000000000000000000000000000000000") || result.proxy.equals(ARPRegistry.CONTRACT_ADDRESS))
                             && (result.expired.longValue() == 0 || result.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))
