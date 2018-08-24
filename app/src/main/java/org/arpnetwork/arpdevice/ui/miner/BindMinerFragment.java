@@ -195,38 +195,32 @@ public class BindMinerFragment extends BaseFragment {
         final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
         String spender = Wallet.get().getAddress();
         if (mBoundMiner != null) {
-            ARPBank.allowanceARP(mBoundMiner.getAddress(), spender, new OnValueResult<BankAllowance>() {
-                @Override
-                public void onValueResult(BankAllowance result) {
-                    if (getActivity() == null) return;
-
-                    BigInteger unexchanged = amount.subtract(result.paid);
-                    if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
-                        String message = String.format(getString(R.string.exchange_change_miner_msg), unexchanged);
-                        MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
-                        builder.setTitle(getString(R.string.exchange_change_miner_title))
-                                .setMessage(message)
-                                .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        Intent intent = new Intent();
-                                        intent.setClass(getActivity(), MyEarningActivity.class);
-                                        startActivity(intent);
-                                    }
-                                })
-                                .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        finish();
-                                    }
-                                })
-                                .create()
-                                .show();
-                    } else {
-                        showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
-                    }
-                }
-            });
+            BankAllowance allowance = ARPBank.allowanceARP(mBoundMiner.getAddress(), spender);
+            BigInteger unexchanged = amount.subtract(allowance.paid);
+                if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+                String message = String.format(getString(R.string.exchange_change_miner_msg), unexchanged);
+                MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
+                builder.setTitle(getString(R.string.exchange_change_miner_title))
+                        .setMessage(message)
+                        .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Intent intent = new Intent();
+                                intent.setClass(getActivity(), MyEarningActivity.class);
+                                startActivity(intent);
+                            }
+                        })
+                        .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .create()
+                        .show();
+            } else {
+                showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
+            }
         }
     }
 
@@ -313,16 +307,13 @@ public class BindMinerFragment extends BaseFragment {
     private void loadBankAllowance() {
         String owner = Wallet.get().getAddress();
         String spender = ARPRegistry.CONTRACT_ADDRESS;
-        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
-            @Override
-            public void onValueResult(BankAllowance result) {
-                if (result != null && Convert.fromWei(result.amount.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
-                    loadData();
-                } else {
-                    loadBankBalanceOf();
-                }
-            }
-        });
+        BankAllowance allowance = ARPBank.allowanceARP(owner, spender);
+
+        if (allowance != null && Convert.fromWei(allowance.amount.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
+            loadData();
+        } else {
+            loadBankBalanceOf();
+        }
     }
 
     private void loadBankBalanceOf() {

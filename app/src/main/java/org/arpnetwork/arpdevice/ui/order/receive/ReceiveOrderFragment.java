@@ -199,30 +199,27 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private void loadAllowance(final Runnable successRunnable) {
         String spender = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(spender);
-        ARPBank.allowanceARP(miner.getAddress(), spender, new OnValueResult<BankAllowance>() {
-            @Override
-            public void onValueResult(BankAllowance result) {
-                if (result != null) {
-                    Promise promise = Promise.get();
-                    if (promise != null && new BigInteger(promise.getCid()).compareTo(result.id) != 0) {
-                        Promise.clear();
-                    }
-
-                    if (!TextUtils.isEmpty(result.proxy)
-                            && (result.proxy.equals("0x0000000000000000000000000000000000000000") || result.proxy.equals(ARPRegistry.CONTRACT_ADDRESS))
-                            && (result.expired.longValue() == 0 || result.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))
-                            && result.amount.subtract(result.paid).compareTo(new BigInteger("0")) > 0) {
-                        result.save();
-
-                        if (successRunnable != null) {
-                            successRunnable.run();
-                        }
-                    } else {
-                        finish();
-                    }
-                }
+        BankAllowance allowance = ARPBank.allowanceARP(miner.getAddress(), spender);
+        if (allowance != null) {
+            Promise promise = Promise.get();
+            if (promise != null && new BigInteger(promise.getCid()).compareTo(allowance.id) != 0) {
+                Promise.clear();
             }
-        });
+            if (!TextUtils.isEmpty(allowance.proxy)
+                    && (allowance.proxy.equals("0x0000000000000000000000000000000000000000") || allowance.proxy.equals(ARPRegistry.CONTRACT_ADDRESS))
+                    && (allowance.expired.longValue() == 0 || allowance.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))
+                    && allowance.amount.subtract(allowance.paid).compareTo(new BigInteger("0")) > 0) {
+                allowance.save();
+
+                if (successRunnable != null) {
+                    successRunnable.run();
+                } else {
+                    finish();
+                }
+            } else {
+                finish();
+            }
+        }
     }
 
     private void postRequestPayment(final DApp dApp) {

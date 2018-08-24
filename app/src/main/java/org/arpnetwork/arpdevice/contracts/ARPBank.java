@@ -16,7 +16,7 @@
 
 package org.arpnetwork.arpdevice.contracts;
 
-import android.os.AsyncTask;
+import android.util.Log;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -27,7 +27,6 @@ import java.util.concurrent.ExecutionException;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
-import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask2;
@@ -140,9 +139,27 @@ public class ARPBank extends Contract {
                 credentials, gasPrice, gasLimit);
     }
 
-    public static void allowanceARP(String owner, String spender, OnValueResult<BankAllowance> onResult) {
-        BankAllowanceTask arpAllowanceTask = new BankAllowanceTask(onResult);
-        arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner, spender);
+    public static BankAllowance allowanceARP(String owner, String spender) {
+        Function function = getAllowanceFunctionData(owner, spender);
+        EthCall response = null;
+        try {
+            response = EtherAPI.getWeb3J().ethCall(
+                    Transaction.createEthCallTransaction(owner, ARPBank.CONTRACT_ADDRESS, FunctionEncoder.encode(function)),
+                    DefaultBlockParameterName.LATEST)
+                    .sendAsync().get();
+        } catch (Exception e) {
+            Log.e(TAG, "allowanceARP(" + owner + ", "  + spender + "), error:" + e.getCause());
+        }
+        List<Type> results = FunctionReturnDecoder.decode(
+                response.getValue(), function.getOutputParameters());
+
+        BankAllowance bankBalance = new BankAllowance();
+        bankBalance.id = (BigInteger) results.get(0).getValue();
+        bankBalance.amount = (BigInteger) results.get(1).getValue();
+        bankBalance.paid = (BigInteger) results.get(2).getValue();
+        bankBalance.expired = (BigInteger) results.get(3).getValue();
+        bankBalance.proxy = (String) results.get(4).getValue();
+        return bankBalance;
     }
 
     public static BigInteger balanceOf(String owner) {
@@ -154,7 +171,7 @@ public class ARPBank extends Contract {
                     DefaultBlockParameterName.LATEST)
                     .sendAsync().get();
         } catch (Exception e) {
-            android.util.Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause() );
+            Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause() );
         }
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
@@ -268,6 +285,20 @@ public class ARPBank extends Contract {
         return new Function(FUNC_BALANCEOF,
                 Arrays.<Type>asList(new Address(owner)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
+    }
+
+    private static Function getAllowanceFunctionData(String owner, String spender) {
+        return new Function(ARPBank.FUNC_ALLOWANCE,
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner),
+                        new org.web3j.abi.datatypes.Address(spender)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
+                                                }, new TypeReference<Uint256>() {
+                                                },
+                        new TypeReference<Uint256>() {
+                        }, new TypeReference<Uint256>() {
+                        },
+                        new TypeReference<Address>() {
+                        }));
     }
 
     private static String getTransactionHexData(String data, Credentials credentials,

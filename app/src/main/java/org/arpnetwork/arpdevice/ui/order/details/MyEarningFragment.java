@@ -289,14 +289,10 @@ public class MyEarningFragment extends BaseFragment {
         String address = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(address);
         if (miner != null) {
-            ARPBank.allowanceARP(miner.getAddress(), Wallet.get().getAddress(), new OnValueResult<BankAllowance>() {
-                @Override
-                public void onValueResult(BankAllowance result) {
-                    mUnexchanged = amount.subtract(result.paid);
-                    float show = Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue();
-                    mHeaderView.setUnexchanged(show);
-                }
-            });
+            BankAllowance allowance = ARPBank.allowanceARP(miner.getAddress(), Wallet.get().getAddress());
+            mUnexchanged = amount.subtract(allowance.paid);
+            float show = Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue();
+            mHeaderView.setUnexchanged(show);
         }
     }
 }

@@ -90,18 +90,14 @@ public class MonitorService extends Service {
 
         String owner = miner.getAddress();
         String spender = Wallet.get().getAddress();
-        ARPBank.allowanceARP(owner, spender, new OnValueResult<BankAllowance>() {
-            @Override
-            public void onValueResult(BankAllowance result) {
-                BigInteger unexchanged = amount.subtract(result.paid);
-                if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
-                    Message message = new Message();
-                    message.what = 1;
-                    message.obj = miner.getExpired().longValue() + "#" + unexchanged;
-                    mHandler.sendMessage(message);
-                }
-            }
-        });
+        BankAllowance allowance = ARPBank.allowanceARP(owner, spender);
+        BigInteger unexchanged = amount.subtract(allowance.paid);
+        if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+            Message message = new Message();
+            message.what = 1;
+            message.obj = miner.getExpired().longValue() + "#" + unexchanged;
+            mHandler.sendMessage(message);
+        }
     }
 
     @Override
