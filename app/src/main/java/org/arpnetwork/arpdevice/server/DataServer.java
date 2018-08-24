@@ -319,6 +319,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
         mAVDataThread = new SendThread();
         mAVDataThread.start();
+        mStop = false;
     }
 
     private void stop() {

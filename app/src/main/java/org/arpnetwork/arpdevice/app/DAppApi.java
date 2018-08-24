@@ -159,7 +159,7 @@ public class DAppApi {
         new OKHttpUtils().post(url, json, METHOD_CLIENT_DISCONNECTED, null);
     }
 
-    public static void requestPayment(final DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {
+    public static void requestPayment(final DApp dApp, final Runnable failedRunnable) {
         String amount = Numeric.prependHexPrefix(dApp.getUnitAmount().toString(16));
         String nonce = AtomicNonce.getAndIncrement(dApp.address);
 
@@ -179,11 +179,7 @@ public class DAppApi {
         new OKHttpUtils().post(url, json, METHOD_REQUEST_PAYMENT, new SimpleCallback<Result>() {
             @Override
             public void onSuccess(Response response, Result result) {
-                if (verify(result, dApp)) {
-                    if (successRunnable != null) {
-                        successRunnable.run();
-                    }
-                } else {
+                if (!verify(result, dApp)) {
                     if (failedRunnable != null) {
                         failedRunnable.run();
                     }

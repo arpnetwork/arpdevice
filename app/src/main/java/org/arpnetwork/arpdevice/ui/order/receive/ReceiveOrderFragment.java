@@ -33,7 +33,6 @@ import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
-import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Promise;
@@ -82,10 +81,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
 
-        Promise promise = Promise.get();
-        if (promise != null) {
-            mLastAmount = new BigInteger(promise.getAmount(), 16);
-        }
         loadAllowance(new Runnable() {
             @Override
             public void run() {
@@ -199,12 +194,14 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private void loadAllowance(final Runnable successRunnable) {
         String spender = Wallet.get().getAddress();
         Miner miner = BindMinerHelper.getBound(spender);
+
         BankAllowance allowance = ARPBank.allowance(miner.getAddress(), spender);
         if (allowance != null) {
             Promise promise = Promise.get();
-            if (promise != null && new BigInteger(promise.getCid()).compareTo(allowance.id) != 0) {
+            if (promise != null && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) != 0) {
                 Promise.clear();
             }
+
             if (!TextUtils.isEmpty(allowance.proxy)
                     && (allowance.proxy.equals("0x0000000000000000000000000000000000000000") || allowance.proxy.equals(ARPRegistry.CONTRACT_ADDRESS))
                     && (allowance.expired.longValue() == 0 || allowance.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))
@@ -213,16 +210,17 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
                 if (successRunnable != null) {
                     successRunnable.run();
-                } else {
-                    finish();
                 }
             } else {
                 finish();
             }
+        } else {
+            finish();
         }
     }
 
     private void postRequestPayment(final DApp dApp) {
+        mRetryRequestPayment = false;
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -238,24 +236,18 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void requestPayment(final DApp dApp) {
-        final Runnable successRunnable = new Runnable() {
-            @Override
-            public void run() {
-                mRetryRequestPayment = false;
-            }
-        };
         Runnable failedRunnable = new Runnable() {
             @Override
             public void run() {
                 if (!mRetryRequestPayment) {
-                    DAppApi.requestPayment(dApp, successRunnable, this);
+                    DAppApi.requestPayment(dApp, this);
                     mRetryRequestPayment = true;
                 } else {
                     releaseDApp();
                 }
             }
         };
-        DAppApi.requestPayment(dApp, successRunnable, failedRunnable);
+        DAppApi.requestPayment(dApp, failedRunnable);
         postRequestPayment(dApp);
     }
 
@@ -281,6 +273,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mDApp = null;
         mAppManager.clear();
         DataServer.getInstance().releaseDApp();
+        mOrderStateView.setText(R.string.wait_for_order);
     }
 
     private void showAlertDialog(String msg) {
@@ -361,6 +354,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             mOrderStateView.setText(R.string.received_order);
 
             if (dApp.priceValid()) {
+                Promise promise = Promise.get();
+                if (promise != null) {
+                    mLastAmount = new BigInteger(promise.getAmount(), 16);
+                }
+                mTotalTime = 0;
+
                 mDApp = dApp;
                 mAppManager.setDApp(dApp);
                 DataServer.getInstance().setDApp(dApp);
@@ -383,7 +382,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onDeviceReleased() {
-            mOrderStateView.setText(R.string.wait_for_order);
             releaseDApp();
         }
 
