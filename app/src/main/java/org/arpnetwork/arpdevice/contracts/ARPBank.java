@@ -75,7 +75,7 @@ import org.web3j.utils.Numeric;
  * <p>Generated with web3j version 3.5.0.
  */
 public class ARPBank extends Contract {
-    public static final String CONTRACT_ADDRESS = "0x0bebeedee8ebb75847515efde978c92596366b5d";
+    public static final String CONTRACT_ADDRESS = "0x19ea440d8a78a06be54ffca6a8564197bd1b443a";
     private static final String BINARY = null;
 
     public static final String APPROVE_ARP_NUMBER = "500";
@@ -166,9 +166,9 @@ public class ARPBank extends Contract {
         return Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, data);
     }
 
-    public static void estimateCashGasLimit(String from, BigInteger amount, Sign.SignatureData signatureData,
+    public static void estimateCashGasLimit(String owner, String spender, BigInteger amount, Sign.SignatureData signatureData,
             final OnValueResult<BigInteger> onValueResult) {
-        String cashFunctionString = getCashFunctionData(from, amount, signatureData);
+        String cashFunctionString = getCashFunctionData(owner, spender, amount, signatureData);
         String ownerAddress = Wallet.get().getAddress();
         Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, CONTRACT_ADDRESS, cashFunctionString);
         TransactionGasEstimateTask estimateTask = new TransactionGasEstimateTask(transaction, onValueResult);
@@ -183,9 +183,10 @@ public class ARPBank extends Contract {
         estimateTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    public static void cash(Promise promise, Credentials credentials, BigInteger gasPrice,
+    public static void cash(Promise promise, String spender, Credentials credentials, BigInteger gasPrice,
             BigInteger gasLimit, TransactionTask2.OnTransactionCallback<Boolean> onValueResult) {
-        String cashFunctionString = getCashFunctionData(Numeric.cleanHexPrefix(promise.getFrom()), new BigInteger(promise.getAmount(), 16),
+        String cashFunctionString = getCashFunctionData(Numeric.cleanHexPrefix(promise.getFrom()),
+                spender, new BigInteger(promise.getAmount(), 16),
                 VerifyAPI.getSignatureDataFromHexString(promise.getSign()));
         String transactionString = getTransactionHexData(cashFunctionString, credentials, gasPrice, gasLimit);
         TransactionTask2 task = new TransactionTask2(onValueResult);
@@ -226,9 +227,9 @@ public class ARPBank extends Contract {
         return FunctionEncoder.encode(function);
     }
 
-    private static String getCashFunctionData(String from, BigInteger amount, Sign.SignatureData signatureData) {
+    private static String getCashFunctionData(String owner, String spender, BigInteger amount, Sign.SignatureData signatureData) {
         Function function = new Function(FUNC_CASH,
-                Arrays.<Type>asList(new Address(from), new Uint256(amount),
+                Arrays.<Type>asList(new Address(owner), new Address(spender), new Uint256(amount),
                         new Uint8(signatureData.getV()), new Bytes32(signatureData.getR()),
                         new Bytes32(signatureData.getS())),
                 Collections.<TypeReference<?>>emptyList());
@@ -254,8 +255,9 @@ public class ARPBank extends Contract {
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
         EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(earliestBlockNumber), DefaultBlockParameterName.LATEST, CONTRACT_ADDRESS);
         ethFilter.addSingleTopic(EventEncoder.encode(event));
-        Address addr = new Address(address);
-        String optTopicAddress = "0x" + TypeEncoder.encode(addr);
+        ethFilter.addNullTopic();
+        Address spender = new Address(address);
+        String optTopicAddress = "0x" + TypeEncoder.encode(spender);
         ethFilter.addOptionalTopics(optTopicAddress);
 
         EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();

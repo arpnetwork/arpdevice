@@ -102,10 +102,11 @@ public class MyEarningFragment extends BaseFragment {
                     UIHelper.showToast(CustomApplication.sInstance,
                             getString(R.string.exchange_tip_exchanging), Toast.LENGTH_SHORT);
                 } else {
+                    final String spender = Wallet.get().getAddress();
                     PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
                         @Override
                         public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
-                            ARPBank.cash(promise, Wallet.loadCredentials(password), priceWei, gasUsed, new TransactionTask2.OnTransactionCallback<Boolean>() {
+                            ARPBank.cash(promise, spender, Wallet.loadCredentials(password), priceWei, gasUsed, new TransactionTask2.OnTransactionCallback<Boolean>() {
                                 @Override
                                 public void onTxHash(String txHash) {
                                     final EarningRecord localRecord = savePendingToDb(txHash);
@@ -266,7 +267,7 @@ public class MyEarningFragment extends BaseFragment {
         System.arraycopy(data, 32, amountByte, 0, 32);
         BigInteger amount = new BigInteger(amountByte);
 
-        byte[] topic = Hex.decode(Numeric.cleanHexPrefix(log.getTopics().get(2)));
+        byte[] topic = Hex.decode(Numeric.cleanHexPrefix(log.getTopics().get(1)));
         byte[] addressByte = new byte[20];
         System.arraycopy(topic, 12, addressByte, 0, 20);
 
