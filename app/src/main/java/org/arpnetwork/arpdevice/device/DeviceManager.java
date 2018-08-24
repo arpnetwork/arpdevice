@@ -70,16 +70,17 @@ public class DeviceManager implements DeviceConnection.Listener {
     private boolean mRegistered;
 
     private Handler mHandler = new Handler();
-    private OnManageDeviceListener mOnManageDeviceListener;
-    private OnErrorListener mOnErrorListener;
+    private OnDeviceStateChangedListener mOnDeviceStateChangedListener;
 
-    public interface OnManageDeviceListener {
+    public interface OnDeviceStateChangedListener {
+        void onConnected();
+
+        void onDeviceReady();
+
         void onDeviceAssigned(DApp dApp);
 
         void onDeviceReleased();
-    }
 
-    public interface OnErrorListener {
         void onError(int code, int msg);
     }
 
@@ -88,12 +89,8 @@ public class DeviceManager implements DeviceConnection.Listener {
         mRegistered = false;
     }
 
-    public void setOnDeviceAssignedListener(OnManageDeviceListener listener) {
-        mOnManageDeviceListener = listener;
-    }
-
-    public void setOnErrorListener(OnErrorListener listener) {
-        mOnErrorListener = listener;
+    public void setOnDeviceStateChangedListener(OnDeviceStateChangedListener listener) {
+        mOnDeviceStateChangedListener = listener;
     }
 
     /**
@@ -130,6 +127,14 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     @Override
     public void onConnected(DeviceConnection conn) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnDeviceStateChangedListener != null) {
+                    mOnDeviceStateChangedListener.onConnected();
+                }
+            }
+        });
         verify();
     }
 
@@ -153,6 +158,14 @@ public class DeviceManager implements DeviceConnection.Listener {
         Log.e(TAG, "onException. message = " + cause.getMessage());
 
         reset();
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnDeviceStateChangedListener != null) {
+                    mOnDeviceStateChangedListener.onError(0, R.string.connect_miner_failed);
+                }
+            }
+        });
     }
 
     private void onDeviceMessage(Message msg) {
@@ -171,8 +184,8 @@ public class DeviceManager implements DeviceConnection.Listener {
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (mOnManageDeviceListener != null) {
-                                mOnManageDeviceListener.onDeviceAssigned(res.data);
+                            if (mOnDeviceStateChangedListener != null) {
+                                mOnDeviceStateChangedListener.onDeviceAssigned(res.data);
                             }
                         }
                     });
@@ -181,15 +194,17 @@ public class DeviceManager implements DeviceConnection.Listener {
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (mOnManageDeviceListener != null) {
-                                mOnManageDeviceListener.onDeviceReleased();
+                            if (mOnDeviceStateChangedListener != null) {
+                                mOnDeviceStateChangedListener.onDeviceReleased();
                             }
                         }
                     });
                     break;
                 case SPEED_RESULT:
                     SpeedResponse speedResponse = mGson.fromJson(json, SpeedResponse.class);
-                    if (speedResponse.data != null && speedResponse.data.getUploadSpeed() < 2 * 1024 * 1024) {
+                    if (speedResponse.data != null && speedResponse.data.getUploadSpeed() >= 2 * 1024 * 1024) {
+                        mHandler.post(mDeviceReadyRunnable);
+                    } else {
                         handleError(0, R.string.low_upload_speed);
                     }
                     break;
@@ -200,6 +215,8 @@ public class DeviceManager implements DeviceConnection.Listener {
     }
 
     private void onSpeedMessage(Message msg) {
+        mHandler.removeCallbacks(mDeviceReadyRunnable);
+
         if (msg.getDataLen() == 0) {
             if (mSpeedDataBuf == null) {
                 mSpeedDataBuf = Unpooled.buffer(2 * 1024 * 1024);
@@ -243,16 +260,31 @@ public class DeviceManager implements DeviceConnection.Listener {
         if (result == 0) {
             mRegistered = true;
             startHeartbeat();
+            mHandler.postDelayed(mDeviceReadyRunnable, 800);
         } else {
             handleError(result, R.string.incompatible_protocol);
         }
     }
 
-    private void handleError(int result, int msg) {
-        close();
-        if (mOnErrorListener != null) {
-            mOnErrorListener.onError(result, msg);
+    private Runnable mDeviceReadyRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mOnDeviceStateChangedListener != null) {
+                mOnDeviceStateChangedListener.onDeviceReady();
+            }
         }
+    };
+
+    private void handleError(final int result, final int msg) {
+        close();
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnDeviceStateChangedListener != null) {
+                    mOnDeviceStateChangedListener.onError(result, msg);
+                }
+            }
+        });
     }
 
     private void startHeartbeat() {

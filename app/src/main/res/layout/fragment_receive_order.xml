@@ -4,16 +4,36 @@
     android:layout_height="match_parent"
     android:padding="60dp">
 
-    <TextView
-        style="@style/MyItemLabel"
-        android:layout_above="@+id/btn_exit"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="30dp"
-        android:text="@string/receive_order_tips" />
-
-    <Button
-        android:id="@id/btn_exit"
-        style="@style/Button"
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="@string/exit_order" />
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingBottom="50dp">
+
+        <TextView
+            android:id="@+id/tv_order_state"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/tv_tips"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
+            android:text="Preparing"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tv_tips"
+            style="@style/MyItemLabel"
+            android:layout_above="@+id/btn_exit"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
+            android:text="@string/receive_order_tips" />
+
+        <Button
+            android:id="@id/btn_exit"
+            style="@style/Button"
+            android:text="@string/exit_order" />
+    </LinearLayout>
 </RelativeLayout>

@@ -25,6 +25,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AppManager;
@@ -58,6 +59,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private static final int PERIOD = 3600000;
 
+    private TextView mOrderStateView;
+
     private DeviceManager mDeviceManager;
     private HttpServer mHttpServer;
     private AppManager mAppManager;
@@ -87,6 +90,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             @Override
             public void run() {
                 startDeviceService();
+                mOrderStateView.setText(R.string.connecting_miners);
             }
         });
     }
@@ -111,6 +115,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void initViews() {
+        mOrderStateView = (TextView) findViewById(R.id.tv_order_state);
+        mOrderStateView.setText(R.string.starting_service);
+
         Button exitButton = (Button) findViewById(R.id.btn_exit);
         exitButton.setOnClickListener(mOnClickExitListener);
     }
@@ -125,8 +132,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mAppManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
 
         mDeviceManager = new DeviceManager();
-        mDeviceManager.setOnDeviceAssignedListener(mOnManageDeviceListener);
-        mDeviceManager.setOnErrorListener(mOnErrorListener);
+        mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
         mDeviceManager.connect();
 
         DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext());
@@ -337,9 +343,21 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     };
 
-    private DeviceManager.OnManageDeviceListener mOnManageDeviceListener = new DeviceManager.OnManageDeviceListener() {
+    private DeviceManager.OnDeviceStateChangedListener mOnDeviceStateChangedListener = new DeviceManager.OnDeviceStateChangedListener() {
+        @Override
+        public void onConnected() {
+            mOrderStateView.setText(R.string.miner_connected);
+        }
+
+        @Override
+        public void onDeviceReady() {
+            mOrderStateView.setText(R.string.wait_for_order);
+        }
+
         @Override
         public void onDeviceAssigned(final DApp dApp) {
+            mOrderStateView.setText(R.string.received_order);
+
             if (dApp.priceValid()) {
                 mDApp = dApp;
                 mAppManager.setDApp(dApp);
@@ -363,19 +381,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onDeviceReleased() {
+            mOrderStateView.setText(R.string.wait_for_order);
             releaseDApp();
         }
-    };
 
-    private DeviceManager.OnErrorListener mOnErrorListener = new DeviceManager.OnErrorListener() {
         @Override
-        public void onError(int code, final int msgResId) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    showAlertDialog(getString(msgResId));
-                }
-            });
+        public void onError(int code, int msg) {
+            showAlertDialog(getString(msg));
         }
     };
 
