@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.contracts.api;
 
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
@@ -52,6 +53,22 @@ public class TransactionAPI {
     public static BigInteger getTransactionGasLimit(Transaction transaction) throws IOException {
         EthEstimateGas gas = EtherAPI.getWeb3J().ethEstimateGas(transaction).send();
         return gas.hasError() ? new BigInteger("40000") : gas.getAmountUsed();
+    }
+
+    public static BigInteger getAsyncTransactionGasLimit(Transaction transaction) {
+        EthEstimateGas gas = null;
+        try {
+            gas = EtherAPI.getWeb3J().ethEstimateGas(transaction).sendAsync().get();
+        } catch (InterruptedException ignore) {
+        } catch (ExecutionException ignore) {
+        }
+        return (gas == null || gas.hasError()) ? new BigInteger("40000") : gas.getAmountUsed();
+    }
+
+    public static BigInteger estimateFunctionGasLimit(String functionString, String contractAddress) {
+        String ownerAddress = Wallet.get().getAddress();
+        Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, contractAddress, functionString);
+        return TransactionAPI.getAsyncTransactionGasLimit(transaction);
     }
 
     private static BigInteger getTransactionCount(String address) {

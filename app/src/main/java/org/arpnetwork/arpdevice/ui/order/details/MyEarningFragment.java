@@ -106,7 +106,7 @@ public class MyEarningFragment extends BaseFragment {
                     PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
                         @Override
                         public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
-                            ARPBank.cash(promise, spender, Wallet.loadCredentials(password), priceWei, gasUsed, new TransactionTask2.OnTransactionCallback<Boolean>() {
+                            ARPBank.cash(promise, spender, Wallet.loadCredentials(password), priceWei, new TransactionTask2.OnTransactionCallback<Boolean>() {
                                 @Override
                                 public void onTxHash(String txHash) {
                                     final EarningRecord localRecord = savePendingToDb(txHash);
