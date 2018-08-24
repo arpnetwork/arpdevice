@@ -106,14 +106,11 @@ public class MyWalletFragment extends BaseFragment {
             }
         });
         final String deviceAddress = Wallet.get().getAddress();
-        ARPBank.balanceOf(deviceAddress, new OnValueResult<BigDecimal>() {
-            @Override
-            public void onValueResult(BigDecimal result) {
-                if (BindMinerHelper.getBound(deviceAddress) == null && result != null && result.doubleValue() > 0) {
-                    mWithdrawBtn.setVisibility(View.VISIBLE);
-                }
-            }
-        });
+        BigInteger balance = ARPBank.balanceOf(deviceAddress);
+        float floatValue = balance.floatValue();
+        if (BindMinerHelper.getBound(deviceAddress) == null && balance != null && floatValue > 0) {
+            mWithdrawBtn.setVisibility(View.VISIBLE);
+        }
     }
 
     private void resetWallet() {

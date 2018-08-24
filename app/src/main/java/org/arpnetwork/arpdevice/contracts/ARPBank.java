@@ -18,7 +18,6 @@ package org.arpnetwork.arpdevice.contracts;
 
 import android.os.AsyncTask;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +28,6 @@ import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
-import org.arpnetwork.arpdevice.contracts.tasks.BankBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask;
 import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask2;
@@ -38,12 +36,14 @@ import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeEncoder;
 import org.web3j.abi.TypeReference;
 import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.Uint;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint8;
@@ -56,6 +56,7 @@ import org.web3j.protocol.core.DefaultBlockParameterNumber;
 import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthLog;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
@@ -74,6 +75,7 @@ import org.web3j.utils.Numeric;
  * <p>Generated with web3j version 3.5.0.
  */
 public class ARPBank extends Contract {
+    private static final String TAG = Contract.class.getSimpleName();
     public static final String CONTRACT_ADDRESS = "0x19ea440d8a78a06be54ffca6a8564197bd1b443a";
     private static final String BINARY = null;
 
@@ -143,9 +145,21 @@ public class ARPBank extends Contract {
         arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner, spender);
     }
 
-    public static void balanceOf(String owner, OnValueResult<BigDecimal> onResult) {
-        BankBalanceTask arpAllowanceTask = new BankBalanceTask(onResult);
-        arpAllowanceTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner);
+    public static BigInteger balanceOf(String owner) {
+        Function function = getBalanceOfFunctionData(owner);
+        EthCall response = null;
+        try {
+            response = EtherAPI.getWeb3J().ethCall(
+                    Transaction.createEthCallTransaction(owner, ARPBank.CONTRACT_ADDRESS, FunctionEncoder.encode(function)),
+                    DefaultBlockParameterName.LATEST)
+                    .sendAsync().get();
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause() );
+        }
+        List<Type> someTypes = FunctionReturnDecoder.decode(
+                response.getValue(), function.getOutputParameters());
+        Uint balance = (Uint) someTypes.get(0);
+        return balance.getValue();
     }
 
     public static Transaction getApproveEstimateGasTrans(String proxy) {
@@ -194,13 +208,8 @@ public class ARPBank extends Contract {
 
     public static void withdrawAll(final Credentials credentials, final BigInteger gasPrice,
             final OnValueResult<Boolean> onValueResult) {
-        balanceOf(Wallet.get().getAddress(), new OnValueResult<BigDecimal>() {
-            @Override
-            public void onValueResult(BigDecimal result) {
-                BigInteger amount = Convert.toWei(result, Convert.Unit.ETHER).toBigInteger();
-                withdraw(amount, credentials, gasPrice, onValueResult);
-            }
-        });
+        BigInteger amount = balanceOf(Wallet.get().getAddress());
+        withdraw(amount, credentials, gasPrice, onValueResult);
     }
 
     private static void sendTransaction(String functionString, Credentials credentials,
@@ -253,6 +262,12 @@ public class ARPBank extends Contract {
                 Arrays.<Type>asList(new Uint256(amount)),
                 Collections.<TypeReference<?>>emptyList());
         return FunctionEncoder.encode(function);
+    }
+
+    private static Function getBalanceOfFunctionData(String owner) {
+        return new Function(FUNC_BALANCEOF,
+                Arrays.<Type>asList(new Address(owner)),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
     }
 
     private static String getTransactionHexData(String data, Credentials credentials,

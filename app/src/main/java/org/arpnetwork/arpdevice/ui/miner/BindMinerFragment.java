@@ -327,16 +327,14 @@ public class BindMinerFragment extends BaseFragment {
 
     private void loadBankBalanceOf() {
         String owner = Wallet.get().getAddress();
-        ARPBank.balanceOf(owner, new OnValueResult<BigDecimal>() {
-            @Override
-            public void onValueResult(BigDecimal result) {
-                if (result != null && result.intValue() >= LOCK_ARP) {
-                    showPayEthDialog(getString(R.string.bind_bank_approve_title), getString(R.string.bind_bank_approve_msg), OPERATION_BANK_APPROVE);
-                } else {
-                    loadARPAllowance();
-                }
-            }
-        });
+        BigInteger balance = ARPBank.balanceOf(owner);
+        int intValue = Convert.fromWei(balance.toString(), Convert.Unit.ETHER).intValue();
+
+        if (balance != null && intValue >= LOCK_ARP) {
+            showPayEthDialog(getString(R.string.bind_bank_approve_title), getString(R.string.bind_bank_approve_msg), OPERATION_BANK_APPROVE);
+        } else {
+            loadARPAllowance();
+        }
     }
 
     private void loadARPAllowance() {
