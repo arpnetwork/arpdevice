@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
 public class TransactionAPI {
+    private static final String DEFAULT_GAS_LIMIT = "400000";
 
     /**
      * Get row transaction string by params
@@ -52,7 +53,7 @@ public class TransactionAPI {
 
     public static BigInteger getTransactionGasLimit(Transaction transaction) throws IOException {
         EthEstimateGas gas = EtherAPI.getWeb3J().ethEstimateGas(transaction).send();
-        return gas.hasError() ? new BigInteger("40000") : gas.getAmountUsed();
+        return gas.hasError() ? new BigInteger(DEFAULT_GAS_LIMIT) : gas.getAmountUsed();
     }
 
     public static BigInteger getAsyncTransactionGasLimit(Transaction transaction) {
@@ -62,7 +63,7 @@ public class TransactionAPI {
         } catch (InterruptedException ignore) {
         } catch (ExecutionException ignore) {
         }
-        return (gas == null || gas.hasError()) ? new BigInteger("40000") : gas.getAmountUsed();
+        return (gas == null || gas.hasError()) ? new BigInteger(DEFAULT_GAS_LIMIT) : gas.getAmountUsed();
     }
 
     public static BigInteger estimateFunctionGasLimit(String functionString, String contractAddress) {
@@ -71,7 +72,7 @@ public class TransactionAPI {
         return TransactionAPI.getAsyncTransactionGasLimit(transaction);
     }
 
-    private static BigInteger getTransactionCount(String address) {
+    private static BigInteger getNonce(String address) {
         EthGetTransactionCount transactionCount = new EthGetTransactionCount();
         try {
             transactionCount = EtherAPI.getWeb3J()
@@ -82,7 +83,7 @@ public class TransactionAPI {
         return transactionCount.getTransactionCount();
     }
 
-    private static BigInteger getFutureTransactionCount(String address) throws ExecutionException, InterruptedException {
+    private static BigInteger getNonceAsync(String address) throws ExecutionException, InterruptedException {
         EthGetTransactionCount transactionCount = EtherAPI.getWeb3J()
                 .ethGetTransactionCount(address, DefaultBlockParameterName.PENDING).sendAsync().get();
         return transactionCount.getTransactionCount();
@@ -92,7 +93,7 @@ public class TransactionAPI {
             String contractAddress, String data, Credentials credentials) {
         BigInteger nonce = null;
         try {
-            nonce = getFutureTransactionCount(credentials.getAddress());
+            nonce = getNonceAsync(credentials.getAddress());
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
