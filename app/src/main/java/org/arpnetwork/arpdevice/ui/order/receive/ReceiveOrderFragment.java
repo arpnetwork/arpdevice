@@ -80,14 +80,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
-
-        loadAllowance(new Runnable() {
-            @Override
-            public void run() {
-                startDeviceService();
-                mOrderStateView.setText(R.string.connecting_miners);
-            }
-        });
     }
 
     @Override
@@ -100,6 +92,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
+        loadAllowance(new Runnable() {
+            @Override
+            public void run() {
+                startDeviceService();
+                mOrderStateView.setText(R.string.connecting_miners);
+            }
+        });
     }
 
     @Override
