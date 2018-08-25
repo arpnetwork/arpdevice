@@ -102,17 +102,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
-        loadAllowance(new Runnable() {
-            @Override
-            public void run() {
-                startDeviceService();
-                mOrderStateView.setText(R.string.connecting_miners);
-            }
-        });
+        loadAllowance(mStartServiceRunnable);
     }
 
     @Override
     public void onDestroy() {
+        mStartServiceRunnable = null;
         stopDeviceService();
         unregisterReceiver();
 
@@ -215,7 +210,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             if (!TextUtils.isEmpty(allowance.proxy)
                     && (allowance.proxy.equals("0x0000000000000000000000000000000000000000") || allowance.proxy.equals(ARPRegistry.CONTRACT_ADDRESS))
                     && (allowance.expired.longValue() == 0 || allowance.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))
-                    && allowance.amount.subtract(allowance.paid).compareTo(new BigInteger("0")) > 0) {
+                    && allowance.amount.subtract(allowance.paid).compareTo(BigInteger.ZERO) > 0) {
                 allowance.save();
 
                 if (successRunnable != null) {
@@ -278,10 +273,14 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void releaseDApp() {
-        mDeviceManager.releaseDevice();
+        if (mDeviceManager != null) {
+            mDeviceManager.releaseDevice();
+        }
         mHandler.removeCallbacksAndMessages(null);
         mDApp = null;
-        mAppManager.clear();
+        if (mAppManager != null) {
+            mAppManager.clear();
+        }
         DataServer.getInstance().releaseDApp();
         mOrderStateView.setText(R.string.wait_for_order);
     }
@@ -321,6 +320,14 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             finish();
         }
     }
+
+    private Runnable mStartServiceRunnable = new Runnable() {
+        @Override
+        public void run() {
+            startDeviceService();
+            mOrderStateView.setText(R.string.connecting_miners);
+        }
+    };
 
     private DataServer.ConnectionListener mConnectionListener = new DataServer.ConnectionListener() {
         @Override
