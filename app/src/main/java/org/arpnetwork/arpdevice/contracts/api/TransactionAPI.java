@@ -72,6 +72,14 @@ public class TransactionAPI {
         return TransactionAPI.getAsyncTransactionGasLimit(transaction);
     }
 
+    public static boolean isStatusOK(String status) {
+        if (null == status) {
+            return true;
+        }
+        BigInteger statusQuantity = Numeric.decodeQuantity(status);
+        return BigInteger.ONE.equals(statusQuantity);
+    }
+
     private static BigInteger getNonce(String address) {
         EthGetTransactionCount transactionCount = new EthGetTransactionCount();
         try {

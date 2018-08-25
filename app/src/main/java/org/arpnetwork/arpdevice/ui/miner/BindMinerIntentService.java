@@ -19,6 +19,7 @@ package org.arpnetwork.arpdevice.ui.miner;
 import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
@@ -27,7 +28,6 @@ import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
-import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
@@ -36,7 +36,6 @@ import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Sign;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
-import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -126,6 +125,7 @@ public class BindMinerIntentService extends IntentService {
                 break;
             }
 
+            // FIXME: refactor
             case OPERATION_ARP_APPROVE: {
                 mBroadcaster.broadcastWithState(STATE_APPROVE_RUNNING, type, null);
 
@@ -141,34 +141,40 @@ public class BindMinerIntentService extends IntentService {
             case OPERATION_BANK_APPROVE: {
                 mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_RUNNING, type, null);
 
-                ARPBank.approve(ARPRegistry.CONTRACT_ADDRESS, BigInteger.ZERO, "0",
-                        Wallet.loadCredentials(password), new BigInteger(gasPrice), new OnValueResult<Boolean>() {
-                            @Override
-                            public void onValueResult(Boolean result) {
-                                if (result) {
-                                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_SUCCESS, type, null);
-                                } else {
-                                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_FAILED, type, null);
-                                }
-                            }
-                        });
+                ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), new BigInteger(gasPrice), new BigInteger(gasLimit));
+                TransactionReceipt receipt = null;
+                try {
+                    receipt = bank.approve(ARPRegistry.CONTRACT_ADDRESS, BigInteger.ZERO, "0").send();
+                } catch (Exception e) {
+                    Log.e(TAG, "approve error:" + e.getCause());
+                }
+
+                boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
+                if (success) {
+                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_SUCCESS, type, null);
+                } else {
+                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_FAILED, type, null);
+                }
                 break;
             }
 
             case OPERATION_BANK_DEPOSIT: {
                 mBroadcaster.broadcastWithState(STATE_DEPOSIT_RUNNING, type, null);
 
-                ARPBank.deposit(new BigInteger(Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toString()),
-                        Wallet.loadCredentials(password), new BigInteger(gasPrice), new OnValueResult<Boolean>() {
-                            @Override
-                            public void onValueResult(Boolean result) {
-                                if (result) {
-                                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_SUCCESS, type, null);
-                                } else {
-                                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_FAILED, type, null);
-                                }
-                            }
-                        });
+                ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), new BigInteger(gasPrice), new BigInteger(gasLimit));
+                TransactionReceipt receipt = null;
+                try {
+                    receipt = bank.deposit(new BigInteger(Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toString())).send();
+                } catch (Exception e) {
+                    Log.e(TAG, "deposit error:" + e.getCause());
+                }
+
+                boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
+                if (success) {
+                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_SUCCESS, type, null);
+                } else {
+                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_FAILED, type, null);
+                }
                 break;
             }
 
@@ -176,16 +182,20 @@ public class BindMinerIntentService extends IntentService {
                 String address = intent.getExtras().getString(KEY_ADDRESS);
                 mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_RUNNING, type, null);
 
-                ARPBank.cancelApprovalBySpender(address, Wallet.loadCredentials(password), new BigInteger(gasPrice), new OnValueResult<Boolean>() {
-                    @Override
-                    public void onValueResult(Boolean result) {
-                        if (result) {
-                            mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_SUCCESS, type, null);
-                        } else {
-                            mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_FAILED, type, null);
-                        }
-                    }
-                });
+                ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), new BigInteger(gasPrice), new BigInteger(gasLimit));
+                TransactionReceipt receipt = null;
+                try {
+                    receipt = bank.cancelApprovalBySpender(address).send();
+                } catch (Exception e) {
+                    Log.e(TAG, "cancel approval by spender error:" + e.getCause());
+                }
+
+                boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
+                if (success) {
+                    mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_SUCCESS, type, null);
+                } else {
+                    mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_FAILED, type, null);
+                }
                 break;
             }
 
@@ -222,7 +232,7 @@ public class BindMinerIntentService extends IntentService {
             Sign.SignatureData signatureData = VerifyAPI.getSignatureDataFromByte(signatureDataBytes);
 
             TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(), bindPromise.getExpired(), bindPromise.getSignExpired(), new BigInteger(String.valueOf(signatureData.getV())), signatureData.getR(), signatureData.getS()).send();
-            success = isStatusOK(bindDeviceReceipt.getStatus());
+            success = TransactionAPI.isStatusOK(bindDeviceReceipt.getStatus());
         } catch (Exception e) {
         }
         return success;
@@ -234,17 +244,11 @@ public class BindMinerIntentService extends IntentService {
                 credentials, gasPrice, gasLimit);
         try {
             TransactionReceipt unbindDeviceReceipt = registry.unbindDevice().send();
-            success = isStatusOK(unbindDeviceReceipt.getStatus());
+            success = TransactionAPI.isStatusOK(unbindDeviceReceipt.getStatus());
         } catch (Exception e) {
         }
         return success;
     }
 
-    public boolean isStatusOK(String status) {
-        if (null == status) {
-            return true;
-        }
-        BigInteger statusQuantity = Numeric.decodeQuantity(status);
-        return BigInteger.ONE.equals(statusQuantity);
-    }
+
 }

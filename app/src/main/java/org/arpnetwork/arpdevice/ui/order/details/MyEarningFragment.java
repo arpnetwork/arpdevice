@@ -30,8 +30,7 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
-import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
-import org.arpnetwork.arpdevice.contracts.tasks.TransactionTask2;
+import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
@@ -43,6 +42,7 @@ import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.protocol.core.methods.response.Log;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
@@ -54,6 +54,8 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class MyEarningFragment extends BaseFragment {
+    private static final String TAG = MyEarningFragment.class.getSimpleName();
+
     private MyEarningAdapter mAdapter;
     private MyEarningHeader mHeaderView;
 
@@ -106,35 +108,36 @@ public class MyEarningFragment extends BaseFragment {
                     PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
                         @Override
                         public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
-                            ARPBank.cash(promise, spender, Wallet.loadCredentials(password), priceWei, new TransactionTask2.OnTransactionCallback<Boolean>() {
-                                @Override
-                                public void onTxHash(String txHash) {
-                                    final EarningRecord localRecord = savePendingToDb(txHash);
-                                    mHeaderView.post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            List<EarningRecord> local = new ArrayList<>(1);
-                                            local.add(localRecord);
-                                            mAdapter.addData(local);
-                                        }
-                                    });
-                                }
+                            ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), priceWei, gasUsed);
+                            TransactionReceipt receipt = null;
+                            try {
+                                receipt = bank.cash(promise, spender).sendAsync().get();
+                            } catch (Exception e) {
+                                android.util.Log.e(TAG, "onPay, cash error:" + e.getCause());
+                            }
 
+                            final EarningRecord localRecord = savePendingToDb(receipt.getTransactionHash());
+                            mHeaderView.post(new Runnable() {
                                 @Override
-                                public void onValueResult(Boolean result) {
-                                    if (result) {
-                                        if (mHeaderView != null) {
-                                            refreshData();
-                                        } else {
-                                            UIHelper.showToast(CustomApplication.sInstance,
-                                                    getString(R.string.exchange_success), Toast.LENGTH_SHORT);
-                                        }
-                                    } else {
-                                        UIHelper.showToast(CustomApplication.sInstance,
-                                                getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
-                                    }
+                                public void run() {
+                                    List<EarningRecord> local = new ArrayList<>(1);
+                                    local.add(localRecord);
+                                    mAdapter.addData(local);
                                 }
                             });
+
+                            boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
+                            if (success) {
+                                if (mHeaderView != null) {
+                                    refreshData();
+                                } else {
+                                    UIHelper.showToast(CustomApplication.sInstance,
+                                            getString(R.string.exchange_success), Toast.LENGTH_SHORT);
+                                }
+                            } else {
+                                UIHelper.showToast(CustomApplication.sInstance,
+                                        getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
+                            }
                         }
                     });
                 }
