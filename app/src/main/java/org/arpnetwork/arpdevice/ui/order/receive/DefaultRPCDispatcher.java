@@ -64,12 +64,15 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     @Override
     protected void doRequest(RPCRequest request, RPCResponse response) {
         DApp dApp = mAppManager.getDApp();
-        if (dApp == null || !checkRemoteAddress(request, dApp)) {
+        if (!checkRemoteAddress(request, dApp)) {
             response.setError(request.getId(), RPCErrorCode.INVALID_REQUEST, "Invalid request");
             return;
         }
 
-        String dappAddr = dApp.address;
+        String dappAddr = "";
+        if (dApp != null) {
+            dappAddr = dApp.address;
+        }
         String walletAddr = Wallet.get().getAddress();
 
         String method = request.getMethod();
@@ -130,7 +133,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     private boolean checkRemoteAddress(RPCRequest request, DApp dApp) {
         String remoteAddress = request.getRemoteAddress();
         Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-        if (remoteAddress.equals(dApp.ip) || remoteAddress.equals(miner.getIpString())) {
+        if (remoteAddress.equals(miner.getIpString()) || (dApp != null && remoteAddress.equals(dApp.ip))) {
             return true;
         }
         return false;

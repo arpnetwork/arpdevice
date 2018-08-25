@@ -163,9 +163,9 @@ public class NettyConnection {
                     ctx.close().addListener(ChannelFutureListener.CLOSE);
                     return;
                 }
-                conn.mListener.onConnected(conn);
 
                 mHandlerContext = ctx;
+                conn.mListener.onConnected(conn);
             }
 
             super.channelActive(ctx);

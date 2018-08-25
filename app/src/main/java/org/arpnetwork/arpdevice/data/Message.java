@@ -22,7 +22,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 public class Message {
-    public static final int HEARTBEAT = -5;
+    public static final int HEARTBEAT = -1;
     public static final int VIDEO = 0;
     public static final int AUDIO = 1;
     public static final int TOUCH = 2;

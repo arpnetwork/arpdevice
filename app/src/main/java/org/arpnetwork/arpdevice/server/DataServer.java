@@ -153,6 +153,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onConnected(NettyConnection conn) {
+        heartbeat();
+
         if (mDApp == null) {
             stop();
             return;
@@ -409,12 +411,15 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private final Runnable mServerHeartTimeout = new Runnable() {
         @Override
         public void run() {
-            Message pkt = ProtocolPacket.generateHeartbeat();
-            mConn.write(pkt);
-
+            heartbeat();
             mHandler.postDelayed(this, HEARTBEAT_INTERVAL);
         }
     };
+
+    private void heartbeat() {
+        Message pkt = ProtocolPacket.generateHeartbeat();
+        mConn.write(pkt);
+    }
 
     private void startHeartbeatTimer() {
         mHandler.postDelayed(mServerHeartTimeout, HEARTBEAT_INTERVAL);
