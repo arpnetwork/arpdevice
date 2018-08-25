@@ -334,16 +334,13 @@ public class BindMinerFragment extends BaseFragment {
     private void loadARPAllowance() {
         String owner = Wallet.get().getAddress();
         String spender = ARPBank.CONTRACT_ADDRESS;
-        ARPContract.allowanceARP(owner, spender, new OnValueResult<BigDecimal>() {
-            @Override
-            public void onValueResult(BigDecimal result) {
-                if (result != null && result.intValue() >= LOCK_ARP) {
-                    showPayEthDialog(getString(R.string.bind_bank_deposit_title), getString(R.string.bind_bank_deposit_msg), OPERATION_BANK_DEPOSIT);
-                } else {
-                    showPayEthDialog(getString(R.string.bind_arp_approve_title), getString(R.string.bind_arp_approve_msg), OPERATION_ARP_APPROVE);
-                }
-            }
-        });
+        BigInteger allowance = ARPContract.allowance(owner, spender);
+
+        if (allowance != null && Convert.fromWei(allowance.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
+            showPayEthDialog(getString(R.string.bind_bank_deposit_title), getString(R.string.bind_bank_deposit_msg), OPERATION_BANK_DEPOSIT);
+        } else {
+            showPayEthDialog(getString(R.string.bind_arp_approve_title), getString(R.string.bind_arp_approve_msg), OPERATION_ARP_APPROVE);
+        }
     }
 
     private void loadData() {
@@ -435,18 +432,15 @@ public class BindMinerFragment extends BaseFragment {
                 if (result.doubleValue() < bindDeviceEthCost) {
                     showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
                 } else {
-                    ARPContract.getArpBalance(address, new OnValueResult<BigDecimal>() {
-                        @Override
-                        public void onValueResult(BigDecimal result) {
-                            if (result.doubleValue() < LOCK_ARP) {
-                                showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
-                            } else {
-                                Miner miner = mAdapter.getItem(mClickPosition);
-                                String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
-                                loadPromiseForBind(url, miner.getAddress());
-                            }
-                        }
-                    });
+                    BigInteger balance = ARPContract.balanceOf(address);
+
+                    if (balance != null && Convert.fromWei(balance.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
+                        Miner miner = mAdapter.getItem(mClickPosition);
+                        String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
+                        loadPromiseForBind(url, miner.getAddress());
+                    } else {
+                        showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
+                    }
                 }
             }
         });

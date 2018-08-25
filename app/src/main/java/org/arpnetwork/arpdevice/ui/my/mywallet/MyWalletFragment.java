@@ -41,6 +41,7 @@ import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -139,13 +140,9 @@ public class MyWalletFragment extends BaseFragment {
     }
 
     private void getARPBalance(String address) {
-        final TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
-        ARPContract.getArpBalance(address, new OnValueResult<BigDecimal>() {
-            @Override
-            public void onValueResult(BigDecimal result) {
-                setBalance(result, arpBalanceText);
-            }
-        });
+        TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
+        BigInteger balance = ARPContract.balanceOf(address);
+        setBalance(Convert.fromWei(balance.toString(), Convert.Unit.ETHER), arpBalanceText);
     }
 
     private void setBalance(BigDecimal balance, TextView textView) {

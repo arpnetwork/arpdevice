@@ -37,7 +37,6 @@ import org.web3j.crypto.Sign;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 
-import java.io.IOException;
 import java.math.BigInteger;
 
 import static org.arpnetwork.arpdevice.config.Constant.KEY_ADDRESS;
@@ -206,20 +205,15 @@ public class BindMinerIntentService extends IntentService {
 
     private boolean arpApprove(Credentials credentials, BigInteger gasPrice) {
         boolean result;
-        BigInteger gasLimit;
+        BigInteger gasLimit = ARPContract.estimateApproveGasLimit();
+        ARPContract contract = ARPContract.load(credentials, gasPrice, gasLimit);
+        TransactionReceipt receipt = null;
         try {
-            gasLimit = TransactionAPI.getTransactionGasLimit(ARPContract.getApproveEstimateGasTrans());
-        } catch (IOException e) {
-            gasLimit = new BigInteger("400000");
+            receipt = contract.approve().sendAsync().get();
+        } catch (Exception e) {
+            Log.e(TAG, "arpApprove, error:" + e.getCause());
         }
-        String hexData = ARPContract.getTransactionHexData(ARPBank.CONTRACT_ADDRESS,
-                credentials, gasPrice, gasLimit);
-        try {
-            EtherAPI.getWeb3J().ethSendRawTransaction(hexData).send();
-            result = true;
-        } catch (IOException e) {
-            result = false;
-        }
+        result = receipt != null && TransactionAPI.isStatusOK(receipt.getStatus());
         return result;
     }
 
