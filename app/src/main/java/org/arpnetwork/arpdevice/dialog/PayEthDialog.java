@@ -43,31 +43,23 @@ import okhttp3.Response;
 
 public class PayEthDialog {
     private static BigDecimal mGasPriceGWei;
-    private static BigInteger mGasUsed;
     private static ProgressDialog mProgressDialog;
     private static Dialog mShowPriceDialog;
 
     public interface OnPayListener {
-        void onPay(BigInteger priceWei, BigInteger gasUsed, String password);
+        void onPay(BigInteger priceWei, String password);
     }
 
     /**
      * Convenience method.
      */
-    public static void showPayEthDialog(final Activity context, OnPayListener callback) {
-        showPayEthDialog(context, callback, context.getString(R.string.pay_title), context.getString(R.string.pay_msg), null, null);
+    public static void showPayEthDialog(final Activity context, BigInteger gasLimit, OnPayListener callback) {
+        showPayEthDialog(context, context.getString(R.string.pay_title), context.getString(R.string.pay_msg), null, gasLimit, callback, null);
     }
 
-    public static void showPayEthDialog(final Activity context, String positiveText, OnPayListener callback, final DialogInterface.OnClickListener negativeListener) {
-        showPayEthDialog(context, callback, context.getString(R.string.pay_title), context.getString(R.string.pay_msg), positiveText, negativeListener);
-    }
-
-    public static void showPayEthDialog(final Activity context, String positiveText, OnPayListener callback) {
-        showPayEthDialog(context, callback, context.getString(R.string.pay_title), context.getString(R.string.pay_msg), positiveText, null);
-    }
-
-    public static void showPayEthDialog(final Activity context, final OnPayListener callback,
-            final String title, final String message, final String positiveText, final DialogInterface.OnClickListener negativeListener) {
+    public static void showPayEthDialog(final Activity context, final String title,
+            final String message, final String positiveText, final BigInteger gasLimit,
+            final OnPayListener callback, final DialogInterface.OnClickListener negativeListener) {
         if (mShowPriceDialog != null && mShowPriceDialog.isShowing()) return;
 
         new OKHttpUtils().get(Config.API_URL, new SimpleCallback<GasInfoResponse>() {
@@ -85,10 +77,9 @@ public class PayEthDialog {
                 final BigDecimal max = (gasInfo.getGasPriceGwei().multiply(new BigDecimal("100")));
                 BigDecimal defaultValue = gasInfo.getGasPriceGwei();
                 mGasPriceGWei = gasInfo.getGasPriceGwei();
-                mGasUsed = gasInfo.getGasLimit();
 
-                final BigDecimal mEthSpend = Util.getEthCost(gasInfo.getGasPriceGwei(), gasInfo.getGasLimit());
-                double yuan = Util.getYuanCost(defaultValue, gasInfo.getGasLimit(), gasInfo.getEthToYuanRate());
+                final BigDecimal mEthSpend = Util.getEthCost(gasInfo.getGasPriceGwei(), gasLimit);
+                double yuan = Util.getYuanCost(defaultValue, gasLimit, gasInfo.getEthToYuanRate());
 
                 final SeekBarDialog.Builder builder = new SeekBarDialog.Builder(context);
                 builder.setTitle(title)
@@ -102,8 +93,8 @@ public class PayEthDialog {
                                     BigDecimal multiply = new BigDecimal(progress).multiply(max.subtract(min));
                                     BigDecimal divide = multiply.divide(new BigDecimal("100"));
                                     mGasPriceGWei = min.add(divide);
-                                    BigDecimal mEthSpend = Util.getEthCost(mGasPriceGWei, gasInfo.getGasLimit());
-                                    double yuan = Util.getYuanCost(mGasPriceGWei, gasInfo.getGasLimit(), gasInfo.getEthToYuanRate());
+                                    BigDecimal mEthSpend = Util.getEthCost(mGasPriceGWei, gasLimit);
+                                    double yuan = Util.getYuanCost(mGasPriceGWei, gasLimit, gasInfo.getEthToYuanRate());
                                     builder.setSeekValue(progress, String.format(context.getString(R.string.bind_eth_format), mEthSpend, yuan));
                                 }
                             }
@@ -160,7 +151,7 @@ public class PayEthDialog {
                                     } else {
                                         dialog.dismiss();
                                         if (callback != null) {
-                                            callback.onPay(Convert.toWei(mGasPriceGWei, Convert.Unit.GWEI).toBigInteger(), mGasUsed, password);
+                                            callback.onPay(Convert.toWei(mGasPriceGWei, Convert.Unit.GWEI).toBigInteger(), password);
                                         }
                                     }
                                 }

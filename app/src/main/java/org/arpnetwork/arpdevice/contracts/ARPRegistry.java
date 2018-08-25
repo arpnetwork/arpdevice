@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
+import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -112,14 +113,17 @@ public class ARPRegistry extends Contract {
 
     // estimate gas limit
 
-    public static BigInteger estimateBinddeviceGasLimit(String _server, BigInteger _amount, BigInteger _expired, BigInteger _signExpired, BigInteger _v, byte[] _r, byte[] _s) {
-        String functionString = FunctionEncoder.encode(funcBindDevice(_server, _amount, _expired, _signExpired, _v, _r, _s));
+    public static BigInteger estimateBindDeviceGasLimit(String _server, BindPromise bindPromise) {
+        String functionString = FunctionEncoder.encode(funcBindDevice(_server, bindPromise.getAmount(),
+                bindPromise.getExpired(), bindPromise.getSignExpired(),
+                new BigInteger(String.valueOf(bindPromise.getSignatureData().getV())),
+                bindPromise.getSignatureData().getR(), bindPromise.getSignatureData().getS()));
         return TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
     }
 
-    public static BigInteger estimateDepositGasLimit() {
-        String depositFunctionString = FunctionEncoder.encode(funcUnbindDevice());
-        return TransactionAPI.estimateFunctionGasLimit(depositFunctionString, CONTRACT_ADDRESS);
+    public static BigInteger estimateUnbindGasLimit() {
+        String functionString = FunctionEncoder.encode(funcUnbindDevice());
+        return TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
     }
 
     // Bind miner helper method.

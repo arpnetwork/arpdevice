@@ -96,10 +96,12 @@ public class MyWalletFragment extends BaseFragment {
         mWithdrawBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
+                BigInteger amount = ARPBank.balanceOf(Wallet.get().getAddress());
+                final BigInteger gasLimit = ARPBank.estimateWithdrawGasLimit(amount);
+                PayEthDialog.showPayEthDialog(getActivity(), gasLimit, new PayEthDialog.OnPayListener() {
                     @Override
-                    public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
-                        withdraw(Wallet.loadCredentials(password), priceWei, gasUsed);
+                    public void onPay(BigInteger priceWei, String password) {
+                        withdraw(Wallet.loadCredentials(password), priceWei, gasLimit);
                     }
                 });
             }

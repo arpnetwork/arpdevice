@@ -27,13 +27,10 @@ import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
-import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
-import org.spongycastle.util.encoders.Hex;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.Sign;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 
@@ -222,10 +219,10 @@ public class BindMinerIntentService extends IntentService {
         ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
                 credentials, gasPrice, gasLimit);
         try {
-            byte[] signatureDataBytes = Hex.decode(bindPromise.getPromiseSign());
-            Sign.SignatureData signatureData = VerifyAPI.getSignatureDataFromByte(signatureDataBytes);
-
-            TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(), bindPromise.getExpired(), bindPromise.getSignExpired(), new BigInteger(String.valueOf(signatureData.getV())), signatureData.getR(), signatureData.getS()).send();
+            TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(),
+                    bindPromise.getExpired(), bindPromise.getSignExpired(),
+                    new BigInteger(String.valueOf(bindPromise.getSignatureData().getV())),
+                    bindPromise.getSignatureData().getR(), bindPromise.getSignatureData().getS()).send();
             success = TransactionAPI.isStatusOK(bindDeviceReceipt.getStatus());
         } catch (Exception e) {
         }

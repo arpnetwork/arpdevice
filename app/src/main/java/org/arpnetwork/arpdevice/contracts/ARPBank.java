@@ -70,7 +70,7 @@ public class ARPBank extends Contract{
     public static final String FUNC_APPROVE = "approve";
     public static final String FUNC_CANCEL_APPROVAL_BY_SPENDER = "cancelApprovalBySpender";
     public static final String FUNC_CASH = "cash";
-    public static final String FUNC_BALANCEOF = "balanceOf";
+    public static final String FUNC_BALANCE_OF = "balanceOf";
     public static final String FUNC_ALLOWANCE = "allowance";
     public static final String EVENT_CASHING = "Cashing";
 
@@ -161,15 +161,16 @@ public class ARPBank extends Contract{
 
     // estimate gas limit
 
-    public static BigInteger estimateApproveGasLimit(String spender, BigInteger expired, String proxy) {
+    public static BigInteger estimateApproveGasLimit(String spender) {
         String  functionString = FunctionEncoder.encode(getApproveFunction(spender,
                 new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()),
-                expired, proxy));
+                new BigInteger("0"), ARPRegistry.CONTRACT_ADDRESS));
         return  TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
     }
 
-    public static BigInteger estimateDepositGasLimit(BigInteger value) {
-        String depositFunctionString = FunctionEncoder.encode(getDepositFunction(value));
+    public static BigInteger estimateDepositGasLimit() {
+        String depositFunctionString = FunctionEncoder.encode(
+                getDepositFunction(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger()));
         return TransactionAPI.estimateFunctionGasLimit(depositFunctionString, CONTRACT_ADDRESS);
     }
 
@@ -178,9 +179,10 @@ public class ARPBank extends Contract{
         return TransactionAPI.estimateFunctionGasLimit(withdrawFunctionString, CONTRACT_ADDRESS);
     }
 
-    public static BigInteger estimateCashGasLimit(String owner, String spender, BigInteger amount,
-            Sign.SignatureData signatureData) {
-        String cashFunctionString = FunctionEncoder.encode(getCashFunction(owner, spender, amount, signatureData));
+    public static BigInteger estimateCashGasLimit(Promise promise, String spender) {
+        String cashFunctionString = FunctionEncoder.encode(getCashFunction(Numeric.cleanHexPrefix(promise.getFrom()),
+                spender, new BigInteger(promise.getAmount(), 16),
+                VerifyAPI.getSignatureDataFromHexString(promise.getSign())));
         return TransactionAPI.estimateFunctionGasLimit(cashFunctionString, CONTRACT_ADDRESS);
     }
 
@@ -216,7 +218,7 @@ public class ARPBank extends Contract{
     }
 
     private static Function getBalanceOfFunction(String owner) {
-        return new Function(FUNC_BALANCEOF,
+        return new Function(FUNC_BALANCE_OF,
                 Arrays.<Type>asList(new Address(owner)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
     }

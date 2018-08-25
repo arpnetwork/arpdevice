@@ -99,6 +99,7 @@ public class SeekBarDialog extends Dialog {
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
             final SeekBarDialog dialog = new SeekBarDialog(mContext, R.style.Dialog);
+            dialog.setCanceledOnTouchOutside(false);
             View layout = inflater.inflate(R.layout.dialog_seekbar, null);
             dialog.addContentView(layout, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 

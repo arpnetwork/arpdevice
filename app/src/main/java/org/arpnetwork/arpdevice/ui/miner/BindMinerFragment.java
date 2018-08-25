@@ -103,7 +103,7 @@ public class BindMinerFragment extends BaseFragment {
     private BindPromise mBindPromise;
     private String mGasTag = "gas_price";
     private BigInteger mGasPriceWei;
-    private BigInteger mGasUsed;
+    private BigInteger mGasLimit;
 
     private BindStateReceiver mBindStateReceiver;
 
@@ -263,7 +263,8 @@ public class BindMinerFragment extends BaseFragment {
 
             @Override
             public void onSuccess(Response response, GasInfoResponse result) {
-                checkBalance(Util.getEthCost(result.data.getGasPriceGwei(), result.data.getGasLimit()).doubleValue());
+                // FIXME: update gas limit
+                checkBalance(Util.getEthCost(result.data.getGasPriceGwei(), new BigInteger("400000")).doubleValue());
             }
 
             @Override
@@ -396,7 +397,9 @@ public class BindMinerFragment extends BaseFragment {
         new OKHttpUtils().post(url, json, Config.API_SERVER_BIND_PROMISE, new SimpleCallback<BindPromise>() {
             @Override
             public void onSuccess(Response response, BindPromise result) {
-                String data = String.format(Locale.US, "%s:%d:%d:%s:%s", result.getAmount(), result.getSignExpired(), result.getExpired(), result.getPromiseSign(), Wallet.get().getAddress());
+                String data = String.format(Locale.US, "%s:%d:%d:%s:%s", result.getAmount(),
+                        result.getSignExpired(), result.getExpired(), result.getPromiseSign(),
+                        Wallet.get().getAddress());
                 if (!VerifyAPI.verifySign(data, result.getSign(), minerAddr)) {
                     String message = String.format(getString(R.string.bind_apply_message), result.getAmountHumanic());
                     showAmountAlertDialog(null, message, result);
@@ -482,37 +485,45 @@ public class BindMinerFragment extends BaseFragment {
 
     private void showPayEthDialog(String title, String message, final int opType) {
         String positiveText = getString(R.string.ok);
+        mGasLimit = new BigInteger("400000");
+        String deviceAddr = Wallet.get().getAddress();
         switch (opType) {
             case OPERATION_ARP_APPROVE:
                 positiveText = getString(R.string.bind_btn_arp_approve);
+                mGasLimit = ARPContract.estimateApproveGasLimit();
                 break;
 
             case OPERATION_BANK_APPROVE:
                 positiveText = getString(R.string.bind_btn_bank_approve);
+                mGasLimit = ARPBank.estimateApproveGasLimit(deviceAddr);
                 break;
 
             case OPERATION_BANK_DEPOSIT:
                 positiveText = getString(R.string.bind_btn_deposit);
+                mGasLimit = ARPBank.estimateDepositGasLimit();
                 break;
 
             case OPERATION_BIND:
                 positiveText = getString(R.string.bind_btn_bind);
+                mGasLimit = ARPRegistry.estimateBindDeviceGasLimit(mAdapter.getItem(mClickPosition).getAddress(),
+                        mBindPromise);
                 break;
 
             case OPERATION_UNBIND:
                 positiveText = getString(R.string.bind_btn_unbind);
+                mGasLimit = ARPRegistry.estimateUnbindGasLimit();
                 break;
 
             case OPERATION_CANCEL_APPROVE:
                 positiveText = getString(R.string.bind_btn_cancel_approve);
+                mGasLimit = ARPBank.estimateCancelApprovalBySpenderGasLimit(deviceAddr);
                 break;
         }
 
-        PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
+        PayEthDialog.showPayEthDialog(getActivity(), title, message, positiveText, mGasLimit, new PayEthDialog.OnPayListener() {
             @Override
-            public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
+            public void onPay(BigInteger priceWei, String password) {
                 mGasPriceWei = priceWei;
-                mGasUsed = gasUsed;
                 if (opType == OPERATION_BIND) {
                     if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) { // 4小时内
                         showErrorAlertDialog(null, getString(R.string.bind_apply_expired));
@@ -527,7 +538,7 @@ public class BindMinerFragment extends BaseFragment {
                     startCommonService(password, opType);
                 }
             }
-        }, title, message, positiveText, new DialogInterface.OnClickListener() {
+        }, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 getActivity().finish();
@@ -563,7 +574,7 @@ public class BindMinerFragment extends BaseFragment {
         mServiceIntent.putExtra(KEY_OP, opType);
         mServiceIntent.putExtra(KEY_PASSWD, passwd);
         mServiceIntent.putExtra(KEY_GASPRICE, mGasPriceWei.toString());
-        mServiceIntent.putExtra(KEY_GASLIMIT, mGasUsed.toString());
+        mServiceIntent.putExtra(KEY_GASLIMIT, mGasLimit.toString());
         return mServiceIntent;
     }
 

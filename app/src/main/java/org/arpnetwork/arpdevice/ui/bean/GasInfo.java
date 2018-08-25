@@ -34,10 +34,6 @@ public class GasInfo {
         return new BigDecimal(gasPriceGwei);
     }
 
-    public BigInteger getGasLimit() {
-        return new BigInteger(gasLimit);
-    }
-
     public BigDecimal getEthToYuanRate() {
         return new BigDecimal(ethToYuanRate);
     }

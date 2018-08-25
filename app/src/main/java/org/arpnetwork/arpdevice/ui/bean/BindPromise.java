@@ -16,6 +16,9 @@
 
 package org.arpnetwork.arpdevice.ui.bean;
 
+import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.spongycastle.util.encoders.Hex;
+import org.web3j.crypto.Sign;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
@@ -35,6 +38,11 @@ public class BindPromise implements Serializable {
 
     public String getPromiseSign() {
         return Numeric.cleanHexPrefix(promiseSign);
+    }
+
+    public Sign.SignatureData getSignatureData() {
+        byte[] signatureDataBytes = Hex.decode(getPromiseSign());
+        return VerifyAPI.getSignatureDataFromByte(signatureDataBytes);
     }
 
     public BigInteger getAmount() {

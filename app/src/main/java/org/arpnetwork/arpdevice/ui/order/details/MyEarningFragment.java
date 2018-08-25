@@ -105,10 +105,11 @@ public class MyEarningFragment extends BaseFragment {
                             getString(R.string.exchange_tip_exchanging), Toast.LENGTH_SHORT);
                 } else {
                     final String spender = Wallet.get().getAddress();
-                    PayEthDialog.showPayEthDialog(getActivity(), new PayEthDialog.OnPayListener() {
+                    final BigInteger gasLimit = ARPBank.estimateCashGasLimit(promise, spender);
+                    PayEthDialog.showPayEthDialog(getActivity(), gasLimit, new PayEthDialog.OnPayListener() {
                         @Override
-                        public void onPay(BigInteger priceWei, BigInteger gasUsed, String password) {
-                            ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), priceWei, gasUsed);
+                        public void onPay(BigInteger priceWei, String password) {
+                            ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), priceWei, gasLimit);
                             TransactionReceipt receipt = null;
                             try {
                                 receipt = bank.cash(promise, spender).sendAsync().get();
