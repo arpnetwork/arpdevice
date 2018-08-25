@@ -73,13 +73,7 @@ public class MyWalletFragment extends BaseFragment {
         Wallet myWallet = Wallet.get();
         nameText.setText(myWallet.getName());
 
-        final TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
-        ARPContract.getArpBalance(myWallet.getAddress(), new OnValueResult<BigDecimal>() {
-            @Override
-            public void onValueResult(BigDecimal result) {
-                setBalance(result, arpBalanceText);
-            }
-        });
+        getARPBalance(myWallet.getAddress());
 
         final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);
         EtherAPI.getEtherBalance(myWallet.getAddress(), new OnValueResult<BigDecimal>() {
@@ -137,10 +131,21 @@ public class MyWalletFragment extends BaseFragment {
         hideProgressDialog();
         if (success) {
             mWithdrawBtn.setVisibility(View.GONE);
+            getARPBalance(Wallet.get().getAddress());
             Toast.makeText(getContext(), getString(R.string.withdraw_success), Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(getContext(), getString(R.string.withdraw_failed), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void getARPBalance(String address) {
+        final TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
+        ARPContract.getArpBalance(address, new OnValueResult<BigDecimal>() {
+            @Override
+            public void onValueResult(BigDecimal result) {
+                setBalance(result, arpBalanceText);
+            }
+        });
     }
 
     private void setBalance(BigDecimal balance, TextView textView) {
