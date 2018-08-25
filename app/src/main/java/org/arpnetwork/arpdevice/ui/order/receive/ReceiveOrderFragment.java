@@ -17,9 +17,14 @@
 package org.arpnetwork.arpdevice.ui.order.receive;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,6 +36,7 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.data.BankAllowance;
@@ -72,6 +78,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private int mTotalTime;
     private boolean mRetryRequestPayment;
 
+    private TouchLocalReceiver mTouchLocalReceiver;
+
     private Handler mHandler = new Handler();
 
     @Override
@@ -80,6 +88,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
+
+        registerReceiver();
     }
 
     @Override
@@ -104,6 +114,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     @Override
     public void onDestroy() {
         stopDeviceService();
+        unregisterReceiver();
 
         super.onDestroy();
     }
@@ -404,4 +415,42 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             showExitDialog();
         }
     };
+
+    private void registerReceiver() {
+        IntentFilter statusIntentFilter = new IntentFilter(Constant.BROADCAST_ACTION_TOUCH_LOCAL);
+        mTouchLocalReceiver = new TouchLocalReceiver();
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
+                mTouchLocalReceiver,
+                statusIntentFilter);
+    }
+
+    private void unregisterReceiver() {
+        if (mTouchLocalReceiver != null) {
+            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mTouchLocalReceiver);
+            mTouchLocalReceiver = null;
+        }
+    }
+
+    private class TouchLocalReceiver extends BroadcastReceiver {
+        private TouchLocalReceiver() {
+            // prevents instantiation by other packages.
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (!TextUtils.isEmpty(action)){
+                switch (intent.getAction()) {
+                    case Constant.BROADCAST_ACTION_TOUCH_LOCAL:
+                        releaseDApp();
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+
+        }
+    }
 }

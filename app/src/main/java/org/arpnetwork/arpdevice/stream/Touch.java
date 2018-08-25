@@ -59,6 +59,7 @@ public class Touch {
     private Handler mCheckHandler;
 
     private RecordHelper mRecordHelper;
+    private MonitorTouch mMonitor;
 
     public static Touch getInstance() {
         if (sInstance == null) {
@@ -104,6 +105,7 @@ public class Touch {
     public void sendTouch(String touchInfo) {
         if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mShell != null) {
             mShell.write(touchInfo);
+            mMonitor.increaseCount();
         }
     }
 
@@ -118,6 +120,8 @@ public class Touch {
         mRecordHelper = new RecordHelper();
         if (getState() == STATE_CONNECTED) {
             mRecordHelper.startRecord(quality, mConn);
+            mMonitor = new MonitorTouch();
+            mMonitor.startMonitor(mBanner.split(" ")[6]);
         }
     }
 
@@ -125,6 +129,9 @@ public class Touch {
         if (mRecordHelper != null) {
             mRecordHelper.stopRecord();
             mRecordHelper = null;
+        }
+        if (mMonitor != null) {
+            mMonitor.stopMonitor();
         }
     }
 
