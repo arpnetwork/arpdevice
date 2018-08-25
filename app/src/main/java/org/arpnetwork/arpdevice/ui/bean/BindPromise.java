@@ -16,25 +16,25 @@
 
 package org.arpnetwork.arpdevice.ui.bean;
 
-import com.google.gson.annotations.SerializedName;
-
-import org.spongycastle.util.encoders.Hex;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Arrays;
 
 public class BindPromise implements Serializable {
     private String amount; // hex
     private long expired;
-    @SerializedName("sign_expired")
     private long signExpired;
+    private String promiseSign; // hex
     private String sign; // hex
 
     public String getSign() {
         return Numeric.cleanHexPrefix(sign);
+    }
+
+    public String getPromiseSign() {
+        return Numeric.cleanHexPrefix(promiseSign);
     }
 
     public BigInteger getAmount() {
@@ -58,7 +58,7 @@ public class BindPromise implements Serializable {
         return "BindPromise{" +
                 "amount='" + amount + '\'' +
                 ", expired=" + expired +
-                ", signExpired=" + signExpired +
+                ", getSignExpired=" + signExpired +
                 '}';
     }
 }

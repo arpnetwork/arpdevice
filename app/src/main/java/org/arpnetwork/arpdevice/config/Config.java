@@ -24,7 +24,7 @@ public class Config {
 
     public static final String API_URL = "https://easy-mock.com/mock/5afea0ae6ba6060f61c231d1/example";
     public static final String API_SERVER_INFO = "server_info";
-    public static final String API_SERVER_VOUVHER = "server_voucher";
+    public static final String API_SERVER_BIND_PROMISE = "server_bindPromise";
 
     public static final int DATA_SERVER_PORT = 9000;
     public static final int HTTP_SERVER_PORT = 9001;

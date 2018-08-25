@@ -34,7 +34,7 @@ public class BroadcastNotifier {
 
         Intent localIntent = new Intent();
 
-        localIntent.setAction(Constant.BROADCAST_ACTION);
+        localIntent.setAction(Constant.BROADCAST_ACTION_STATUS);
 
         localIntent.putExtra(Constant.EXTENDED_DATA_STATUS, status);
         localIntent.addCategory(Intent.CATEGORY_DEFAULT);

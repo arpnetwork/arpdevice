@@ -26,9 +26,11 @@ public class Constant {
     public static final int CHECK_AUTH_SUCCESS = 6;
 
     // Defines a custom Intent action
-    public static final String BROADCAST_ACTION = "org.arpnetwork.arpdevice.BROADCAST";
+    public static final String BROADCAST_ACTION_STATUS = "org.arpnetwork.arpdevice.ACTION_STATUS";
     // Defines the key for the status "extra" in an Intent
     public static final String EXTENDED_DATA_STATUS = "org.arpnetwork.arpdevice.STATUS";
+
+    public static final String BROADCAST_ACTION_TOUCH_LOCAL = "org.arpnetwork.arpdevice.ACTION_TOUCH_LOCAL";
 
     public static final String KEY_OP = "op_type";
     public static final String KEY_PASSWD = "passwd";

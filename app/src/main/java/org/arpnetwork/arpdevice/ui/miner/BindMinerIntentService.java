@@ -218,7 +218,7 @@ public class BindMinerIntentService extends IntentService {
         ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
                 credentials, gasPrice, gasLimit);
         try {
-            byte[] signatureDataBytes = Hex.decode(bindPromise.getSign());
+            byte[] signatureDataBytes = Hex.decode(bindPromise.getPromiseSign());
             Sign.SignatureData signatureData = VerifyAPI.getSignatureDataFromByte(signatureDataBytes);
 
             TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(), bindPromise.getExpired(), bindPromise.getSignExpired(), new BigInteger(String.valueOf(signatureData.getV())), signatureData.getR(), signatureData.getS()).send();

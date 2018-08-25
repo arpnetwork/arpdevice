@@ -39,6 +39,7 @@ import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
+import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.data.Promise;
@@ -62,6 +63,7 @@ import org.web3j.utils.Convert;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Locale;
 
 import okhttp3.Request;
 import okhttp3.Response;
@@ -141,7 +143,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private void registerReceiver() {
         IntentFilter statusIntentFilter = new IntentFilter(
-                Constant.BROADCAST_ACTION);
+                Constant.BROADCAST_ACTION_STATUS);
         statusIntentFilter.addCategory(Intent.CATEGORY_DEFAULT);
         mBindStateReceiver = new BindStateReceiver();
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
@@ -198,7 +200,7 @@ public class BindMinerFragment extends BaseFragment {
         if (mBoundMiner != null) {
             BankAllowance allowance = ARPBank.allowance(mBoundMiner.getAddress(), spender);
             BigInteger unexchanged = amount.subtract(allowance.paid);
-                if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+            if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
                 String message = String.format(getString(R.string.exchange_change_miner_msg), unexchanged);
                 MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
                 builder.setTitle(getString(R.string.exchange_change_miner_title))
@@ -359,13 +361,12 @@ public class BindMinerFragment extends BaseFragment {
         }
     }
 
-    private void loadMinerLoadInfo(final int index, final String url, String address) {
-        String nonce = AtomicNonce.getAndIncrement(address);
+    private void loadMinerLoadInfo(final int index, final String url, String minerAddr) {
+        String nonce = AtomicNonce.getAndIncrement(minerAddr);
 
         RPCRequest request = new RPCRequest();
         request.setId(nonce);
         request.setMethod(Config.API_SERVER_INFO);
-        request.putString(nonce);
 
         String json = request.toJSON();
 
@@ -385,22 +386,28 @@ public class BindMinerFragment extends BaseFragment {
         });
     }
 
-    public void loadPromiseForBind(String url, String address) {
-        String nonce = AtomicNonce.getAndIncrement(address);
+    public void loadPromiseForBind(String url, final String minerAddr) {
+        String nonce = AtomicNonce.getAndIncrement(minerAddr);
 
         RPCRequest request = new RPCRequest();
+        request.setMethod(Config.API_SERVER_BIND_PROMISE);
         request.setId(nonce);
-        request.setMethod(Config.API_SERVER_VOUVHER);
         request.putString(Wallet.get().getAddress());
-        request.putString(nonce);
 
         String json = request.toJSON();
 
-        new OKHttpUtils().post(url, json, Config.API_SERVER_VOUVHER, new SimpleCallback<BindPromise>() {
+        new OKHttpUtils().post(url, json, Config.API_SERVER_BIND_PROMISE, new SimpleCallback<BindPromise>() {
             @Override
             public void onSuccess(Response response, BindPromise result) {
-                String message = String.format(getString(R.string.bind_apply_message), result.getAmountHumanic());
-                showAmountAlertDialog(null, message, result);
+                String data = String.format(Locale.US, "%s:%d:%d:%s:%s", result.getAmount(), result.getSignExpired(), result.getExpired(), result.getPromiseSign(), Wallet.get().getAddress());
+                if (!VerifyAPI.verifySign(data, result.getSign(), minerAddr)) {
+                    String message = String.format(getString(R.string.bind_apply_message), result.getAmountHumanic());
+                    showAmountAlertDialog(null, message, result);
+                } else {
+                    if (getActivity() != null) {
+                        UIHelper.showToast(getActivity(), getString(R.string.load_promise_failed));
+                    }
+                }
             }
 
             @Override

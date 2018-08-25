@@ -96,12 +96,12 @@
     <string name="bind_btn_cancel_approve">Cancel approve</string>
     <string name="bind_btn_quit">Quit</string>
     <!-- bind step -->
-    <string name="bind_bank_approve_title">BankApprove</string>
-    <string name="bind_bank_approve_msg">BankApprove</string>
-    <string name="bind_bank_deposit_title">BankDeposit</string>
-    <string name="bind_bank_deposit_msg">BankDeposit</string>
-    <string name="bind_arp_approve_title">ARPApprove</string>
+    <string name="bind_arp_approve_title">ARP Approve</string>
     <string name="bind_arp_approve_msg">Approve need 5000 ARPs to bind miner(Approve doesn\'t cost ARP but cost eth gas）</string>
+    <string name="bind_bank_approve_title">Lockup</string>
+    <string name="bind_bank_approve_msg">need 500ARP as allowance</string>
+    <string name="bind_bank_deposit_title">Deposit ARP</string>
+    <string name="bind_bank_deposit_msg">need deposit 500ARP to Bank contract to lockup</string>
     <string name="bind_unbind_title">Unbind</string>
     <string name="bind_unbind_msg">Unbind need to cost eth gas</string>
     <string name="bind_cancel_approve_title">cancel approve</string>

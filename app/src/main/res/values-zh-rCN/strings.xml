@@ -81,6 +81,7 @@
     <string name="bind_apply">申请绑定</string>
     <string name="bind_apply_message">矿工授权额度是%s个ARP，申请绑定吗？</string>
     <string name="bind_apply_expired">申请绑定已过期</string>
+    <string name="load_promise_failed">获取矿工信息失败，请重试</string>
     <string name="unbind">解绑</string>
     <string name="unbind_success">解绑成功，您可以到我的钱包页面取回押金</string>
     <string name="unbind_running">正在解绑</string>
@@ -94,13 +95,12 @@
     <string name="bind_btn_cancel_approve">取消授权</string>
     <string name="bind_btn_quit">退出</string>
     <!-- 绑定矿工 step -->
-    <string name="load_promise_failed">获取矿工信息失败，请重试</string>
-    <string name="bind_bank_approve_title">Bank预授权</string>
-    <string name="bind_bank_approve_msg">Bank需要预授权</string>
-    <string name="bind_bank_deposit_title">存ARP到ARP Bank</string>
-    <string name="bind_bank_deposit_msg">需要预先存ARP500个到ARP Bank</string>
-    <string name="bind_arp_approve_title">ARPApprove</string>
-    <string name="bind_arp_approve_msg">需要预授权500个ARP才能绑定矿工（预授权不扣ARP但需要支付以太坊油费）</string>
+    <string name="bind_arp_approve_title">ARP预授权</string>
+    <string name="bind_arp_approve_msg">预授权5000个ARP用于绑定矿工（预授权不扣ARP但需要支付以太坊油费）</string>
+    <string name="bind_bank_approve_title">锁仓</string>
+    <string name="bind_bank_approve_msg">需锁仓500ARP作为上线保证金</string>
+    <string name="bind_bank_deposit_title">存储ARP</string>
+    <string name="bind_bank_deposit_msg">需要预先存ARP500个到Bank合约用于锁仓</string>
     <string name="bind_unbind_title">解绑</string>
     <string name="bind_unbind_msg">解绑需要支付以太坊油费</string>
     <string name="bind_cancel_approve_title">取消授权</string>
