@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.data.ReleaseDeviceReq;
 import org.arpnetwork.arpdevice.data.SpeedResponse;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
@@ -300,7 +301,8 @@ public class DeviceManager implements DeviceConnection.Listener {
     private void verify() {
         String salt = Util.getRandomString(32);
         String sign = SignUtil.sign(salt);
-        mVerifyData = new VerifyData(salt, sign);
+        String promiseJson = Promise.getJson();
+        mVerifyData = new VerifyData(salt, sign, !TextUtils.isEmpty(promiseJson) ? promiseJson : null);
         send(new VerifyReq(mVerifyData));
     }
 

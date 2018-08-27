@@ -19,10 +19,12 @@ package org.arpnetwork.arpdevice.data;
 public class VerifyData {
     private String salt;
     private String sign;
+    private String promise;
 
-    public VerifyData(String salt, String sign) {
+    public VerifyData(String salt, String sign, String promise) {
         this.salt = salt;
         this.sign = sign;
+        this.promise = promise;
     }
 
     public String getSalt() {
@@ -31,5 +33,9 @@ public class VerifyData {
 
     public String getSign() {
         return sign;
+    }
+
+    public String getPromise() {
+        return promise;
     }
 }

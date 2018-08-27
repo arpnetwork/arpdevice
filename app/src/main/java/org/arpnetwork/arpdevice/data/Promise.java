@@ -95,6 +95,10 @@ public class Promise {
         return fromJson(json);
     }
 
+    public static String getJson() {
+        return PreferenceManager.getInstance().getString(KEY);
+    }
+
     public static Promise fromJson(String json) {
         if (!TextUtils.isEmpty(json)) {
             try {
@@ -108,5 +112,5 @@ public class Promise {
     public static void clear() {
         PreferenceManager.getInstance().putString(KEY, "");
     }
-    
+
 }
