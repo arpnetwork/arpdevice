@@ -52,7 +52,7 @@ public class ARPContract extends Contract {
                     DefaultBlockParameterName.LATEST)
                     .sendAsync().get();
         } catch (Exception e) {
-            Log.e(TAG, "allowance(" + owner + ", "  + spender + "), error:" + e.getCause());
+            Log.e(TAG, "allowance(" + owner + ", " + spender + "), error:" + e.getCause());
         }
 
         List<Type> someTypes = FunctionReturnDecoder.decode(
@@ -79,9 +79,9 @@ public class ARPContract extends Contract {
     }
 
     public RemoteCall<TransactionReceipt> approve() {
-        String spender = Wallet.get().getAddress();
+        String spender = ARPBank.CONTRACT_ADDRESS;
         BigInteger amount = Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
-        Function function = getApproveFunction(spender,amount);
+        Function function = getApproveFunction(spender, amount);
         return executeRemoteCallTransaction(function);
     }
 
