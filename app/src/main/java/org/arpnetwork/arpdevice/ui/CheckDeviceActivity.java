@@ -112,6 +112,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
             Intent intent = new Intent();
             intent.setComponent(componentName);
             intent.setAction("android.intent.action.View");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         } catch (Exception e) {
             UIHelper.showToast(CheckDeviceActivity.this, getString(R.string.check_fail_adb_exception));
