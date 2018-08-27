@@ -86,7 +86,7 @@ public class ARPContract extends Contract {
     }
 
     public static BigInteger estimateApproveGasLimit() {
-        String spender = Wallet.get().getAddress();
+        String spender = ARPBank.CONTRACT_ADDRESS;
         BigInteger amount = Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
         String functionString = FunctionEncoder.encode(getApproveFunction(spender, amount));
         return TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);

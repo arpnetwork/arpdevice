@@ -223,9 +223,9 @@ public class BindMinerIntentService extends IntentService {
         return result;
     }
 
-    private boolean arpApprove(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws ExecutionException, InterruptedException {
+    private boolean arpApprove(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
         ARPContract contract = ARPContract.load(credentials, gasPrice, gasLimit);
-        TransactionReceipt receipt = contract.approve().sendAsync().get();
+        TransactionReceipt receipt = contract.approve().send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
