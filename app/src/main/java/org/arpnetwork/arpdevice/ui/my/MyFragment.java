@@ -18,8 +18,11 @@ package org.arpnetwork.arpdevice.ui.my;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -209,6 +212,15 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         return BindMinerHelper.getBound(Wallet.get().getAddress()) != null;
     }
 
+    private boolean isCharging() {
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = getActivity().registerReceiver(null, intentFilter);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL;
+        return isCharging;
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -229,7 +241,9 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_order:
-                if (isMinerBound()) {
+                if (!isCharging()) {
+                    UIHelper.showToast(getActivity(), getString(R.string.no_charging));
+                } else if (isMinerBound()) {
                     if (!SignUtil.signerExists()) {
                         showPasswordDialog();
                     } else {

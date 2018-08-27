@@ -47,7 +47,7 @@
             android:screenOrientation="portrait" />
 
         <activity
-            android:name=".ui.miner.ExchangeDialogActivity"
+            android:name=".monitor.ExchangeDialogActivity"
             android:label=""
             android:theme="@style/Dialog" />
 
@@ -56,8 +56,15 @@
             android:exported="false" />
 
         <service
-            android:name=".ui.miner.MonitorService"
+            android:name=".monitor.MonitorService"
             android:exported="false" />
+
+        <receiver android:name=".monitor.PowerConnectionReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
+                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
+            </intent-filter>
+        </receiver>
 
         <meta-data
             android:name="AA_DB_NAME"

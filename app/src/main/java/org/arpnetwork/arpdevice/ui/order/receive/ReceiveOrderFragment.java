@@ -79,6 +79,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private boolean mRetryRequestPayment;
 
     private TouchLocalReceiver mTouchLocalReceiver;
+    private ChargingReceiver mChargingReceiver;
 
     private Handler mHandler = new Handler();
 
@@ -429,12 +430,22 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                 mTouchLocalReceiver,
                 statusIntentFilter);
+
+        IntentFilter chargingIntentFilter = new IntentFilter(Constant.BROADCAST_ACTION_CHARGING);
+        mChargingReceiver = new ChargingReceiver();
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
+                mChargingReceiver,
+                chargingIntentFilter);
     }
 
     private void unregisterReceiver() {
         if (mTouchLocalReceiver != null) {
             LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mTouchLocalReceiver);
             mTouchLocalReceiver = null;
+        }
+        if (mChargingReceiver != null) {
+            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mChargingReceiver);
+            mChargingReceiver = null;
         }
     }
 
@@ -446,7 +457,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (!TextUtils.isEmpty(action)){
+            if (!TextUtils.isEmpty(action)) {
                 switch (intent.getAction()) {
                     case Constant.BROADCAST_ACTION_TOUCH_LOCAL:
                         releaseDApp();
@@ -456,8 +467,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                         break;
                 }
             }
+        }
+    }
 
-
+    public class ChargingReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            boolean isCharging = intent.getBooleanExtra(Constant.EXTENDED_DATA_CHARGING, true);
+            if (!isCharging) {
+                releaseDApp();
+            }
         }
     }
 }

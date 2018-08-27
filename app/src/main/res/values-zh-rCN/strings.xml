@@ -50,6 +50,7 @@
     <string name="low">低</string>
     <string name="high">高</string>
     <string name="no_bind_miner">未绑定矿工</string>
+    <string name="no_charging">请连接充电器</string>
 
     <!-- 我的钱包 -->
     <string name="ARP_balance">ARP金额</string>

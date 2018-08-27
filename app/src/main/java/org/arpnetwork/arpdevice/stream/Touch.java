@@ -30,6 +30,7 @@ import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.monitor.MonitorTouch;
 import org.arpnetwork.arpdevice.server.DataServer;
 
 import java.security.spec.InvalidKeySpecException;
@@ -105,7 +106,9 @@ public class Touch {
     public void sendTouch(String touchInfo) {
         if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mShell != null) {
             mShell.write(touchInfo);
-            mMonitor.increaseCount();
+            if (mMonitor != null) {
+                mMonitor.increaseCount();
+            }
         }
     }
 

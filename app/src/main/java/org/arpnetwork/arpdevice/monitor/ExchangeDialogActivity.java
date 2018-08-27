@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.miner;
+package org.arpnetwork.arpdevice.monitor;
 
 import android.app.Activity;
 import android.content.Context;
@@ -27,6 +27,7 @@ import android.widget.TextView;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.util.Util;
+import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
 
@@ -55,7 +56,7 @@ public class ExchangeDialogActivity extends Activity {
         TextView message = ((TextView) findViewById(R.id.tv_message));
 
         String args = getIntent().getExtras().getString(KEY_ARGS);
-        final BigInteger unExchanged = new BigInteger(args.split("#")[1]);
+        final BigInteger unExchanged = Convert.fromWei(args.split("#")[1], Convert.Unit.ETHER).toBigInteger();
         long minerExp = Long.valueOf(args.split("#")[0]);
 
         String minerExpDate = Util.getDateTime("yyyy-MM-dd HH:mm", minerExp);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.stream;
+package org.arpnetwork.arpdevice.monitor;
 
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
@@ -24,6 +24,7 @@ import android.util.Log;
 import org.arpnetwork.adb.RawChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.stream.Touch;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -90,7 +91,7 @@ public class MonitorTouch {
         private void handleMonitor(String packet) {
             // parse line:  EV_SYN       SYN_REPORT           00000000
             try {
-                commits = parsePacket(packet);
+                commits += parsePacket(packet);
                 if (commits > mRemoteCommits) {
                     Log.e(TAG, "abnormal");
                     sendBroadcast();
@@ -106,6 +107,7 @@ public class MonitorTouch {
         }
 
         private void cancel() {
+            commits = 0;
             mStopped = true;
         }
 

@@ -50,6 +50,7 @@
     <string name="low">Low</string>
     <string name="high">High</string>
     <string name="no_bind_miner">No bind miner</string>
+    <string name="no_charging">Please make sure your device is charging</string>
 
     <!-- my wallet -->
     <string name="ARP_balance">ARP account</string>

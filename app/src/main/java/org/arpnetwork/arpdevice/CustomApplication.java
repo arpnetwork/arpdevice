@@ -24,7 +24,7 @@ import com.activeandroid.ActiveAndroid;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.stream.Touch;
-import org.arpnetwork.arpdevice.ui.miner.MonitorService;
+import org.arpnetwork.arpdevice.monitor.MonitorService;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 
