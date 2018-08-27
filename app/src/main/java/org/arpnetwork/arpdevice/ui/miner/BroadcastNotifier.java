@@ -29,7 +29,7 @@ public class BroadcastNotifier {
         mBroadcaster = LocalBroadcastManager.getInstance(context);
     }
 
-    public void broadcastWithState(int status,int opType,String address) {
+    public void broadcastWithState(int status, int opType, String address) {
         StateHolder.setState(new TaskInfo(opType, address), status);
 
         Intent localIntent = new Intent();

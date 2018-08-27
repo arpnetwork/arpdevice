@@ -115,6 +115,9 @@ public class MyEarningFragment extends BaseFragment {
                                 receipt = bank.cash(promise, spender).sendAsync().get();
                             } catch (Exception e) {
                                 android.util.Log.e(TAG, "onPay, cash error:" + e.getCause());
+                                UIHelper.showToast(CustomApplication.sInstance,
+                                        getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
+                                return;
                             }
 
                             final EarningRecord localRecord = savePendingToDb(receipt.getTransactionHash());

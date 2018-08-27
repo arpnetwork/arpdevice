@@ -59,11 +59,12 @@ import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
-public class ARPBank extends Contract{
+public class ARPBank extends Contract {
     private static final String TAG = Contract.class.getSimpleName();
     public static final String CONTRACT_ADDRESS = "0x19ea440d8a78a06be54ffca6a8564197bd1b443a";
 
     public static final String APPROVE_ARP_NUMBER = "500";
+    public static final String DEPOSIT_ARP_NUMBER = "500";
 
     public static final String FUNC_DEPOSIT = "deposit";
     public static final String FUNC_WITHDRAW = "withdraw";
@@ -100,7 +101,7 @@ public class ARPBank extends Contract{
                     DefaultBlockParameterName.LATEST)
                     .sendAsync().get();
         } catch (Exception e) {
-            Log.e(TAG, "allowance(" + owner + ", "  + spender + "), error:" + e.getCause());
+            Log.e(TAG, "allowance(" + owner + ", " + spender + "), error:" + e.getCause());
         }
         List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
@@ -123,7 +124,7 @@ public class ARPBank extends Contract{
                     DefaultBlockParameterName.LATEST)
                     .sendAsync().get();
         } catch (Exception e) {
-            Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause() );
+            Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause());
         }
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
@@ -162,10 +163,10 @@ public class ARPBank extends Contract{
     // estimate gas limit
 
     public static BigInteger estimateApproveGasLimit(String spender) {
-        String  functionString = FunctionEncoder.encode(getApproveFunction(spender,
+        String functionString = FunctionEncoder.encode(getApproveFunction(spender,
                 new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()),
                 new BigInteger("0"), ARPRegistry.CONTRACT_ADDRESS));
-        return  TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
+        return TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
     }
 
     public static BigInteger estimateDepositGasLimit() {
@@ -195,12 +196,8 @@ public class ARPBank extends Contract{
 
     public static List getTransactionList(String address, BigInteger earliestBlockNumber) throws ExecutionException, InterruptedException {
         Event event = new Event(EVENT_CASHING,
-                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {
-                }, new TypeReference<Address>() {
-                }),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
-                }, new TypeReference<Uint256>() {
-                }));
+                Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {}, new TypeReference<Address>() {}),
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
         EthFilter ethFilter = new EthFilter(new DefaultBlockParameterNumber(earliestBlockNumber), DefaultBlockParameterName.LATEST, CONTRACT_ADDRESS);
         ethFilter.addSingleTopic(EventEncoder.encode(event));
         ethFilter.addNullTopic();
@@ -227,14 +224,9 @@ public class ARPBank extends Contract{
         return new Function(ARPBank.FUNC_ALLOWANCE,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(owner),
                         new org.web3j.abi.datatypes.Address(spender)),
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
-                                                }, new TypeReference<Uint256>() {
-                                                },
-                        new TypeReference<Uint256>() {
-                        }, new TypeReference<Uint256>() {
-                        },
-                        new TypeReference<Address>() {
-                        }));
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {},
+                        new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {},
+                        new TypeReference<Address>() {}));
     }
 
     private static Function getApproveFunction(String spender, BigInteger amount, BigInteger expired, String proxy) {
