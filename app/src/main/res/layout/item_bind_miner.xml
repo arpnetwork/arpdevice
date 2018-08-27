@@ -12,7 +12,8 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:orientation="vertical"
-        android:paddingLeft="23dp">
+        android:paddingLeft="23dp"
+        android:paddingRight="18dp">
 
         <TextView
             android:id="@+id/tv_miner_name"

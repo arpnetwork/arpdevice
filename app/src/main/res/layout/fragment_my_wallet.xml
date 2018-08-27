@@ -15,7 +15,6 @@
         android:orientation="vertical">
 
         <LinearLayout
-            android:id="@+id/layout_private_key"
             style="@style/ItemLayout">
 
             <TextView
@@ -30,7 +29,20 @@
         <View style="@style/Divider" />
 
         <LinearLayout
-            android:id="@+id/layout_wallet_name"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyWalletTitleLabel"
+                android:text="@string/wallet_addr" />
+
+            <TextView
+                android:id="@+id/tv_addr"
+                style="@style/MyWalletInfoLabel"/>
+        </LinearLayout>
+
+        <View style="@style/Divider" />
+
+        <LinearLayout
             style="@style/ItemLayout">
 
             <TextView
@@ -46,7 +58,6 @@
         <View style="@style/Divider" />
 
         <LinearLayout
-            android:id="@+id/layout_password"
             style="@style/ItemLayout">
 
             <TextView

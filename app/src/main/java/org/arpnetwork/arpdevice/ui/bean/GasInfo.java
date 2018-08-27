@@ -21,14 +21,7 @@ import java.math.BigInteger;
 
 public class GasInfo {
     private String gasPriceGwei;
-    private String gasLimit;
     private String ethToYuanRate;
-
-    public GasInfo(String gasPriceGwei, String gasLimit, String ethToYuanRate) {
-        this.gasPriceGwei = gasPriceGwei;
-        this.gasLimit = gasLimit;
-        this.ethToYuanRate = ethToYuanRate;
-    }
 
     public BigDecimal getGasPriceGwei() {
         return new BigDecimal(gasPriceGwei);
@@ -36,5 +29,9 @@ public class GasInfo {
 
     public BigDecimal getEthToYuanRate() {
         return new BigDecimal(ethToYuanRate);
+    }
+
+    public static BigDecimal getDefaultPriceGwei() {
+        return new BigDecimal("1.0");
     }
 }

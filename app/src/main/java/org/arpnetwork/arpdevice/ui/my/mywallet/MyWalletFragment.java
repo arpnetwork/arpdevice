@@ -74,6 +74,9 @@ public class MyWalletFragment extends BaseFragment {
         Wallet myWallet = Wallet.get();
         nameText.setText(myWallet.getName());
 
+        TextView addrText = (TextView) findViewById(R.id.tv_addr);
+        addrText.setText(myWallet.getAddress());
+
         getARPBalance(myWallet.getAddress());
 
         final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);

@@ -53,6 +53,7 @@
     <string name="no_charging">Please make sure your device is charging</string>
 
     <!-- my wallet -->
+    <string name="wallet_addr">Address</string>
     <string name="ARP_balance">ARP account</string>
     <string name="ETH_balance">ETH account</string>
     <string name="loading_balance">loading</string>

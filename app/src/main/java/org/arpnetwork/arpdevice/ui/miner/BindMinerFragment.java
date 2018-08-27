@@ -49,6 +49,7 @@ import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
+import org.arpnetwork.arpdevice.ui.bean.GasInfo;
 import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
@@ -171,7 +172,9 @@ public class BindMinerFragment extends BaseFragment {
                     if (mBoundMiner != null || StateHolder.getTaskByState(StateHolder.STATE_BIND_SUCCESS) != null) {
                         showMessageAlertDialog(null, getString(R.string.bind_change_bind_msg), getString(R.string.ok), null, null, null);
                     } else {
-                        loadGasInfo();
+                        Miner miner = mAdapter.getItem(mClickPosition);
+                        String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
+                        loadPromiseForBind(url, miner.getAddress());
                     }
                 }
             }
@@ -256,22 +259,23 @@ public class BindMinerFragment extends BaseFragment {
         mOkHttpUtils.get(Config.API_URL, mGasTag, new SimpleCallback<GasInfoResponse>() {
             @Override
             public void onFailure(Request request, Exception e) {
-                if (getActivity() != null) {
-                    UIHelper.showToast(getActivity(), getString(R.string.load_gas_failed));
-                }
+                checkBalance(Util.getEthCost(GasInfo.getDefaultPriceGwei(),
+                        ARPRegistry.estimateBindDeviceGasLimit(mAdapter.getItem(mClickPosition).getAddress(),
+                                mBindPromise)).doubleValue());
             }
 
             @Override
             public void onSuccess(Response response, GasInfoResponse result) {
-                // FIXME: update gas limit
-                checkBalance(Util.getEthCost(result.data.getGasPriceGwei(), new BigInteger("400000")).doubleValue());
+                checkBalance(Util.getEthCost(result.data.getGasPriceGwei(),
+                        ARPRegistry.estimateBindDeviceGasLimit(mAdapter.getItem(mClickPosition).getAddress(),
+                                mBindPromise)).doubleValue());
             }
 
             @Override
             public void onError(Response response, int code, Exception e) {
-                if (getActivity() != null) {
-                    UIHelper.showToast(getActivity(), getString(R.string.load_gas_failed));
-                }
+                checkBalance(Util.getEthCost(GasInfo.getDefaultPriceGwei(),
+                        ARPRegistry.estimateBindDeviceGasLimit(mAdapter.getItem(mClickPosition).getAddress(),
+                                mBindPromise)).doubleValue());
             }
         });
     }
@@ -439,8 +443,7 @@ public class BindMinerFragment extends BaseFragment {
 
                     if (balance != null && Convert.fromWei(balance.toString(), Convert.Unit.ETHER).doubleValue() >= LOCK_ARP) {
                         Miner miner = mAdapter.getItem(mClickPosition);
-                        String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
-                        loadPromiseForBind(url, miner.getAddress());
+                        showPayEthDialog(miner.getAddress(), getString(R.string.bind_message), OPERATION_BIND);
                     } else {
                         showErrorAlertDialog(null, getString(R.string.bind_miner_error_balance_insufficient));
                     }
@@ -457,8 +460,7 @@ public class BindMinerFragment extends BaseFragment {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         mBindPromise = bindPromise;
-                        Miner miner = mAdapter.getItem(mClickPosition);
-                        showPayEthDialog(miner.getAddress(), getString(R.string.bind_message), OPERATION_BIND);
+                        loadGasInfo();
                     }
                 })
                 .show();
