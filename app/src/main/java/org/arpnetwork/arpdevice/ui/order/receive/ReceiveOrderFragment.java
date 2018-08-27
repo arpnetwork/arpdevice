@@ -37,9 +37,6 @@ import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
-import org.arpnetwork.arpdevice.contracts.ARPBank;
-import org.arpnetwork.arpdevice.contracts.ARPRegistry;
-import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.device.DeviceManager;
@@ -51,18 +48,12 @@ import org.arpnetwork.arpdevice.server.http.HttpServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
-import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 
 import java.math.BigInteger;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener {
     private static final String TAG = ReceiveOrderFragment.class.getSimpleName();
-
-    private static final int PERIOD = 3600000;
 
     private TextView mOrderStateView;
 
@@ -70,7 +61,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private HttpServer mHttpServer;
     private AppManager mAppManager;
     private DApp mDApp;
-    private Timer mTimer;
 
     private BigInteger mLastAmount = BigInteger.ZERO;
     private BigInteger mReceivedAmount = BigInteger.ZERO;
@@ -80,6 +70,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private TouchLocalReceiver mTouchLocalReceiver;
     private ChargingReceiver mChargingReceiver;
+    private MinerStateChangedReceiver mStateChangedReceiver;
 
     private Handler mHandler = new Handler();
 
@@ -103,12 +94,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
-        loadAllowance(mStartServiceRunnable);
+        startDeviceService();
+        mOrderStateView.setText(R.string.connecting_miners);
     }
 
     @Override
     public void onDestroy() {
-        mStartServiceRunnable = null;
         stopDeviceService();
         unregisterReceiver();
 
@@ -140,12 +131,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         dispatcher.setAppManager(mAppManager);
         dispatcher.setPromiseHandler(new PromiseHandler(this));
         startHttpServer(dispatcher);
-
-        startTimer();
     }
 
     private void stopDeviceService() {
-        stopTimer();
         mHandler.removeCallbacksAndMessages(null);
         DownloadManager.getInstance().cancelAll();
         stopHttpServer();
@@ -167,6 +155,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private void stopHttpServer() {
         if (mHttpServer != null) {
             mHttpServer.stop();
+            mHttpServer = null;
         }
     }
 
@@ -178,51 +167,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private void stopRecord() {
         Touch.getInstance().stopRecord();
-    }
-
-    private void startTimer() {
-        mTimer = new Timer();
-        mTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                loadAllowance(null);
-            }
-        }, PERIOD, PERIOD);
-    }
-
-    private void stopTimer() {
-        if (mTimer != null) {
-            mTimer.cancel();
-            mTimer = null;
-        }
-    }
-
-    private void loadAllowance(final Runnable successRunnable) {
-        String spender = Wallet.get().getAddress();
-        Miner miner = BindMinerHelper.getBound(spender);
-
-        BankAllowance allowance = ARPBank.allowance(miner.getAddress(), spender);
-        if (allowance != null) {
-            Promise promise = Promise.get();
-            if (promise != null && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) != 0) {
-                Promise.clear();
-            }
-
-            if (!TextUtils.isEmpty(allowance.proxy)
-                    && (allowance.proxy.equals("0x0000000000000000000000000000000000000000") || allowance.proxy.equals(ARPRegistry.CONTRACT_ADDRESS))
-                    && (allowance.expired.longValue() == 0 || allowance.expired.longValue() >= (System.currentTimeMillis() / 1000 + 24 * 60 * 60))
-                    && allowance.amount.subtract(allowance.paid).compareTo(BigInteger.ZERO) > 0) {
-                allowance.save();
-
-                if (successRunnable != null) {
-                    successRunnable.run();
-                }
-            } else {
-                finish();
-            }
-        } else {
-            finish();
-        }
     }
 
     private void postRequestPayment(final DApp dApp) {
@@ -321,14 +265,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             finish();
         }
     }
-
-    private Runnable mStartServiceRunnable = new Runnable() {
-        @Override
-        public void run() {
-            startDeviceService();
-            mOrderStateView.setText(R.string.connecting_miners);
-        }
-    };
 
     private DataServer.ConnectionListener mConnectionListener = new DataServer.ConnectionListener() {
         @Override
@@ -436,6 +372,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                 mChargingReceiver,
                 chargingIntentFilter);
+
+        IntentFilter stateChangedIntentFilter = new IntentFilter(Constant.BROADCAST_ACTION_STATE_CHANGED);
+        mStateChangedReceiver = new MinerStateChangedReceiver();
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
+                mStateChangedReceiver,
+                stateChangedIntentFilter);
     }
 
     private void unregisterReceiver() {
@@ -446,6 +388,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mChargingReceiver != null) {
             LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mChargingReceiver);
             mChargingReceiver = null;
+        }
+        if (mStateChangedReceiver != null) {
+            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mStateChangedReceiver);
+            mStateChangedReceiver = null;
         }
     }
 
@@ -470,12 +416,22 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     }
 
-    public class ChargingReceiver extends BroadcastReceiver {
+    private class ChargingReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean isCharging = intent.getBooleanExtra(Constant.EXTENDED_DATA_CHARGING, true);
             if (!isCharging) {
                 releaseDApp();
+            }
+        }
+    }
+
+    private class MinerStateChangedReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Constant.STATE_INVALID.equals(intent.getAction())) {
+                stopDeviceService();
+                showAlertDialog(getString(R.string.invalid_miner));
             }
         }
     }

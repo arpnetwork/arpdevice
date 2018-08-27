@@ -81,6 +81,11 @@ public class Miner {
         return minerInfo;
     }
 
+    public boolean expiredValid() {
+        BigInteger nextDay = new BigInteger(String.valueOf(System.currentTimeMillis() / 1000 + 24 * 60 * 60));
+        return expired != null && (expired.compareTo(BigInteger.ZERO) == 0 || expired.compareTo(nextDay) >= 0);
+    }
+
     @Override
     public int hashCode() {
         return address.hashCode();

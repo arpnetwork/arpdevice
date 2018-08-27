@@ -112,5 +112,4 @@ public class Promise {
     public static void clear() {
         PreferenceManager.getInstance().putString(KEY, "");
     }
-
 }

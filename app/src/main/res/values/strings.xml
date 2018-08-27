@@ -51,6 +51,7 @@
     <string name="high">High</string>
     <string name="no_bind_miner">No bind miner</string>
     <string name="no_charging">Please make sure your device is charging</string>
+    <string name="invalid_miner">The miner you have bound has stopped service, please bind the new miner</string>
 
     <!-- my wallet -->
     <string name="wallet_addr">Address</string>

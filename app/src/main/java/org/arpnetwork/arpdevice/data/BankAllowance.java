@@ -21,6 +21,7 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 
 import java.math.BigInteger;
@@ -33,6 +34,23 @@ public class BankAllowance {
     public BigInteger paid;
     public BigInteger expired;
     public String proxy;
+
+    public boolean valid() {
+        return proxyValid() && expiredValid() && amountValid();
+    }
+
+    public boolean proxyValid() {
+        return proxy != null && (proxy.equals("0x0000000000000000000000000000000000000000") || proxy.equals(ARPRegistry.CONTRACT_ADDRESS));
+    }
+
+    public boolean expiredValid() {
+        BigInteger nextDay = new BigInteger(String.valueOf(System.currentTimeMillis() / 1000 + 24 * 60 * 60));
+        return expired != null && (expired.compareTo(BigInteger.ZERO) == 0 || expired.compareTo(nextDay) >= 0);
+    }
+
+    public boolean amountValid() {
+        return amount != null && (amount.subtract(paid).compareTo(BigInteger.ZERO) > 0);
+    }
 
     public void save() {
         String json = new Gson().toJson(this);
@@ -48,6 +66,10 @@ public class BankAllowance {
             }
         }
         return null;
+    }
+
+    public static void clear() {
+        PreferenceManager.getInstance().putString(KEY, "");
     }
 
     @Override

@@ -34,6 +34,8 @@ import android.widget.TextView;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.data.BankAllowance;
+import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
@@ -174,6 +176,14 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 .show();
     }
 
+    private void showAlertDialog(int resId) {
+        new AlertDialog.Builder(getContext())
+                .setMessage(resId)
+                .setPositiveButton(R.string.ok, null)
+                .create()
+                .show();
+    }
+
     private void showPasswordDialog() {
         final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
         builder.setOnClickListener(new DialogInterface.OnClickListener() {
@@ -208,10 +218,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         builder.create().show();
     }
 
-    private boolean isMinerBound() {
-        return BindMinerHelper.getBound(Wallet.get().getAddress()) != null;
-    }
-
     private boolean isCharging() {
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = getActivity().registerReceiver(null, intentFilter);
@@ -241,10 +247,15 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_order:
+                Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
                 if (!isCharging()) {
                     UIHelper.showToast(getActivity(), getString(R.string.no_charging));
-                } else if (isMinerBound()) {
-                    if (!SignUtil.signerExists()) {
+                } else if (!BankAllowance.get().valid()) {
+                    showAlertDialog(R.string.invalid_miner);
+                } else if (miner != null) {
+                    if (!miner.expiredValid()) {
+                        showAlertDialog(R.string.invalid_miner);
+                    } else if (!SignUtil.signerExists()) {
                         showPasswordDialog();
                     } else {
                         startActivity(ReceiveOrderActivity.class);
