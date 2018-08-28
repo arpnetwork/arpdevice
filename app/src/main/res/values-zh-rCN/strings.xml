@@ -40,7 +40,7 @@
     <string name="import_success">导入成功</string>
     <string name="import_failed">导入失败</string>
 
-    !-- 我的 -->
+    <!-- 我的 -->
     <string name="my">我的</string>
     <string name="my_wallet">我的钱包</string>
     <string name="order_price">设置接单价格</string>
@@ -53,6 +53,7 @@
     <string name="no_bind_miner">未绑定矿工</string>
     <string name="no_charging">请连接充电器</string>
     <string name="invalid_miner">您绑定的矿工已停止服务，请绑定新的矿工</string>
+    <string name="unbinding_miner">解绑矿工中，暂不能开始接单</string>
 
     <!-- 我的钱包 -->
     <string name="wallet_addr">地址</string>
@@ -149,7 +150,7 @@
     <string name="exit_order">退出接单</string>
     <string name="confirm_to_exit">确定退出接单?</string>
 
-    <!-- exchange -->
+    <!-- 兑换 -->
     <string name="exchange_tip_title">请尽快兑换凭证</string>
     <string name="exchange_tip_msg">您已经累积%s个ARP凭证，绑定的矿工有效期为%s，是否兑换</string>
     <string name="exchange_tip_cancel">暂不兑换</string>

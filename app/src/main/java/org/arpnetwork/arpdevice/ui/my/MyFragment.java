@@ -42,6 +42,7 @@ import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
+import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
@@ -253,7 +254,9 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 } else if (!BankAllowance.get().valid()) {
                     showAlertDialog(R.string.invalid_miner);
                 } else if (miner != null) {
-                    if (!miner.expiredValid()) {
+                    if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+                        showAlertDialog(R.string.unbinding_miner);
+                    } else if (!miner.expiredValid()) {
                         showAlertDialog(R.string.invalid_miner);
                     } else if (!SignUtil.signerExists()) {
                         showPasswordDialog();

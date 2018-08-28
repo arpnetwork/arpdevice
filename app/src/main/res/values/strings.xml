@@ -53,6 +53,7 @@
     <string name="no_bind_miner">No bind miner</string>
     <string name="no_charging">Please make sure your device is charging</string>
     <string name="invalid_miner">The miner you have bound has stopped service, please bind the new miner</string>
+    <string name="unbinding_miner">During unbinding miner, can not start receiving order</string>
 
     <!-- my wallet -->
     <string name="wallet_addr">Address</string>
