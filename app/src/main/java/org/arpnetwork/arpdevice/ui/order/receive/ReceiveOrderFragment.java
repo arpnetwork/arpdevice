@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.ui.order.receive;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -224,7 +225,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void showAlertDialog(String msg) {
-        new AlertDialog.Builder(getContext())
+        Dialog dialog = new AlertDialog.Builder(getContext())
                 .setMessage(msg)
                 .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                     @Override
@@ -232,8 +233,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                         finish();
                     }
                 })
-                .create()
-                .show();
+                .create();
+        dialog.setCancelable(false);
+        dialog.show();
     }
 
     private void showExitDialog() {

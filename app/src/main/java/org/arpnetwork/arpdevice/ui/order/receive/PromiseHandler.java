@@ -67,7 +67,7 @@ public class PromiseHandler {
                 && !TextUtils.isEmpty(promise.getFrom())
                 && !TextUtils.isEmpty(promise.getTo())
                 && !TextUtils.isEmpty(promise.getAmount())
-                && Numeric.cleanHexPrefix(promise.getCid()).equals(allowance.id.toString(16))
+                && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) == 0
                 && Numeric.cleanHexPrefix(promise.getFrom()).equals(Numeric.cleanHexPrefix(miner.getAddress()))
                 && Numeric.cleanHexPrefix(promise.getTo()).equals(Numeric.cleanHexPrefix(walletAddr))
                 && VerifyAPI.isEffectivePromise(promise)
