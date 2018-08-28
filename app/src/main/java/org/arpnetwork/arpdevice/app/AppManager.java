@@ -87,7 +87,9 @@ public class AppManager {
 
                 @Override
                 public void onError(Exception e) {
-                    DAppApi.appInstalled(packageName, DOWNLOAD_FAILED, mDApp);
+                    if (mDApp != null) {
+                        DAppApi.appInstalled(packageName, DOWNLOAD_FAILED, mDApp);
+                    }
                 }
             });
         } else {
@@ -112,6 +114,7 @@ public class AppManager {
 
     public void clear() {
         uninstallAll();
+        mPackageSet.clear();
         mDApp = null;
     }
 
@@ -121,12 +124,16 @@ public class AppManager {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 mPackageSet.add(packageName);
-                DAppApi.appInstalled(packageName, SUCCESS, mDApp);
+                if (mDApp == null) {
+                    DAppApi.appInstalled(packageName, SUCCESS, mDApp);
+                }
             }
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
-                DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
+                if (mDApp == null) {
+                    DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
+                }
             }
 
             @Override
