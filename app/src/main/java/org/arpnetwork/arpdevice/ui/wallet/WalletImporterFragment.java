@@ -17,6 +17,8 @@
 package org.arpnetwork.arpdevice.ui.wallet;
 
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -62,6 +64,19 @@ public class WalletImporterFragment extends BaseFragment {
         mEditWalletName = (EditText) findViewById(R.id.et_wallet_name);
         mEditPassword = (EditText) findViewById(R.id.et_password);
         mEditConfirmedPassword = (EditText) findViewById(R.id.et_confirm_password);
+
+        InputFilter filter = new InputFilter() {
+            @Override
+            public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                if (source.equals(" ")) {
+                    return "";
+                }
+                return null;
+            }
+        };
+        mEditPassword.setFilters(new InputFilter[]{filter});
+        mEditConfirmedPassword.setFilters(new InputFilter[]{filter});
+
         mBtnImport = (Button) findViewById(R.id.btn_import);
         mBtnImport.setOnClickListener(mOnClickImportListener);
     }
@@ -94,8 +109,8 @@ public class WalletImporterFragment extends BaseFragment {
     private void importWallet() {
         String privateKey = mEditPrivateKey.getText().toString().trim();
         String walletName = mEditWalletName.getText().toString().trim();
-        String password = mEditPassword.getText().toString().trim();
-        String confirmedPassword = mEditConfirmedPassword.getText().toString().trim();
+        String password = mEditPassword.getText().toString();
+        String confirmedPassword = mEditConfirmedPassword.getText().toString();
 
         if (checkInputs(privateKey, walletName, password, confirmedPassword)) {
             showProgressDialog(getString(R.string.importing), false);
