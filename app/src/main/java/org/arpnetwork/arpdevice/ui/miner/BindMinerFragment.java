@@ -215,9 +215,9 @@ public class BindMinerFragment extends BaseFragment {
                     .show();
                 return;
             }
-            BigInteger unexchanged = amount.subtract(allowance.paid);
-            if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
-                String message = String.format(getString(R.string.exchange_change_miner_msg), unexchanged);
+            final BigInteger unExchanged = Convert.fromWei(amount.subtract(allowance.paid).toString(), Convert.Unit.ETHER).toBigInteger();
+            if (unExchanged.compareTo(BigInteger.ZERO) > 0) {
+                String message = String.format(getString(R.string.exchange_change_miner_msg), unExchanged);
                 MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
                 builder.setTitle(getString(R.string.exchange_change_miner_title))
                         .setMessage(message)
@@ -232,7 +232,7 @@ public class BindMinerFragment extends BaseFragment {
                         .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                finish();
+                                showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
                             }
                         })
                         .create()
@@ -556,7 +556,9 @@ public class BindMinerFragment extends BaseFragment {
         }, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                getActivity().finish();
+                if (opType != OPERATION_BIND) {
+                    getActivity().finish();
+                }
             }
         });
     }
