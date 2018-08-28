@@ -140,6 +140,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         DataServer.getInstance().shutdown();
         if (mDeviceManager != null) {
             mDeviceManager.close();
+            mDeviceManager.setOnDeviceStateChangedListener(null);
         }
     }
 
