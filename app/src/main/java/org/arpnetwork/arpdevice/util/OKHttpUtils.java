@@ -39,11 +39,13 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OKHttpUtils {
+    private static final int DEFAULT_RETRY_TIMES = 1;
     private static final MediaType JSON = MediaType.parse("application/json");
     private static OkHttpClient mOkHttpClient;
 
     private final Gson mGson = new Gson();
     private Handler mHandler = new Handler(Looper.getMainLooper());
+    private int mRetryTimes = DEFAULT_RETRY_TIMES;
 
     private static synchronized OkHttpClient getOkHttpClient() {
         if (mOkHttpClient == null) {
@@ -173,7 +175,13 @@ public class OKHttpUtils {
             @Override
             public void onFailure(Call call, IOException e) {
                 if (callback == null) return;
-                callbackFailure(callback, request, e);
+
+                if (mRetryTimes == DEFAULT_RETRY_TIMES) {
+                    mRetryTimes--;
+                    request(request, callback);
+                } else {
+                    callbackFailure(callback, request, e);
+                }
             }
 
             @Override

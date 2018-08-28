@@ -126,9 +126,9 @@ public class DeviceConnection {
         mChannelFuture.removeListener(mChannelFutureListener);
         try {
             mChannelFuture.sync().channel().close().sync();
+            mWorkerGroup.shutdownGracefully();
         } catch (Exception e) {
         }
-        mWorkerGroup.shutdownGracefully();
     }
 
     /**
@@ -148,7 +148,10 @@ public class DeviceConnection {
             throw new IllegalStateException();
         }
 
-        mChannelFuture.channel().writeAndFlush(msg);
+        try {
+            mChannelFuture.channel().writeAndFlush(msg);
+        } catch (Exception e) {
+        }
     }
 
     private static class ConnectionHandler extends ChannelInboundHandlerAdapter {

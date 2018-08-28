@@ -66,7 +66,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private BigInteger mReceivedAmount = BigInteger.ZERO;
     private int mQuality;
     private int mTotalTime;
-    private boolean mRetryRequestPayment;
 
     private TouchLocalReceiver mTouchLocalReceiver;
     private ChargingReceiver mChargingReceiver;
@@ -171,7 +170,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void postRequestPayment(final DApp dApp) {
-        mRetryRequestPayment = false;
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -187,18 +185,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void requestPayment(final DApp dApp) {
-        Runnable failedRunnable = new Runnable() {
+        DAppApi.requestPayment(dApp, new Runnable() {
             @Override
             public void run() {
-                if (!mRetryRequestPayment) {
-                    DAppApi.requestPayment(dApp, this);
-                    mRetryRequestPayment = true;
-                } else {
-                    releaseDApp();
-                }
+                releaseDApp();
             }
-        };
-        DAppApi.requestPayment(dApp, failedRunnable);
+        });
         postRequestPayment(dApp);
     }
 
