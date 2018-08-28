@@ -133,7 +133,7 @@ public class MyWalletFragment extends BaseFragment {
             Log.e(TAG, "withdraw error:" + e.getCause());
         }
 
-        boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
+        boolean success = receipt != null && TransactionAPI.isStatusOK(receipt.getStatus());
         hideProgressDialog();
         if (success) {
             mWithdrawBtn.setVisibility(View.GONE);

@@ -297,7 +297,7 @@ public class MyEarningFragment extends BaseFragment {
         Miner miner = BindMinerHelper.getBound(address);
         if (miner != null) {
             BankAllowance allowance = ARPBank.allowance(miner.getAddress(), Wallet.get().getAddress());
-            if (amount.compareTo(allowance.paid) > 0) {
+            if (allowance != null && amount.compareTo(allowance.paid) > 0) {
                 mUnexchanged = amount.subtract(allowance.paid);
             } else {
                 mUnexchanged = new BigInteger("0");

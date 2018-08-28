@@ -200,8 +200,21 @@ public class BindMinerFragment extends BaseFragment {
 
         final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
         String spender = Wallet.get().getAddress();
-        if (mBoundMiner != null) {
+        if (mBoundMiner != null && amount.compareTo(BigInteger.ZERO) > 0) {
             BankAllowance allowance = ARPBank.allowance(mBoundMiner.getAddress(), spender);
+            if (allowance == null) {
+                new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.network_error)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .setCancelable(false)
+                    .show();
+                return;
+            }
             BigInteger unexchanged = amount.subtract(allowance.paid);
             if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
                 String message = String.format(getString(R.string.exchange_change_miner_msg), unexchanged);

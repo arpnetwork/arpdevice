@@ -53,6 +53,7 @@ public class ARPContract extends Contract {
                     .sendAsync().get();
         } catch (Exception e) {
             Log.e(TAG, "allowance(" + owner + ", " + spender + "), error:" + e.getCause());
+            return new BigInteger("0");
         }
 
         List<Type> someTypes = FunctionReturnDecoder.decode(
@@ -71,6 +72,7 @@ public class ARPContract extends Contract {
                     .sendAsync().get();
         } catch (Exception e) {
             Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause());
+            return new BigInteger("0");
         }
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
