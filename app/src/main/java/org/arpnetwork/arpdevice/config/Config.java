@@ -26,8 +26,8 @@ public class Config {
     public static final String API_SERVER_INFO = "server_info";
     public static final String API_SERVER_BIND_PROMISE = "server_bindPromise";
 
-    public static final int DATA_SERVER_PORT = 9000;
-    public static final int HTTP_SERVER_PORT = 9001;
+    public static final int DATA_SERVER_PORT = 33333;
+    public static final int HTTP_SERVER_PORT = 33334;
 
     public static final int ORDER_PRICE_LOW = 0;
     public static final int ORDER_PRICE_HIGH = 100;

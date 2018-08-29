@@ -21,6 +21,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/beans.xml'
+    }
 }
 
 repositories {
@@ -33,6 +37,9 @@ repositories {
     maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
     //activeandroid end
     maven { url "https://raw.githubusercontent.com/umeng/mvn-repo-umeng/master/repository" }
+    maven {
+        url 'http://4thline.org/m2'
+    }
 }
 
 
@@ -40,6 +47,12 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation project(':adb')
+
+    implementation 'org.fourthline.cling:cling-core:2.1.1'
+    implementation 'org.fourthline.cling:cling-support:2.1.1'
+    implementation 'org.eclipse.jetty:jetty-server:8.1.0.v20120127'
+    implementation 'org.eclipse.jetty:jetty-servlet:8.1.0.v20120127'
+    implementation 'org.eclipse.jetty:jetty-client:8.1.0.v20120127'
 
     implementation 'io.netty:netty-all:4.1.25.Final'
     implementation 'com.google.code.gson:gson:2.3.1'
