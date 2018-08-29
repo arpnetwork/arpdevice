@@ -65,6 +65,8 @@
     <string name="get_balance_error_msg">Error occurred when getting balance</string>
     <string name="withdraw_success">Withdraw success</string>
     <string name="withdraw_failed">Withdraw failed</string>
+    <string name="unexchange_tip_changing_wallet">You have accumulated %.2f ARP, please exchange your promise. if you cancel the exchange, the promise will become invalid automatically</string>
+    <string name="tip_changing_wallet">You have accumulated some ARP. please make sure the promise have been exchanged, or it would be invalid after wallet changed.</string>
 
     <!-- bind miner -->
     <string name="bind_miner_error_balance_insufficient">Balance insufficient for binding miner.</string>
@@ -158,7 +160,7 @@
     <string name="exchange_tip_msg">You have accumulated %s ARP,the bound miner expired is %s</string>
     <string name="exchange_tip_cancel">Pending exchange</string>
     <string name="exchange_change_miner_title">Please exchange your promise before change your miner</string>
-    <string name="exchange_change_miner_msg">You have accumulated %s ARP,please exchange your promise. if you cancel the exchange,the promise will become invalid automatically</string>
+    <string name="exchange_change_miner_msg">You have accumulated %.2f ARP,please exchange your promise. if you cancel the exchange,the promise will become invalid automatically</string>
     <string name="exchange_change_miner_cancel">Abandon</string>
 
 </resources>

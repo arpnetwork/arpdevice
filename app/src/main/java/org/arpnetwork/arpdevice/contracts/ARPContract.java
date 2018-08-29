@@ -4,7 +4,6 @@ import android.util.Log;
 
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
-import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;

@@ -42,7 +42,6 @@ import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.config.Constant;
-import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.dialog.MessageDialog;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.data.BankAllowance;
@@ -193,17 +192,11 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void getUnexchange() {
-        if (Promise.get() == null) {
-            showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
-            return;
-        }
-
-        final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
-        String spender = Wallet.get().getAddress();
-        if (mBoundMiner != null && amount.compareTo(BigInteger.ZERO) > 0) {
-            BankAllowance allowance = ARPBank.allowance(mBoundMiner.getAddress(), spender);
-            if (allowance == null) {
-                new AlertDialog.Builder(getContext())
+        BigInteger unexchanged = null;
+        try {
+            unexchanged = ARPBank.getUnexchange();
+        } catch (Exception e) {
+            new AlertDialog.Builder(getContext())
                     .setMessage(R.string.network_error)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
@@ -213,33 +206,32 @@ public class BindMinerFragment extends BaseFragment {
                     })
                     .setCancelable(false)
                     .show();
-                return;
-            }
-            final BigInteger unExchanged = Convert.fromWei(amount.subtract(allowance.paid).toString(), Convert.Unit.ETHER).toBigInteger();
-            if (unExchanged.compareTo(BigInteger.ZERO) > 0) {
-                String message = String.format(getString(R.string.exchange_change_miner_msg), unExchanged);
-                MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
-                builder.setTitle(getString(R.string.exchange_change_miner_title))
-                        .setMessage(message)
-                        .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                Intent intent = new Intent();
-                                intent.setClass(getActivity(), MyEarningActivity.class);
-                                startActivity(intent);
-                            }
-                        })
-                        .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
-                            }
-                        })
-                        .create()
-                        .show();
-            } else {
-                showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
-            }
+            return;
+        }
+        if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+            String message = String.format(getString(R.string.exchange_change_miner_msg),
+                    Convert.fromWei(unexchanged.toString(), Convert.Unit.ETHER).floatValue());
+            MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
+            builder.setTitle(getString(R.string.exchange_change_miner_title))
+                    .setMessage(message)
+                    .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent();
+                            intent.setClass(getActivity(), MyEarningActivity.class);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
+                        }
+                    })
+                    .create()
+                    .show();
+        } else {
+            showPayEthDialog(getString(R.string.bind_unbind_title), getString(R.string.bind_unbind_msg), OPERATION_UNBIND);
         }
     }
 
@@ -540,7 +532,7 @@ public class BindMinerFragment extends BaseFragment {
             public void onPay(BigInteger priceWei, String password) {
                 mGasPriceWei = priceWei;
                 if (opType == OPERATION_BIND) {
-                    if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) { // 4小时内
+                    if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) {
                         showErrorAlertDialog(null, getString(R.string.bind_apply_expired));
                     } else {
                         startBindService(password);

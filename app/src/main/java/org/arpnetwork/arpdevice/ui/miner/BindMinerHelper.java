@@ -55,8 +55,8 @@ public class BindMinerHelper {
                     miner.setExpired(server.getValue4());
                 }
             }
-        } catch (ExecutionException e) {
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
+            return null;
         }
         return miner;
     }

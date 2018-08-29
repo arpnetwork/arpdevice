@@ -65,6 +65,8 @@
     <string name="get_balance_error_msg">获取金额失败</string>
     <string name="withdraw_success">取回成功</string>
     <string name="withdraw_failed">取回失败</string>
+    <string name="unexchange_tip_changing_wallet">您已经累积%.2f个ARP凭证，请在更换钱包前兑换，如选择放弃兑换，该凭证自动作废</string>
+    <string name="tip_changing_wallet">检测到您有ARP凭证，请确认是否已兑换，更换钱包后凭证自动作废</string>
 
     <!-- 绑定矿工 -->
     <string name="bind_miner_error_balance_insufficient">账户余额不足以支撑绑定矿工请求</string>
@@ -155,6 +157,6 @@
     <string name="exchange_tip_msg">您已经累积%s个ARP凭证，绑定的矿工有效期为%s，是否兑换</string>
     <string name="exchange_tip_cancel">暂不兑换</string>
     <string name="exchange_change_miner_title">更换矿工前请先将凭证兑换ARP</string>
-    <string name="exchange_change_miner_msg">您已经累积%s个ARP凭证，请在更换矿工前兑换，如选择放弃兑换，该凭证自动作废</string>
+    <string name="exchange_change_miner_msg">您已经累积%.2f个ARP凭证，请在更换矿工前兑换，如选择放弃兑换，该凭证自动作废</string>
     <string name="exchange_change_miner_cancel">放弃兑换</string>
 </resources>

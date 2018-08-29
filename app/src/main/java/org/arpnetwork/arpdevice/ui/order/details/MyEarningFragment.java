@@ -16,6 +16,8 @@
 
 package org.arpnetwork.arpdevice.ui.order.details;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -31,13 +33,10 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
-import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
-import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.spongycastle.util.encoders.Hex;
@@ -290,20 +289,21 @@ public class MyEarningFragment extends BaseFragment {
     }
 
     private void getUnexchange() {
-        if (Promise.get() == null) return;
-
-        final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
-        String address = Wallet.get().getAddress();
-        Miner miner = BindMinerHelper.getBound(address);
-        if (miner != null) {
-            BankAllowance allowance = ARPBank.allowance(miner.getAddress(), Wallet.get().getAddress());
-            if (allowance != null && amount.compareTo(allowance.paid) > 0) {
-                mUnexchanged = amount.subtract(allowance.paid);
-            } else {
-                mUnexchanged = new BigInteger("0");
-            }
-            float show = Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue();
-            mHeaderView.setUnexchanged(show);
+        mUnexchanged = BigInteger.ZERO;
+        try {
+            mUnexchanged = ARPBank.getUnexchange();
+        } catch (Exception e) {
+            new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.network_error)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .setCancelable(true)
+                    .show();
         }
+        mHeaderView.setUnexchanged(Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue());
     }
 }

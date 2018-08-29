@@ -34,9 +34,11 @@ import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.dialog.MessageDialog;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
+import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
 import org.web3j.crypto.Credentials;
@@ -91,7 +93,7 @@ public class MyWalletFragment extends BaseFragment {
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                resetWallet();
+                getUnexchange();
             }
         });
 
@@ -121,6 +123,52 @@ public class MyWalletFragment extends BaseFragment {
         Intent intent = new Intent(getActivity(), WalletImporterActivity.class);
         startActivity(intent);
         finish();
+    }
+
+    private void getUnexchange() {
+        BigInteger unexchanged = BigInteger.ZERO;
+        try {
+            unexchanged = ARPBank.getUnexchange();
+        } catch (Exception e) {
+            Log.d(TAG, "getUnexchange: error:" + e.getMessage());
+            new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.tip_changing_wallet)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            resetWallet();
+                        }
+                    })
+                    .setCancelable(true)
+                    .show();
+            return;
+        }
+
+        if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+            String message = String.format(getString(R.string.unexchange_tip_changing_wallet),
+                    Convert.fromWei(unexchanged.toString(), Convert.Unit.ETHER).floatValue());
+            MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
+            builder.setTitle(getString(R.string.exchange_change_miner_title))
+                    .setMessage(message)
+                    .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent();
+                            intent.setClass(getActivity(), MyEarningActivity.class);
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            resetWallet();
+                        }
+                    })
+                    .create()
+                    .show();
+        } else {
+            resetWallet();
+        }
     }
 
     private void withdraw(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {

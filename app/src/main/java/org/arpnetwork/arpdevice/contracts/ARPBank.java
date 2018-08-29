@@ -29,6 +29,8 @@ import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
+import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
@@ -209,6 +211,27 @@ public class ARPBank extends Contract {
 
         EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();
         return ethLog.getLogs();
+    }
+
+    public static BigInteger getUnexchange() throws Exception {
+        if (Promise.get() != null) {
+            final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
+            String spender = Wallet.get().getAddress();
+            if (amount.compareTo(BigInteger.ZERO) > 0) {
+                Miner miner = BindMinerHelper.getBound(spender);
+                if (miner == null) {
+                    throw new Exception("get miner error");
+                }
+
+                BankAllowance allowance = ARPBank.allowance(miner.getAddress(), spender);
+                if (allowance == null) {
+                    throw new Exception("get allowance error");
+                } else {
+                    return amount.subtract(allowance.paid);
+                }
+            }
+        }
+        return BigInteger.ZERO;
     }
 
     private RemoteCall<TransactionReceipt> withdraw(BigInteger amount) {
