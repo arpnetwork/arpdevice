@@ -33,11 +33,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.device.DeviceManager;
@@ -132,7 +134,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
         dispatcher.setAppManager(mAppManager);
-        dispatcher.setPromiseHandler(new PromiseHandler(this));
+        dispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
         startHttpServer(dispatcher);
     }
 
@@ -142,8 +144,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         stopHttpServer();
         DataServer.getInstance().shutdown();
         if (mDeviceManager != null) {
-            mDeviceManager.close();
             mDeviceManager.setOnDeviceStateChangedListener(null);
+            mDeviceManager.close();
         }
     }
 
@@ -259,7 +261,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onReceivePromise(Promise promise) {
         mReceivedAmount = new BigInteger(promise.getAmount(), 16);
 
-        if (!checkPromiseAmount()) {
+        if (checkPromiseAmount()) {
+            BankAllowance bankAllowance = BankAllowance.get();
+            BigInteger amount = bankAllowance.amount.multiply(new BigInteger("80")).divide(new BigInteger("100"));
+            if (mReceivedAmount.compareTo(amount) > 0) {
+                CustomApplication.sInstance.startMonitorService();
+            }
+        } else {
             finish();
         }
     }

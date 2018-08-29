@@ -56,21 +56,32 @@ public class MonitorService extends Service {
         super.onCreate();
 
         mHandler = new MyHandler();
-        mTimer = new Timer();
-
-        mTimer.schedule(mTimerTask, Config.MONITOR_MINER_INTERVAL, Config.MONITOR_MINER_INTERVAL);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        runTask();
+        startTimer();
         return START_STICKY;
     }
 
     @Override
     public void onDestroy() {
+        stopTimer();
+
         super.onDestroy();
-        mTimer.cancel();
+    }
+
+    private void startTimer() {
+        stopTimer();
+        mTimer = new Timer();
+        mTimer.schedule(mTimerTask, 0, Config.MONITOR_MINER_INTERVAL);
+    }
+
+    private void stopTimer() {
+        if (mTimer != null) {
+            mTimer.cancel();
+            mTimer = null;
+        }
     }
 
     private boolean getUnexchange(BankAllowance allowance, Miner miner, Promise promise) {
@@ -86,40 +97,36 @@ public class MonitorService extends Service {
         return false;
     }
 
-    private void runTask() {
-        String walletAddr = Wallet.get().getAddress();
-        Miner miner = BindMinerHelper.getBound(walletAddr);
-        if (miner != null) {
-            BankAllowance allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
-            if (allowance != null) {
-                allowance.save();
-
-                Promise promise = Promise.get();
-                if (promise != null && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) != 0) {
-                    Promise.clear();
-                    promise = null;
-                }
-
-                boolean exchange = false;
-                if (miner.getExpired().compareTo(BigInteger.ZERO) > 0
-                        && promise != null
-                        && !TextUtils.isEmpty(promise.getAmount())) {
-                    exchange = getUnexchange(allowance, miner, promise);
-                }
-
-                if (!exchange && (!allowance.valid() || !miner.expiredValid())) {
-                    Intent intent = new Intent();
-                    intent.setAction(Constant.BROADCAST_ACTION_STATE_CHANGED);
-                    LocalBroadcastManager.getInstance(CustomApplication.sInstance).sendBroadcast(intent);
-                }
-            }
-        }
-    }
-
     private TimerTask mTimerTask = new TimerTask() {
         @Override
         public void run() {
-            runTask();
+            String walletAddr = Wallet.get().getAddress();
+            Miner miner = BindMinerHelper.getBound(walletAddr);
+            if (miner != null) {
+                BankAllowance allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
+                if (allowance != null) {
+                    allowance.save();
+
+                    Promise promise = Promise.get();
+                    if (promise != null && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) != 0) {
+                        Promise.clear();
+                        promise = null;
+                    }
+
+                    boolean exchange = false;
+                    if (miner.getExpired().compareTo(BigInteger.ZERO) > 0
+                            && promise != null
+                            && !TextUtils.isEmpty(promise.getAmount())) {
+                        exchange = getUnexchange(allowance, miner, promise);
+                    }
+
+                    if (!exchange && (!allowance.valid() || !miner.expiredValid())) {
+                        Intent intent = new Intent();
+                        intent.setAction(Constant.BROADCAST_ACTION_STATE_CHANGED);
+                        LocalBroadcastManager.getInstance(CustomApplication.sInstance).sendBroadcast(intent);
+                    }
+                }
+            }
         }
     };
 

@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.ui.order.receive;
 
 import android.text.TextUtils;
 
+import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
@@ -29,14 +30,16 @@ import org.web3j.utils.Numeric;
 import java.math.BigInteger;
 
 public class PromiseHandler {
+    private Miner mMiner;
     private OnReceivePromiseListener mOnReceivePromiseListener;
 
     public interface OnReceivePromiseListener {
         void onReceivePromise(Promise promise);
     }
 
-    public PromiseHandler(OnReceivePromiseListener listener) {
+    public PromiseHandler(OnReceivePromiseListener listener, Miner miner) {
         mOnReceivePromiseListener = listener;
+        mMiner = miner;
     }
 
     public boolean processPromise(String promiseJson) {
@@ -55,7 +58,6 @@ public class PromiseHandler {
     private boolean checkPromise(Promise promise) {
         boolean res = false;
         String walletAddr = Wallet.get().getAddress();
-        Miner miner = BindMinerHelper.getBound(walletAddr);
         BankAllowance allowance = BankAllowance.get();
         Promise lastPromise = Promise.get();
         BigInteger lastAmount = BigInteger.ZERO;
@@ -68,7 +70,7 @@ public class PromiseHandler {
                 && !TextUtils.isEmpty(promise.getTo())
                 && !TextUtils.isEmpty(promise.getAmount())
                 && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) == 0
-                && Numeric.cleanHexPrefix(promise.getFrom()).equals(Numeric.cleanHexPrefix(miner.getAddress()))
+                && Numeric.cleanHexPrefix(promise.getFrom()).equals(Numeric.cleanHexPrefix(mMiner.getAddress()))
                 && Numeric.cleanHexPrefix(promise.getTo()).equals(Numeric.cleanHexPrefix(walletAddr))
                 && VerifyAPI.isEffectivePromise(promise)
                 && new BigInteger(promise.getAmount(), 16).compareTo(allowance.amount) <= 0
