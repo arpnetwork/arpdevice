@@ -34,6 +34,7 @@ import android.widget.TextView;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
@@ -185,7 +186,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 .show();
     }
 
-    private void showPasswordDialog() {
+    private void showPasswordDialog(final Miner miner) {
         final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
         builder.setOnClickListener(new DialogInterface.OnClickListener() {
             @Override
@@ -207,7 +208,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                                     if (!SignUtil.signerExists()) {
                                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                     } else {
-                                        startActivity(ReceiveOrderActivity.class);
+                                        startReceivingOrder(miner);
                                     }
                                 }
                             });
@@ -226,6 +227,12 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
         return isCharging;
+    }
+
+    private void startReceivingOrder(Miner miner) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constant.KEY_MINER, miner);
+        startActivity(ReceiveOrderActivity.class, bundle);
     }
 
     @Override
@@ -248,23 +255,35 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_order:
-                Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
+                if (!NetworkHelper.getInstance().isNetworkAvailable()) {
+                    showAlertDialog(R.string.network_error);
+                    return;
+                }
+
                 if (!isCharging()) {
                     UIHelper.showToast(getActivity(), getString(R.string.no_charging));
-                } else if (!BankAllowance.get().valid()) {
-                    showAlertDialog(R.string.invalid_miner);
-                } else if (miner != null) {
-                    if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
-                        showAlertDialog(R.string.unbinding_miner);
-                    } else if (!miner.expiredValid()) {
-                        showAlertDialog(R.string.invalid_miner);
-                    } else if (!SignUtil.signerExists()) {
-                        showPasswordDialog();
-                    } else {
-                        startActivity(ReceiveOrderActivity.class);
-                    }
                 } else {
-                    showNoBindingDialog();
+                    Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
+                    if (miner != null) {
+                        BankAllowance bankAllowance = BankAllowance.get();
+                        if (bankAllowance == null) {
+                            CustomApplication.sInstance.startMonitorService();
+                            showAlertDialog(R.string.load_data_error);
+                            return;
+                        }
+
+                        if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+                            showAlertDialog(R.string.unbinding_miner);
+                        } else if (!miner.expiredValid() || !bankAllowance.valid()) {
+                            showAlertDialog(R.string.invalid_miner);
+                        } else if (!SignUtil.signerExists()) {
+                            showPasswordDialog(miner);
+                        } else {
+                            startReceivingOrder(miner);
+                        }
+                    } else {
+                        showNoBindingDialog();
+                    }
                 }
                 break;
         }

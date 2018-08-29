@@ -28,7 +28,6 @@ import org.arpnetwork.arpdevice.server.http.rpc.RPCErrorCode;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.json.JSONException;
@@ -47,10 +46,12 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     private AppManager mAppManager;
     private PromiseHandler mPromiseHandler;
     private ConcurrentMap<String, BigInteger> mNonceMap;
+    private Miner mMiner;
 
-    public DefaultRPCDispatcher(Context context) {
+    public DefaultRPCDispatcher(Context context, Miner miner) {
         mContext = context;
         mNonceMap = new ConcurrentHashMap<>();
+        mMiner = miner;
     }
 
     public void setAppManager(AppManager appManager) {
@@ -117,10 +118,9 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             String sign = request.getString(2);
             String data = String.format("%s:%s:%s:%s", method, promiseJson, nonce, walletAddr);
 
-            Miner miner = BindMinerHelper.getBound(walletAddr);
-            if (verify(response, request.getId(), data, nonce, sign, miner.getAddress())) {
+            if (verify(response, request.getId(), data, nonce, sign, mMiner.getAddress())) {
                 if (mPromiseHandler.processPromise(promiseJson)) {
-                    responseResult(response, request.getId(), nonce, miner.getAddress());
+                    responseResult(response, request.getId(), nonce, mMiner.getAddress());
                 } else {
                     response.setError(request.getId(), RPCErrorCode.INVALID_PARAMS, "Invalid params");
                 }
@@ -132,8 +132,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
 
     private boolean checkRemoteAddress(RPCRequest request, DApp dApp) {
         String remoteAddress = request.getRemoteAddress();
-        Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-        if (remoteAddress.equals(miner.getIpString()) || (dApp != null && remoteAddress.equals(dApp.ip))) {
+        if (remoteAddress.equals(mMiner.getIpString()) || (dApp != null && remoteAddress.equals(dApp.ip))) {
             return true;
         }
         return false;

@@ -27,7 +27,6 @@ import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.data.ReleaseDeviceReq;
 import org.arpnetwork.arpdevice.data.SpeedResponse;
-import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Req;
 import org.arpnetwork.arpdevice.data.SpeedReq;
@@ -39,7 +38,6 @@ import org.arpnetwork.arpdevice.data.VerifyData;
 import org.arpnetwork.arpdevice.data.VerifyReq;
 import org.arpnetwork.arpdevice.data.VerifyResponse;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
@@ -65,6 +63,7 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     private DeviceConnection mConnection;
     private Gson mGson;
+    private Miner mMiner;
 
     private VerifyData mVerifyData;
     private ByteBuf mSpeedDataBuf;
@@ -97,8 +96,8 @@ public class DeviceManager implements DeviceConnection.Listener {
     /**
      * Connect to a server
      */
-    public void connect() {
-        Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
+    public void connect(Miner miner) {
+        mMiner = miner;
         mConnection = new DeviceConnection(this);
         mConnection.connect(miner.getIpString(), miner.getPortTcpInt());
     }
@@ -245,8 +244,7 @@ public class DeviceManager implements DeviceConnection.Listener {
                 String sign = res.data.getSign();
                 try {
                     String addr = VerifyAPI.getSignatureAddress(mVerifyData.getSalt(), sign);
-                    Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-                    if (miner != null && Numeric.cleanHexPrefix(miner.getAddress()).equalsIgnoreCase(addr)) {
+                    if (mMiner != null && Numeric.cleanHexPrefix(mMiner.getAddress()).equalsIgnoreCase(addr)) {
                         register();
                         return;
                     }

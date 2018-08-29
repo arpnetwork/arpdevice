@@ -49,6 +49,7 @@ import org.arpnetwork.arpdevice.server.http.HttpServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
+import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 
 import java.math.BigInteger;
@@ -62,6 +63,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private HttpServer mHttpServer;
     private AppManager mAppManager;
     private DApp mDApp;
+    private Miner mMiner;
 
     private BigInteger mLastAmount = BigInteger.ZERO;
     private BigInteger mReceivedAmount = BigInteger.ZERO;
@@ -80,6 +82,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
+        mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
 
         registerReceiver();
     }
@@ -125,9 +128,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         mDeviceManager = new DeviceManager();
         mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
-        mDeviceManager.connect();
+        mDeviceManager.connect(mMiner);
 
-        DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext());
+        DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
         dispatcher.setAppManager(mAppManager);
         dispatcher.setPromiseHandler(new PromiseHandler(this));
         startHttpServer(dispatcher);

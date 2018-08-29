@@ -18,9 +18,10 @@ package org.arpnetwork.arpdevice.ui.bean;
 
 import org.arpnetwork.arpdevice.util.Util;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
-public class Miner {
+public class Miner implements Serializable {
     private String address;
     private BigInteger ip;
     private BigInteger port;
