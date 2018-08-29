@@ -124,14 +124,14 @@ public class AppManager {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 mPackageSet.add(packageName);
-                if (mDApp == null) {
+                if (mDApp != null) {
                     DAppApi.appInstalled(packageName, SUCCESS, mDApp);
                 }
             }
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
-                if (mDApp == null) {
+                if (mDApp != null) {
                     DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
                 }
             }
