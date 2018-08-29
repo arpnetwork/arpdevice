@@ -39,7 +39,6 @@ public class TaskHelper {
     private Timer mTimer;
 
     public TaskHelper() {
-        mTimer = new Timer();
         mAdb = new Adb(Touch.getInstance().getConnection());
     }
 
@@ -61,7 +60,15 @@ public class TaskHelper {
     }
 
     private void startCheckTopTimer() {
+        mTimer = new Timer();
         mTimer.schedule(mTimerTask, CHECK_TOP_INTERVAL, CHECK_TOP_INTERVAL);
+    }
+
+    private void stopTimer() {
+        if (mTimer != null) {
+            mTimer.cancel();
+            mTimer = null;
+        }
     }
 
     private TimerTask mTimerTask = new TimerTask() {
@@ -73,7 +80,7 @@ public class TaskHelper {
                     String topPackage = getTopPackage(new String(data));
                     if (!topPackage.contains(mPackageName)) {
                         DataServer.getInstance().onClientDisconnected();
-                        mTimer.cancel();
+                        stopTimer();
                     }
                 }
 
@@ -89,7 +96,7 @@ public class TaskHelper {
     };
 
     public void killLaunchedApp() {
-        mTimer.cancel();
+        stopTimer();
         mAdb.killApp(mPackageName);
         mAdb.clearApplicationUserData(mPackageName);
     }
