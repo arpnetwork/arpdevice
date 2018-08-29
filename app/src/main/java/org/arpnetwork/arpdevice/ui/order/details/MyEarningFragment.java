@@ -19,11 +19,11 @@ package org.arpnetwork.arpdevice.ui.order.details;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -50,7 +50,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 public class MyEarningFragment extends BaseFragment {
     private static final String TAG = MyEarningFragment.class.getSimpleName();
@@ -59,9 +58,10 @@ public class MyEarningFragment extends BaseFragment {
     private MyEarningHeader mHeaderView;
 
     private boolean mLoading;
-    private boolean mFirstLoad = true;
-    private float exchanged;
-    private BigInteger mUnexchanged;
+    private BigInteger exchanged = BigInteger.ZERO;
+    private BigInteger mUnexchanged = BigInteger.ZERO;
+    private BigInteger mTopCid = BigInteger.ZERO;
+    private BigInteger mTopAmount = BigInteger.ZERO;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,10 +89,6 @@ public class MyEarningFragment extends BaseFragment {
     }
 
     private void initViews() {
-        View footerView = new View(getContext());
-        footerView.setLayoutParams(new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, getResources().getDimensionPixelSize(R.dimen.content_padding)));
-        footerView.setBackgroundResource(R.color.window_background_light_gray);
-
         mHeaderView = new MyEarningHeader(getContext(), new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -108,39 +104,7 @@ public class MyEarningFragment extends BaseFragment {
                     PayEthDialog.showPayEthDialog(getActivity(), gasLimit, new PayEthDialog.OnPayListener() {
                         @Override
                         public void onPay(BigInteger priceWei, String password) {
-                            ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), priceWei, gasLimit);
-                            TransactionReceipt receipt = null;
-                            try {
-                                receipt = bank.cash(promise, spender).sendAsync().get();
-                            } catch (Exception e) {
-                                android.util.Log.e(TAG, "onPay, cash error:" + e.getCause());
-                                UIHelper.showToast(CustomApplication.sInstance,
-                                        getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
-                                return;
-                            }
-
-                            final EarningRecord localRecord = savePendingToDb(receipt.getTransactionHash());
-                            mHeaderView.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    List<EarningRecord> local = new ArrayList<>(1);
-                                    local.add(localRecord);
-                                    mAdapter.addData(local);
-                                }
-                            });
-
-                            boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
-                            if (success) {
-                                if (mHeaderView != null) {
-                                    refreshData();
-                                } else {
-                                    UIHelper.showToast(CustomApplication.sInstance,
-                                            getString(R.string.exchange_success), Toast.LENGTH_SHORT);
-                                }
-                            } else {
-                                UIHelper.showToast(CustomApplication.sInstance,
-                                        getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
-                            }
+                            payForExchange(password, priceWei, gasLimit, promise, spender);
                         }
                     });
                 }
@@ -149,35 +113,64 @@ public class MyEarningFragment extends BaseFragment {
 
         mAdapter = new MyEarningAdapter(getContext());
         ListView listView = (ListView) findViewById(R.id.listview);
-        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
-            private boolean mToBottom;
-
-            @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-                if (scrollState == SCROLL_STATE_IDLE && mToBottom) {
-                    loadData();
-                }
-            }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                mToBottom = false;
-                if (totalItemCount > 0 && firstVisibleItem + visibleItemCount == totalItemCount) {
-                    mToBottom = true;
-                }
-            }
-        });
         listView.addHeaderView(mHeaderView);
-        listView.addFooterView(footerView);
         listView.setAdapter(mAdapter);
     }
 
-    private EarningRecord savePendingToDb(String txHash) {
+    private void payForExchange(final String password, final BigInteger priceWei, final BigInteger gasLimit, final Promise promise, final String spender) {
+        final EarningRecord localRecord = savePendingToDb(promise.getCid() + ":" + promise.getAmount());
+        List<EarningRecord> local = new ArrayList<>(1);
+        local.add(localRecord);
+        mAdapter.addData(local);
+
+        final Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), priceWei, gasLimit);
+                TransactionReceipt receipt = null;
+                try {
+                    receipt = bank.cash(promise, spender).send();
+                } catch (Exception e) {
+                    android.util.Log.e(TAG, "onPay, cash error:" + e.getCause());
+                    UIHelper.showToast(CustomApplication.sInstance,
+                            getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
+                    return;
+                }
+                boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
+                Runnable callBack;
+                if (success) {
+                    callBack = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (getActivity() != null && !getActivity().isDestroyed()) {
+                                refreshData();
+                            }
+                            UIHelper.showToast(CustomApplication.sInstance,
+                                    CustomApplication.sInstance.getString(R.string.exchange_success), Toast.LENGTH_SHORT);
+                        }
+                    };
+                } else {
+                    callBack = new Runnable() {
+                        @Override
+                        public void run() {
+                            UIHelper.showToast(CustomApplication.sInstance,
+                                    CustomApplication.sInstance.getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
+                        }
+                    };
+                }
+                handler.post(callBack);
+            }
+        };
+        new Thread(runnable).start();
+    }
+
+    private EarningRecord savePendingToDb(String key) {
         final EarningRecord localRecord = new EarningRecord();
         localRecord.state = EarningRecord.STATE_PENDING;
         localRecord.time = System.currentTimeMillis();
         localRecord.earning = mUnexchanged.toString();
-        localRecord.transactionHash = txHash;
+        localRecord.key = key;
         localRecord.minerAddress = Promise.get().getFrom();
         localRecord.saveRecord();
 
@@ -189,11 +182,11 @@ public class MyEarningFragment extends BaseFragment {
         List<EarningRecord> oneTime = EarningRecord.findAll();
         for (EarningRecord record : oneTime) {
             if (record.state == EarningRecord.STATE_SUCCESS) {
-                exchanged += record.getEarning();
+                exchanged = exchanged.add(record.getEarning());
             }
         }
         mAdapter.setData(oneTime);
-        mHeaderView.setData(exchanged, mAdapter.getCount() > 0);
+        mHeaderView.setData(getFloatExchanged(), mAdapter.getCount() > 0);
         getUnexchange();
     }
 
@@ -202,30 +195,28 @@ public class MyEarningFragment extends BaseFragment {
             return;
         }
 
+        mLoading = true;
+
         List<EarningRecord> oneTime;
-        if (mFirstLoad) {
-            mFirstLoad = false;
-            if (EarningRecord.findTop() != null) {
-                oneTime = EarningRecord.findAll();
-                for (EarningRecord record : oneTime) {
-                    if (record.state == EarningRecord.STATE_SUCCESS) {
-                        exchanged += record.getEarning();
-                    }
+        if (EarningRecord.findTop() != null) {
+            oneTime = EarningRecord.findAll();
+            Collections.reverse(oneTime); // Get latest record.
+            for (EarningRecord record : oneTime) {
+                if (record.state == EarningRecord.STATE_SUCCESS) {
+                    exchanged = exchanged.add(record.getEarning());
+                    setTopAmount(record.getCid(), record.getEarning());
                 }
-                if (EarningRecord.find(EarningRecord.STATE_PENDING) != null) {
-                    loadNextRemote(); // Update state.
-                }
-            } else {
-                oneTime = loadNextRemote();
+            }
+            Collections.reverse(oneTime); // Displayed time decreased.
+            if (EarningRecord.find(EarningRecord.STATE_PENDING) != null) {
+                loadNextRemote(); // Update state.
             }
         } else {
             oneTime = loadNextRemote();
         }
+        mAdapter.setData(oneTime);
 
-        mLoading = true;
-
-        mAdapter.addData(oneTime);
-        mHeaderView.setData(exchanged, mAdapter.getCount() > 0);
+        mHeaderView.setData(getFloatExchanged(), mAdapter.getCount() > 0);
         getUnexchange();
         mLoading = false;
     }
@@ -246,14 +237,14 @@ public class MyEarningFragment extends BaseFragment {
         List<Log> transactionList = null;
         try {
             transactionList = ARPBank.getTransactionList(Wallet.get().getAddress(), blockNumber);
-        } catch (ExecutionException e) {
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "getRemoteAndSave, getTransactionList error:" + e.getCause());
         }
 
         if (transactionList != null && transactionList.size() > 0) {
             for (Log log : transactionList) {
                 EarningRecord newEarning = getEarningByLog(log);
-                exchanged += newEarning.getEarning();
+                exchanged = exchanged.add(newEarning.getEarning());
                 records.add(newEarning);
             }
         }
@@ -264,11 +255,15 @@ public class MyEarningFragment extends BaseFragment {
         long logDate = 0;
         try {
             logDate = EtherAPI.getTransferDate(log.getBlockHash());
-        } catch (ExecutionException ignore) {
-        } catch (InterruptedException ignore) {
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "getEarningByLog, getTransferDate error:" + e.getCause());
         }
 
         byte[] data = Hex.decode(Numeric.cleanHexPrefix(log.getData()));
+        byte[] cidByte = new byte[32];
+        System.arraycopy(data, 0, cidByte, 0, 32);
+        BigInteger cid = new BigInteger(cidByte);
+
         byte[] amountByte = new byte[32];
         System.arraycopy(data, 32, amountByte, 0, 32);
         BigInteger amount = new BigInteger(amountByte);
@@ -276,8 +271,9 @@ public class MyEarningFragment extends BaseFragment {
         byte[] topic = Hex.decode(Numeric.cleanHexPrefix(log.getTopics().get(1)));
         byte[] addressByte = new byte[20];
         System.arraycopy(topic, 12, addressByte, 0, 20);
+        setTopAmount(cid, amount);
 
-        EarningRecord earning = EarningRecord.get(log.getTransactionHash());
+        EarningRecord earning = EarningRecord.get(cid.toString(16) + ":" + mTopAmount.toString(16));
         earning.time = logDate;
         earning.earning = amount.toString();
         earning.minerAddress = "0x" + Hex.toHexString(addressByte);
@@ -305,5 +301,18 @@ public class MyEarningFragment extends BaseFragment {
                     .show();
         }
         mHeaderView.setUnexchanged(Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue());
+    }
+
+    private void setTopAmount(BigInteger cid, BigInteger amount) {
+        if (mTopCid.compareTo(BigInteger.ZERO) == 0 || mTopCid.compareTo(cid) != 0) {
+            mTopCid = cid;
+            mTopAmount = amount;
+        } else {
+            mTopAmount = mTopAmount.add(amount);
+        }
+    }
+
+    private float getFloatExchanged() {
+        return Convert.fromWei(exchanged.toString(), Convert.Unit.ETHER).floatValue();
     }
 }

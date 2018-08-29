@@ -65,14 +65,14 @@ public class PayEthDialog {
         new OKHttpUtils().get(Config.API_URL, new SimpleCallback<GasInfoResponse>() {
             @Override
             public void onFailure(Request request, Exception e) {
-                if (!context.isDestroyed()) {
+                if (context == null || !context.isDestroyed()) {
                     UIHelper.showToast(context, context.getString(R.string.load_gas_failed));
                 }
             }
 
             @Override
             public void onSuccess(Response response, GasInfoResponse result) {
-                if (context.isDestroyed()) return;
+                if (context == null || context.isDestroyed()) return;
                 final GasInfo gasInfo = result.data;
                 final BigDecimal min = gasInfo.getGasPriceGwei();
                 final BigDecimal max = (gasInfo.getGasPriceGwei().multiply(new BigDecimal("100")));

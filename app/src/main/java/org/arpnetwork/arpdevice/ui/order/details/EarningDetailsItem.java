@@ -68,7 +68,7 @@ public class EarningDetailsItem extends LinearLayout {
             state = getContext().getString(R.string.exchange_tip_exchanging);
         }
         mStateView.setText(state);
-        mIncomeView.setText(String.format(getResources().getString(R.string.earning_detail_format), earning.getEarning(), earning.minerAddress));
+        mIncomeView.setText(String.format(getResources().getString(R.string.earning_detail_format), earning.getFloatEarning(), earning.minerAddress));
     }
 
     public void setFirstOrLastItem(boolean firstItem, boolean lastItem) {

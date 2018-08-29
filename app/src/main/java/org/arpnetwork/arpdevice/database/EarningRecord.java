@@ -21,11 +21,10 @@ import android.text.TextUtils;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
 import com.activeandroid.query.Select;
-import com.activeandroid.util.SQLiteUtils;
 
-import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.utils.Convert;
 
+import java.math.BigInteger;
 import java.util.List;
 
 @Table(name = "earning_record")
@@ -34,8 +33,8 @@ public class EarningRecord extends BaseRecord {
     public static final int STATE_PENDING = 2;
     public static final int STATE_FAILED = 3;
 
-    @Column(name = "transactionHash", index = true)
-    public String transactionHash;
+    @Column(name = "key", index = true)
+    public String key;
 
     @Column(name = "minerAddress")
     public String minerAddress;
@@ -49,7 +48,11 @@ public class EarningRecord extends BaseRecord {
     @Column(name = "state")
     public int state;
 
-    public float getEarning() {
+    public BigInteger getEarning() {
+        return new BigInteger(earning);
+    }
+
+    public float getFloatEarning() {
         return Convert.fromWei(earning, Convert.Unit.ETHER).floatValue();
     }
 
@@ -64,13 +67,13 @@ public class EarningRecord extends BaseRecord {
         EarningRecord record = find(transactionHash);
         if (record == null) {
             record = new EarningRecord();
-            record.transactionHash = transactionHash;
+            record.key = transactionHash;
         }
         return record;
     }
 
-    public static EarningRecord find(String transactionHash) {
-        return new Select().from(EarningRecord.class).where("transactionHash = ?", transactionHash).executeSingle();
+    public static EarningRecord find(String key) {
+        return new Select().from(EarningRecord.class).where("key = ?", key).executeSingle();
     }
 
     public static EarningRecord find(int state) {
@@ -83,6 +86,11 @@ public class EarningRecord extends BaseRecord {
 
     public static EarningRecord findTopWithState(int state) {
         return new Select().from(EarningRecord.class).where("state = ?", state).orderBy("create_at DESC").limit(1).executeSingle();
+    }
+
+    public BigInteger getCid() {
+        String cid = key.split(":")[0];
+        return new BigInteger(cid, 16);
     }
 
 }

@@ -40,7 +40,7 @@ public class Promise {
     }
 
     public String getCid() {
-        return Numeric.cleanHexPrefix(cid);
+        return getValueString(cid, 16);
     }
 
     public void setFrom(String from) {
@@ -64,7 +64,7 @@ public class Promise {
     }
 
     public String getAmount() {
-        return Numeric.cleanHexPrefix(amount);
+        return getValueString(amount, 16);
     }
 
     public int compareAmount(Promise promise) {
@@ -111,5 +111,9 @@ public class Promise {
 
     public static void clear() {
         PreferenceManager.getInstance().putString(KEY, "");
+    }
+
+    private String getValueString(String string, int radix) {
+        return new BigInteger(Numeric.cleanHexPrefix(string), 16).toString(radix);
     }
 }
