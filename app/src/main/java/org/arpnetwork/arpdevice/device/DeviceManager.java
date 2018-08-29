@@ -151,6 +151,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     @Override
     public void onClosed(DeviceConnection conn) {
         reset();
+        handleError(0, R.string.connect_miner_failed);
     }
 
     @Override
@@ -158,14 +159,7 @@ public class DeviceManager implements DeviceConnection.Listener {
         Log.e(TAG, "onException. message = " + cause.getMessage());
 
         reset();
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (mOnDeviceStateChangedListener != null) {
-                    mOnDeviceStateChangedListener.onError(0, R.string.connect_miner_failed);
-                }
-            }
-        });
+        handleError(0, R.string.connect_miner_failed);
     }
 
     private void onDeviceMessage(Message msg) {
