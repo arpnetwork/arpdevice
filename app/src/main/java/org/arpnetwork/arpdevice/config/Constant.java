@@ -24,6 +24,7 @@ public class Constant {
     public static final int CHECK_AUTH = 4;
     public static final int CHECK_ADB_SAFE = 5;
     public static final int CHECK_AUTH_SUCCESS = 6;
+    public static final int CHECK_DISK_AVAILABLE = 7;
 
     // Defines a custom Intent action
     public static final String BROADCAST_ACTION_STATUS = "org.arpnetwork.arpdevice.ACTION_STATUS";

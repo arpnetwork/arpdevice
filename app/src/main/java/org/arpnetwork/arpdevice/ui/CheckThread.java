@@ -33,6 +33,7 @@ import java.net.SocketException;
 
 public class CheckThread {
     private static final int PING_INTERVAL = 800;
+    private static final long DISK_REQUEST = 1024 * 1024 * 1024;
 
     private final Context mContext;
     private final HandlerThread mThread;
@@ -52,6 +53,9 @@ public class CheckThread {
     public void doCheck() {
         if (DeviceUtil.getSdk() < Build.VERSION_CODES.N || !DeviceUtil.is64bit()) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_OS);
+            mUIHandler.sendMessage(message);
+        } else if (DeviceUtil.getExternalDiskAvailable(mContext) < DISK_REQUEST) {
+            Message message = mUIHandler.obtainMessage(Constant.CHECK_DISK_AVAILABLE);
             mUIHandler.sendMessage(message);
         } else if (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.ADB_ENABLED, 0) == 0) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_ADB);

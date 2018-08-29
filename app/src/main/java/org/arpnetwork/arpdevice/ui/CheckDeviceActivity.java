@@ -86,6 +86,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
             public void onClick(View v) {
                 switch (mCheckCode) {
                     case Constant.CHECK_OS:
+                    case Constant.CHECK_DISK_AVAILABLE:
                         finish();
                         getApplication().onTerminate();
                         break;
@@ -141,6 +142,11 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
         switch (msg.what) {
             case Constant.CHECK_OS:
                 mTipText.setText(R.string.check_fail_os);
+                mTipButton.setText(R.string.check_btn_quit);
+                break;
+
+            case Constant.CHECK_DISK_AVAILABLE:
+                mTipText.setText(R.string.check_fail_disk);
                 mTipButton.setText(R.string.check_btn_quit);
                 break;
 
