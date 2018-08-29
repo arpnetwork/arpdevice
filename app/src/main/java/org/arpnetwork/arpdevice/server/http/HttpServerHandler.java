@@ -101,25 +101,27 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter {
     public void channelReadComplete(ChannelHandlerContext ctx) {
         ChannelId channelId = ctx.channel().id();
         RequestData requestData = mRequestDataMap.get(channelId);
-        mRequestDataMap.remove(channelId);
+        if (requestData != null) {
+            mRequestDataMap.remove(channelId);
 
-        Request request = new Request();
-        request.setMethod(requestData.method);
-        request.setUri(requestData.uri);
-        request.setRemoteAddress(requestData.remoteAddress);
-        request.setContent(requestData.strBuffer.toString());
+            Request request = new Request();
+            request.setMethod(requestData.method);
+            request.setUri(requestData.uri);
+            request.setRemoteAddress(requestData.remoteAddress);
+            request.setContent(requestData.strBuffer.toString());
 
-        Response response = new Response();
+            Response response = new Response();
 
-        mDispatcher.service(request, response);
+            mDispatcher.service(request, response);
 
-        FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-                HttpResponseStatus.valueOf(response.getStatus()), Unpooled.wrappedBuffer(response.getContent().getBytes()));
-        httpResponse.headers().set(CONTENT_TYPE, response.getContentType());
-        httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
-        httpResponse.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-        ctx.write(httpResponse);
-        ctx.flush();
+            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
+                    HttpResponseStatus.valueOf(response.getStatus()), Unpooled.wrappedBuffer(response.getContent().getBytes()));
+            httpResponse.headers().set(CONTENT_TYPE, response.getContentType());
+            httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
+            httpResponse.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+            ctx.write(httpResponse);
+            ctx.flush();
+        }
     }
 
     @Override
@@ -131,6 +133,7 @@ class HttpServerHandler extends ChannelInboundHandlerAdapter {
         JSONObject jsonObject = new JSONObject();
         QueryStringDecoder decoder = new QueryStringDecoder(uri);
         Map<String, List<String>> params = decoder.parameters();
+
         Iterator<Map.Entry<String, List<String>>> iterator = params.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<String, List<String>> entry = iterator.next();
