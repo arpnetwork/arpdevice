@@ -260,7 +260,7 @@ public class DeviceManager implements DeviceConnection.Listener {
             mRegistered = true;
             startHeartbeat();
             mHandler.postDelayed(mDeviceReadyRunnable, 800);
-        } if (result == 1) {
+        } else if (result == 1) {
             handleError(result, R.string.incompatible_protocol);
         } else {
             handleError(result, R.string.connect_miner_failed);

@@ -201,6 +201,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     @Override
     public void onException(NettyConnection conn, Throwable cause) {
         Log.e(TAG, "onException. cause = " + cause.getMessage());
+
+        stop();
+        if (mListener != null) {
+            mListener.onException(cause);
+        }
     }
 
     private DataServer() {

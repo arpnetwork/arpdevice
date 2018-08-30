@@ -301,6 +301,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onException(Throwable cause) {
+            releaseDApp();
         }
     };
 
