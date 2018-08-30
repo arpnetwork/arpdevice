@@ -18,6 +18,7 @@
     <string name="check_fail_os">您的设备系统版本过低，请升级系统版本至安卓8.0以上，否则无法成为ARP资源提供者</string>
     <string name="check_fail_disk">您的设备需要提供大于1G的磁盘空间</string>
     <string name="check_fail_adb">您的设备尚未打开开发者选项，请点击设置按钮打开开发者选项，并打开 USB调试 开关</string>
+    <string name="check_fail_stay_on">您的设备尚未打开保持不锁定屏幕选项，请点击设置按钮打开开发者选项，并打开 不锁定屏幕 开关</string>
     <string name="check_fail_adb_safe">您的设备尚未打开%s，请点击设置按钮后打开</string>
     <string name="check_fail_tcp">请将设备连接至电脑，并在ARP-tool安装的状态下，按提示进行操作</string>
     <string name="check_fail_auth">提供ARP资源需要允许USB调试。点击设置后弹框请%s，不然无法进行ARP资源提供</string>

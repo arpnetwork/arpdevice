@@ -92,6 +92,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
                         break;
 
                     case Constant.CHECK_ADB:
+                    case Constant.CHECK_STAY_ON_WHILE_PLUGGED_IN:
                     case Constant.CHECK_ADB_SAFE:
                         jumpToSettingADB();
                         break;
@@ -152,6 +153,11 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
 
             case Constant.CHECK_ADB:
                 mTipText.setText(R.string.check_fail_adb);
+                mTipButton.setText(R.string.check_btn);
+                break;
+
+            case Constant.CHECK_STAY_ON_WHILE_PLUGGED_IN:
+                mTipText.setText(R.string.check_fail_stay_on);
                 mTipButton.setText(R.string.check_btn);
                 break;
 

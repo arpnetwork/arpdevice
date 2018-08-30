@@ -31,6 +31,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -282,12 +283,16 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 .show();
     }
 
-    private void showAlertDialog(int resId) {
+    private void showAlertDialog(int resId, DialogInterface.OnClickListener listener) {
         new AlertDialog.Builder(getContext())
                 .setMessage(resId)
-                .setPositiveButton(R.string.ok, null)
+                .setPositiveButton(R.string.ok, listener)
                 .create()
                 .show();
+    }
+
+    private void showAlertDialog(int resId) {
+        showAlertDialog(resId, null);
     }
 
     private void showPasswordDialog(final Miner miner) {
@@ -336,6 +341,15 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     private void startReceivingOrder(Miner miner, int dataPort, int httpPort) {
         if (!isCharging()) {
             UIHelper.showToast(getActivity(), getString(R.string.no_charging));
+        } else if (Settings.Global.getInt(getActivity().getContentResolver(),
+                Settings.Global.STAY_ON_WHILE_PLUGGED_IN, 0) == 0) {
+            showAlertDialog(R.string.check_fail_stay_on, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    jumpToSettingADB();
+                }
+            });
+            UIHelper.showToast(getActivity(), getString(R.string.check_fail_stay_on));
         } else {
             int[] ports = {dataPort, httpPort};
             Bundle bundle = new Bundle();
@@ -398,6 +412,19 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 }
 
                 break;
+        }
+    }
+
+    private void jumpToSettingADB() {
+        try {
+            ComponentName componentName = new ComponentName("com.android.settings", "com.android.settings.DevelopmentSettings");
+            Intent intent = new Intent();
+            intent.setComponent(componentName);
+            intent.setAction("android.intent.action.View");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Exception e) {
+            UIHelper.showToast(getActivity(), getString(R.string.check_fail_adb_exception));
         }
     }
 }

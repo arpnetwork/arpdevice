@@ -60,6 +60,9 @@ public class CheckThread {
         } else if (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.ADB_ENABLED, 0) == 0) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_ADB);
             mUIHandler.sendMessage(message);
+        } else if (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.STAY_ON_WHILE_PLUGGED_IN, 0) == 0) {
+            Message message = mUIHandler.obtainMessage(Constant.CHECK_STAY_ON_WHILE_PLUGGED_IN);
+            mUIHandler.sendMessage(message);
         } else if (mShouldPing) {
             startPingTimer();
         }
