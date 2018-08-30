@@ -148,9 +148,9 @@ public class ARPBank extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public RemoteCall<TransactionReceipt> withdrawAll() {
-        BigInteger amount = balanceOf(Wallet.get().getAddress());
-        return withdraw(amount);
+    public RemoteCall<TransactionReceipt> withdraw(BigInteger amount) {
+        Function function = getWithdrawFunction(amount);
+        return executeRemoteCallTransaction(function);
     }
 
     public RemoteCall<TransactionReceipt> cash(Promise promise, String spender) {
@@ -233,11 +233,6 @@ public class ARPBank extends Contract {
             }
         }
         return BigInteger.ZERO;
-    }
-
-    private RemoteCall<TransactionReceipt> withdraw(BigInteger amount) {
-        Function function = getWithdrawFunction(amount);
-        return executeRemoteCallTransaction(function);
     }
 
     private static Function getBalanceOfFunction(String owner) {

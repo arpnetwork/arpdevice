@@ -20,6 +20,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
@@ -101,14 +103,18 @@ public class MyWalletFragment extends BaseFragment {
         mWithdrawBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BigInteger amount = ARPBank.balanceOf(Wallet.get().getAddress());
-                final BigInteger gasLimit = ARPBank.estimateWithdrawGasLimit(amount);
-                PayEthDialog.showPayEthDialog(getActivity(), gasLimit, new PayEthDialog.OnPayListener() {
-                    @Override
-                    public void onPay(BigInteger priceWei, String password) {
-                        withdraw(Wallet.loadCredentials(password), priceWei, gasLimit);
-                    }
-                });
+                final BigInteger amount = ARPBank.balanceOf(Wallet.get().getAddress());
+                if (amount.compareTo(BigInteger.ZERO) == 0) {
+                    Toast.makeText(getContext(), R.string.network_error, Toast.LENGTH_SHORT).show();
+                } else {
+                    final BigInteger gasLimit = ARPBank.estimateWithdrawGasLimit(amount);
+                    PayEthDialog.showPayEthDialog(getActivity(), gasLimit, new PayEthDialog.OnPayListener() {
+                        @Override
+                        public void onPay(BigInteger priceWei, String password) {
+                            withdraw(Wallet.loadCredentials(password), amount, priceWei, gasLimit);
+                        }
+                    });
+                }
             }
         });
         final String deviceAddress = Wallet.get().getAddress();
@@ -171,25 +177,51 @@ public class MyWalletFragment extends BaseFragment {
         }
     }
 
-    private void withdraw(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
+    private void withdraw(final Credentials credentials, final BigInteger amount, final BigInteger gasPrice, final BigInteger gasLimit) {
         showProgressDialog(getString(R.string.handling));
-        ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
-        TransactionReceipt receipt = null;
-        try {
-            receipt = bank.withdrawAll().sendAsync().get();
-        } catch (Exception e) {
-            Log.e(TAG, "withdraw error:" + e.getCause());
-        }
 
-        boolean success = receipt != null && TransactionAPI.isStatusOK(receipt.getStatus());
-        hideProgressDialog();
-        if (success) {
-            mWithdrawBtn.setVisibility(View.GONE);
-            getARPBalance(Wallet.get().getAddress());
-            Toast.makeText(getContext(), getString(R.string.withdraw_success), Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getContext(), getString(R.string.withdraw_failed), Toast.LENGTH_SHORT).show();
-        }
+        final Handler handler = new Handler();
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
+                TransactionReceipt receipt = null;
+                try {
+                    receipt = bank.withdraw(amount).send();
+                } catch (Exception e) {
+                    Log.e(TAG, "withdraw error:" + e.getCause());
+                    return;
+                }
+
+                boolean success = receipt != null && TransactionAPI.isStatusOK(receipt.getStatus());
+                hideProgressDialog();
+                if (success) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (getActivity() != null && !getActivity().isDestroyed()) {
+                                mWithdrawBtn.setVisibility(View.GONE);
+                                getARPBalance(Wallet.get().getAddress());
+                            }
+                            Toast.makeText(CustomApplication.sInstance,
+                                    CustomApplication.sInstance.getString(R.string.withdraw_success),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                } else {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(CustomApplication.sInstance,
+                                    CustomApplication.sInstance.getString(R.string.withdraw_failed),
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            }
+        };
+        new Thread(runnable).start();
     }
 
     private void getARPBalance(String address) {
