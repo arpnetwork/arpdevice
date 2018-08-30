@@ -108,7 +108,7 @@ public class ARPBank extends Contract {
         }
         List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
-
+        if (results.size() == 0) return null;
         BankAllowance bankBalance = new BankAllowance();
         bankBalance.id = (BigInteger) results.get(0).getValue();
         bankBalance.amount = (BigInteger) results.get(1).getValue();
@@ -128,10 +128,11 @@ public class ARPBank extends Contract {
                     .sendAsync().get();
         } catch (Exception e) {
             Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause());
-            return new BigInteger("0");
+            return BigInteger.ZERO;
         }
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
+        if (someTypes.size() == 0) return BigInteger.ZERO;
         Uint balance = (Uint) someTypes.get(0);
         return balance.getValue();
     }
