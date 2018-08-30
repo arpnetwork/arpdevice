@@ -126,7 +126,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void startDeviceService() {
-        TaskHelper taskHelper = new TaskHelper();
+        TaskHelper taskHelper = new TaskHelper(getContext());
 
         DataServer.getInstance().setListener(mConnectionListener);
         DataServer.getInstance().setTaskHelper(taskHelper);
@@ -145,7 +145,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void stopDeviceService() {
-        mHandler.removeCallbacksAndMessages(null);
+        releaseDApp();
+
         DownloadManager.getInstance().cancelAll();
         stopHttpServer();
         DataServer.getInstance().shutdown();

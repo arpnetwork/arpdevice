@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.device;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
@@ -25,7 +26,9 @@ import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.util.UIHelper;
 
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -37,8 +40,10 @@ public class TaskHelper {
     private String mPackageName;
     private final Adb mAdb;
     private Timer mTimer;
+    private Context mContext;
 
-    public TaskHelper() {
+    public TaskHelper(Context context) {
+        mContext = context;
         mAdb = new Adb(Touch.getInstance().getConnection());
     }
 
@@ -47,6 +52,7 @@ public class TaskHelper {
             return false;
         }
 
+        stopCheckTopTimer();
         mPackageName = packageName;
         PackageManager packageManager = CustomApplication.sInstance.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(mPackageName);
@@ -59,46 +65,57 @@ public class TaskHelper {
         return false;
     }
 
-    private void startCheckTopTimer() {
+    public void startCheckTopTimer() {
         mTimer = new Timer();
-        mTimer.schedule(mTimerTask, CHECK_TOP_INTERVAL, CHECK_TOP_INTERVAL);
+        mTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                mAdb.getTopAndroidTask(new ShellChannel.ShellListener() {
+                    @Override
+                    public void onStdout(ShellChannel ch, byte[] data) {
+                        String topPackage = getTopPackage(new String(data));
+                        if (mPackageName != null) {
+                            if (topPackage.contains("com.miui.wakepath")) {
+                                int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
+                                int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 30);
+                                sendTouch(x, y);
+                                stopCheckTopTimer();
+                            } else if (!topPackage.contains(mPackageName)) {
+                                DataServer.getInstance().onClientDisconnected();
+                                stopCheckTopTimer();
+                            }
+                        } else if (topPackage.contains("com.miui.securitycenter")) {
+                            int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
+                            int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 30);
+                            sendTouch(x, y);
+                            stopCheckTopTimer();
+                        }
+                    }
+
+                    @Override
+                    public void onStderr(ShellChannel ch, byte[] data) {
+                    }
+
+                    @Override
+                    public void onExit(ShellChannel ch, int code) {
+                    }
+                });
+            }
+        }, CHECK_TOP_INTERVAL, CHECK_TOP_INTERVAL);
     }
 
-    private void stopTimer() {
+    public void stopCheckTopTimer() {
         if (mTimer != null) {
             mTimer.cancel();
             mTimer = null;
         }
     }
 
-    private TimerTask mTimerTask = new TimerTask() {
-        @Override
-        public void run() {
-            mAdb.getTopAndroidTask(new ShellChannel.ShellListener() {
-                @Override
-                public void onStdout(ShellChannel ch, byte[] data) {
-                    String topPackage = getTopPackage(new String(data));
-                    if (!topPackage.contains(mPackageName)) {
-                        DataServer.getInstance().onClientDisconnected();
-                        stopTimer();
-                    }
-                }
-
-                @Override
-                public void onStderr(ShellChannel ch, byte[] data) {
-                }
-
-                @Override
-                public void onExit(ShellChannel ch, int code) {
-                }
-            });
-        }
-    };
-
     public void killLaunchedApp() {
-        stopTimer();
+        stopCheckTopTimer();
         mAdb.killApp(mPackageName);
         mAdb.clearApplicationUserData(mPackageName);
+        mPackageName = null;
     }
 
     private String getTopPackage(String topTaskPackages) {
@@ -109,5 +126,11 @@ public class TaskHelper {
         } catch (ArrayIndexOutOfBoundsException e) {
             return "";
         }
+    }
+
+    private void sendTouch(int x, int y) {
+        String downClick = String.format(Locale.US, "d 0 %d %d 50 5 5\nc\n", x, y);
+        Touch.getInstance().sendTouch(downClick);
+        Touch.getInstance().sendTouch("u 0 \nc\n");
     }
 }

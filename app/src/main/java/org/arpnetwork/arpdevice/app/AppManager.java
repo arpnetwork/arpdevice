@@ -119,11 +119,14 @@ public class AppManager {
     }
 
     private void appInstall(File file, final String packageName) {
+        mTaskHelper.startCheckTopTimer();
+
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.installApp(file.getAbsolutePath(), packageName, new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 mPackageSet.add(packageName);
+                mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
                     DAppApi.appInstalled(packageName, SUCCESS, mDApp);
                 }
@@ -131,6 +134,7 @@ public class AppManager {
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
+                mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
                     DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
                 }

@@ -153,8 +153,8 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     @Override
     public void onClosed(DeviceConnection conn) {
+        reset();
         if (!mClosed) {
-            reset();
             handleError(0, R.string.connect_miner_failed);
         }
         mClosed = false;
