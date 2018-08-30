@@ -18,12 +18,10 @@ package org.arpnetwork.arpdevice.ui.order.receive;
 
 import android.text.TextUtils;
 
-import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.utils.Numeric;
 
