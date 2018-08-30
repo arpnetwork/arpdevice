@@ -62,9 +62,11 @@ public class PayEthDialog {
             final OnPayListener callback, final DialogInterface.OnClickListener negativeListener) {
         if (mShowPriceDialog != null && mShowPriceDialog.isShowing()) return;
 
+        showProgressBar(context, "", false);
         new OKHttpUtils().get(Config.API_URL, new SimpleCallback<GasInfoResponse>() {
             @Override
             public void onFailure(Request request, Exception e) {
+                hideProgressBar();
                 if (context == null || !context.isDestroyed()) {
                     UIHelper.showToast(context, context.getString(R.string.load_gas_failed));
                 }
@@ -72,6 +74,7 @@ public class PayEthDialog {
 
             @Override
             public void onSuccess(Response response, GasInfoResponse result) {
+                hideProgressBar();
                 if (context == null || context.isDestroyed()) return;
                 final GasInfo gasInfo = result.data;
                 final BigDecimal min = gasInfo.getGasPriceGwei();
