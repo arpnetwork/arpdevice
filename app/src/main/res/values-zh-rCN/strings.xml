@@ -19,7 +19,7 @@
     <string name="check_fail_disk">您的设备需要提供大于1G的磁盘空间</string>
     <string name="check_fail_adb">您的设备尚未打开开发者选项，请点击设置按钮打开开发者选项，并打开 USB调试 开关</string>
     <string name="check_fail_adb_safe">您的设备尚未打开%s，请点击设置按钮后打开</string>
-    <string name="check_fail_tcp">您的设备尚未处于TCP模式，请将设备连接至电脑，并按提示进行操作</string>
+    <string name="check_fail_tcp">请将设备连接至电脑，并在ARP-tool安装的状态下，按提示进行操作</string>
     <string name="check_fail_auth">提供ARP资源需要允许USB调试。点击设置后弹框请%s，不然无法进行ARP资源提供</string>
     <string name="check_btn_quit">退出</string>
     <string name="check_fail_adb_exception">您的设备尚未打开开发者选项，请到手机设置中打开</string>
@@ -53,7 +53,7 @@
     <string name="low">低</string>
     <string name="high">高</string>
     <string name="no_bind_miner">未绑定矿工</string>
-    <string name="no_charging">请连接充电器</string>
+    <string name="no_charging">请连接电源</string>
     <string name="no_port_forward">请在路由器开启upnp端口转发功能</string>
     <string name="invalid_miner">您绑定的矿工已停止服务，请绑定新的矿工</string>
     <string name="unbinding_miner">解绑矿工中，暂不能开始接单</string>

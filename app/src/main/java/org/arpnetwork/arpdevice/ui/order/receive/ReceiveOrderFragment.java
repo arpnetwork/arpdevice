@@ -78,6 +78,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private Handler mHandler = new Handler();
 
+    private int mDataPort;
+    private int mHttpPort;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +88,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
         mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
+        int[] ports = getArguments().getIntArray(Constant.KEY_PORTS);
+        mDataPort = ports[0];
+        mHttpPort = ports[1];
 
         registerReceiver();
     }
@@ -124,7 +130,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         DataServer.getInstance().setListener(mConnectionListener);
         DataServer.getInstance().setTaskHelper(taskHelper);
-        DataServer.getInstance().startServer();
+        DataServer.getInstance().startServer(mDataPort);
 
         mAppManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
 
@@ -151,7 +157,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private void startHttpServer(Dispatcher dispatcher) {
         try {
-            mHttpServer = new HttpServer(Config.HTTP_SERVER_PORT, dispatcher);
+            mHttpServer = new HttpServer(mHttpPort, dispatcher);
             mHttpServer.start();
         } catch (Exception e) {
             showAlertDialog(getString(R.string.start_service_failed));

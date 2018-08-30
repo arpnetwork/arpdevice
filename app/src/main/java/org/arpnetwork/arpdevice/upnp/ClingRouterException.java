@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.upnp;
+package org.arpnetwork.arpdevice.upnp;
 
-import org.fourthline.cling.model.message.control.IncomingActionResponseMessage;
-
-public class ClingOperationFailedException extends ClingRouterException {
+public class ClingRouterException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
-    private final IncomingActionResponseMessage response;
 
-    public ClingOperationFailedException(final String message, final IncomingActionResponseMessage response) {
-        super(message);
-        assert response.getOperation().isFailed();
-        this.response = response;
+    public ClingRouterException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 
-    public IncomingActionResponseMessage getResponse() {
-        return response;
+    public ClingRouterException(final String message) {
+        super(message);
     }
 }

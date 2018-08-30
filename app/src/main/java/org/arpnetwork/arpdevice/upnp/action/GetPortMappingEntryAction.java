@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.upnp.action;
+package org.arpnetwork.arpdevice.upnp.action;
 
 import org.fourthline.cling.model.action.ActionInvocation;
 import org.fourthline.cling.model.meta.RemoteDevice;

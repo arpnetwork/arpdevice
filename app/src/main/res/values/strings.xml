@@ -19,7 +19,7 @@
     <string name="check_fail_disk">More than 1G disk capability is required</string>
     <string name="check_fail_adb">Please open the Developer options and USB Debug</string>
     <string name="check_fail_adb_safe">Please open %s</string>
-    <string name="check_fail_tcp">Please open your device in TCP mode, connect your device with pc by usb and read the guild </string>
+    <string name="check_fail_tcp">Please connect your device with pc by usb and read the guild of ARP-tool</string>
     <string name="check_fail_auth">Please ensure usb debug checkbox %s, otherwise you cannot be an ARP device.</string>
     <string name="check_btn_quit">quit</string>
     <string name="check_fail_adb_exception">Please setup adb develop mode</string>

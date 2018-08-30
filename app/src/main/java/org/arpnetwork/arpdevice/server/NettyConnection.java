@@ -46,7 +46,6 @@ public class NettyConnection {
     private ConnectionHandler mServerHandler;
 
     private ConnectionListener mListener;
-    private int mPort;
     private AtomicInteger mClientNumber = new AtomicInteger(0);
 
     private EventLoopGroup mWorkerGroup;
@@ -64,14 +63,13 @@ public class NettyConnection {
         void onException(NettyConnection conn, Throwable cause);
     }
 
-    public NettyConnection(ConnectionListener listener, int port) {
+    public NettyConnection(ConnectionListener listener) {
         mListener = listener;
-        mPort = port;
 
         mServerHandler = new ConnectionHandler(this);
     }
 
-    public synchronized void startServer() throws InterruptedException {
+    public synchronized void startServer(int port) throws InterruptedException {
         mBossGroup = new NioEventLoopGroup();
         mWorkerGroup = new NioEventLoopGroup();
         try {
@@ -93,7 +91,7 @@ public class NettyConnection {
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .childOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT);
 
-            mChannelFuture = b.bind(mPort).sync();
+            mChannelFuture = b.bind(port).sync();
             mChannelFuture.channel().closeFuture().sync();
 
             mChannelFutureListener = new GenericFutureListener<ChannelFuture>() {

@@ -44,7 +44,7 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.data.BankAllowance;
-import org.arpnetwork.arpdevice.ui.ClingRegistryListener;
+import org.arpnetwork.arpdevice.upnp.ClingRegistryListener;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
@@ -79,6 +79,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     private AndroidUpnpService upnpService;
     private ClingRegistryListener mClingRegistryListener;
     private boolean mOpenPortForward;
+    private int mDataPort;
+    private int mHttpPort;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
 
@@ -105,6 +107,9 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
             switch (msg.what) {
                 case MSG_PORT_SUCCESS:
                     mOpenPortForward = true;
+                    mDataPort = msg.arg1;
+                    mHttpPort = msg.arg2;
+                    DeviceInfo.get().setDataPort(mDataPort);
                     break;
                 case MSG_PORT_FAILED:
                     mOpenPortForward = false;
@@ -144,12 +149,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public void onDestroy() {
         super.onDestroy();
 
-        if (upnpService != null) {
-            upnpService.getRegistry().removeListener(mClingRegistryListener);
-            upnpService.get().shutdown();
-        }
-        // This will stop the UPnP service if nobody else is bound to it
-        getActivity().unbindService(serviceConnection);
+        stooUpnpService();
         CustomApplication.sInstance.stopMonitorService();
 
         getActivity().getApplication().onTerminate();
@@ -204,6 +204,15 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 serviceConnection,
                 Context.BIND_AUTO_CREATE
         );
+    }
+
+    private void stooUpnpService() {
+        if (upnpService != null) {
+            upnpService.getRegistry().removeListener(mClingRegistryListener);
+            upnpService.get().shutdown();
+        }
+        // This will stop the UPnP service if nobody else is bound to it
+        getActivity().unbindService(serviceConnection);
     }
 
     private void showOrderPriceDialog() {
@@ -284,7 +293,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                                     if (!SignUtil.signerExists()) {
                                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                     } else {
-                                        startReceivingOrder(miner);
+                                        startReceivingOrder(miner, mDataPort, mHttpPort);
                                     }
                                 }
                             });
@@ -305,10 +314,16 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         return isCharging;
     }
 
-    private void startReceivingOrder(Miner miner) {
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(Constant.KEY_MINER, miner);
-        startActivity(ReceiveOrderActivity.class, bundle);
+    private void startReceivingOrder(Miner miner, int dataPort, int httpPort) {
+        if (!isCharging()) {
+            UIHelper.showToast(getActivity(), getString(R.string.no_charging));
+        } else {
+            int[] ports = {dataPort, httpPort};
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(Constant.KEY_MINER, miner);
+            bundle.putIntArray(Constant.KEY_PORTS, ports);
+            startActivity(ReceiveOrderActivity.class, bundle);
+        }
     }
 
     @Override
@@ -337,9 +352,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 }
                 if (!mOpenPortForward) {
                     UIHelper.showToast(getActivity(), getString(R.string.no_port_forward));
+                    stooUpnpService();
                     startUpnpService();
-                } else if (!isCharging()) {
-                    UIHelper.showToast(getActivity(), getString(R.string.no_charging));
                 } else {
                     Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
                     if (miner != null) {
@@ -357,7 +371,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                         } else if (!SignUtil.signerExists()) {
                             showPasswordDialog(miner);
                         } else {
-                            startReceivingOrder(miner);
+                            startReceivingOrder(miner, mDataPort, mHttpPort);
                         }
                     } else {
                         showNoBindingDialog();

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.upnp.action;
+package org.arpnetwork.arpdevice.upnp.action;
 
-import org.arpnetwork.arpdevice.ui.upnp.ClingOperationFailedException;
-import org.arpnetwork.arpdevice.ui.upnp.ClingRouterException;
+import org.arpnetwork.arpdevice.upnp.ClingOperationFailedException;
+import org.arpnetwork.arpdevice.upnp.ClingRouterException;
 import org.fourthline.cling.controlpoint.ControlPoint;
 import org.fourthline.cling.model.action.ActionInvocation;
 import org.fourthline.cling.model.message.control.IncomingActionResponseMessage;

@@ -1,4 +1,4 @@
-package org.arpnetwork.arpdevice.ui;
+package org.arpnetwork.arpdevice.upnp;
 
 import android.os.Handler;
 import android.os.Message;
@@ -6,8 +6,7 @@ import android.util.Log;
 
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.ui.my.MyFragment;
-import org.arpnetwork.arpdevice.ui.upnp.ClingPortMappingExtractor;
-import org.arpnetwork.arpdevice.ui.upnp.action.ActionService;
+import org.arpnetwork.arpdevice.upnp.action.ActionService;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
 import org.fourthline.cling.controlpoint.ControlPoint;
 import org.fourthline.cling.model.action.ActionInvocation;
@@ -97,7 +96,6 @@ public class ClingRegistryListener extends DefaultRegistryListener {
                     }
                     if (mapping.getProtocol() == PortMapping.Protocol.TCP
                             && mapping.getExternalPort().getValue() == defaultHttpPort) {
-
                         findHttp = true;
                     }
                 }
@@ -126,6 +124,8 @@ public class ClingRegistryListener extends DefaultRegistryListener {
 
                 final List<PortMapping> activeForService = new ArrayList<>();
                 for (final PortMapping pm : portMappings) {
+                    final int finalDefaultDataPort = defaultDataPort;
+                    final int finalDefaultHttpPort = defaultHttpPort;
                     new PortMappingAdd(connectionService, registry.getUpnpService().getControlPoint(), pm) {
                         @Override
                         public void success(ActionInvocation invocation) {
@@ -134,6 +134,8 @@ public class ClingRegistryListener extends DefaultRegistryListener {
 
                             Message message = new Message();
                             message.what = MyFragment.MSG_PORT_SUCCESS;
+                            message.arg1 = finalDefaultDataPort;
+                            message.arg2 = finalDefaultHttpPort;
                             mHandler.sendMessage(message);
                         }
 
@@ -151,7 +153,9 @@ public class ClingRegistryListener extends DefaultRegistryListener {
                 activePortMappings.put(connectionService, activeForService);
             } else {
                 Message message = new Message();
-                message.what = 1;
+                message.what = MyFragment.MSG_PORT_SUCCESS;
+                message.arg1 = (int) existDataPort;
+                message.arg2 = (int) existHttpPort;
                 mHandler.sendMessage(message);
             }
         } catch (RouterException e) {

@@ -113,12 +113,12 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         return mHandler;
     }
 
-    public void startServer() {
+    public void startServer(final int port) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    mConn.startServer();
+                    mConn.startServer(port);
                 } catch (InterruptedException ignored) {
                 }
             }
@@ -204,7 +204,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private DataServer() {
-        mConn = new NettyConnection(this, Config.DATA_SERVER_PORT);
+        mConn = new NettyConnection(this);
         mGson = new Gson();
         mHandler = new DataServerHandler(this);
     }

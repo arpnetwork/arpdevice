@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.upnp;
+package org.arpnetwork.arpdevice.upnp;
 
 import android.util.Log;
 
-import org.arpnetwork.arpdevice.ui.upnp.action.ActionService;
-import org.arpnetwork.arpdevice.ui.upnp.action.GetPortMappingEntryAction;
+import org.arpnetwork.arpdevice.upnp.action.ActionService;
+import org.arpnetwork.arpdevice.upnp.action.GetPortMappingEntryAction;
 import org.fourthline.cling.model.message.control.IncomingActionResponseMessage;
 import org.fourthline.cling.support.model.PortMapping;
 import org.fourthline.cling.transport.RouterException;

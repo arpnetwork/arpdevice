@@ -59,7 +59,6 @@ public class DeviceInfo {
         if (sInstance == null) {
             DeviceInfo info = new DeviceInfo();
             info.ver = Config.PROTOCOL_VERSION;
-            info.port = Config.DATA_SERVER_PORT;
             info.brand = DeviceUtil.getBrand();
             info.model = DeviceUtil.getModel();
             info.imsi = DeviceUtil.getIMSI(context);
@@ -89,5 +88,9 @@ public class DeviceInfo {
     public int getPrice() {
         int orderPrice = PreferenceManager.getInstance().getInt(Constant.ORDER_PRICE);
         return orderPrice >= 0 ? orderPrice : Config.ORDER_PRICE_DEFAULT;
+    }
+
+    public void setDataPort(int port) {
+        this.port = port;
     }
 }
