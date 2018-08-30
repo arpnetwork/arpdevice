@@ -74,6 +74,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public final static int MSG_PORT_FAILED = 2;
 
     private TextView mOrderPriceView;
+    private TextView mMinerName;
     private int mOrderPrice;
 
     private AndroidUpnpService upnpService;
@@ -159,6 +160,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         TextView walletName = (TextView) findViewById(R.id.tv_wallet_name);
         walletName.setText(Wallet.get().getName());
 
+        mMinerName = (TextView) findViewById(R.id.tv_miner_name);
+
         mOrderPriceView = (TextView) findViewById(R.id.tv_order_price);
         mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
 
@@ -193,6 +196,22 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
             public void onDrawFrame(GL10 gl) {
             }
         });
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
+                if (miner != null) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mMinerName != null) {
+                                mMinerName.setText(miner.getAddress());
+                            }
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
     private void startUpnpService() {

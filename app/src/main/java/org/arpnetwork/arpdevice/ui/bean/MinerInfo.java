@@ -16,7 +16,9 @@
 
 package org.arpnetwork.arpdevice.ui.bean;
 
-public class MinerInfo {
+import java.io.Serializable;
+
+public class MinerInfo implements Serializable {
     public String name;
     public String country;
     public int bandwidth;
