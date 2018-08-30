@@ -51,7 +51,7 @@ public class CheckThread {
     }
 
     public void doCheck() {
-        if (DeviceUtil.getSdk() < Build.VERSION_CODES.O_MR1 || !DeviceUtil.is64bit()) {
+        if (DeviceUtil.getSdk() < Build.VERSION_CODES.O || !DeviceUtil.is64bit()) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_OS);
             mUIHandler.sendMessage(message);
         } else if (DeviceUtil.getExternalDiskAvailable(mContext) < DISK_REQUEST) {
