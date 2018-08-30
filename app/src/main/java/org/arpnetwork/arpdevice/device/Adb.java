@@ -48,24 +48,31 @@ public class Adb {
             if (new File(desFile).exists()) {
                 new File(desFile).delete();
             }
-            SyncChannel ss = mConnection.openSync();
-            AssetCopyHelper.pushFile(ss, desFile, srcFilePath, new AssetCopyHelper.PushCallback() {
-                @Override
-                public void onStart() {
-                }
 
-                @Override
-                public void onComplete(boolean success, Throwable throwable) {
-                    if (success) {
-                        ShellChannel ss = mConnection.openShell("pm install  -r " + desFile);
-                        ss.setListener(listener);
-                    } else {
-                        if (listener != null) {
-                            listener.onStderr(null, null);
+            try {
+                SyncChannel ss = mConnection.openSync();
+                AssetCopyHelper.pushFile(ss, desFile, srcFilePath, new AssetCopyHelper.PushCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onComplete(boolean success, Throwable throwable) {
+                        if (success) {
+                            ShellChannel ss = mConnection.openShell("pm install  -r " + desFile);
+                            ss.setListener(listener);
+                        } else {
+                            if (listener != null) {
+                                listener.onStderr(null, null);
+                            }
                         }
                     }
+                });
+            } catch (Exception e) {
+                if (listener != null) {
+                    listener.onStderr(null, null);
                 }
-            });
+            }
         } else {
             if (listener != null) {
                 listener.onStderr(null, null);
