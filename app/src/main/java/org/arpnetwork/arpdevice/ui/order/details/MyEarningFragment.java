@@ -37,6 +37,7 @@ import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
+import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.spongycastle.util.encoders.Hex;
@@ -98,6 +99,8 @@ public class MyEarningFragment extends BaseFragment {
                 } else if (EarningRecord.find(EarningRecord.STATE_PENDING) != null) {
                     UIHelper.showToast(CustomApplication.sInstance,
                             getString(R.string.exchange_tip_exchanging), Toast.LENGTH_SHORT);
+                } else if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+                    UIHelper.showToast(CustomApplication.sInstance, getString(R.string.unbinding_exchange), Toast.LENGTH_SHORT);
                 } else {
                     final String spender = Wallet.get().getAddress();
                     final BigInteger gasLimit = ARPBank.estimateCashGasLimit(promise, spender);
