@@ -68,6 +68,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     private VerifyData mVerifyData;
     private ByteBuf mSpeedDataBuf;
     private boolean mRegistered;
+    private boolean mClosed;
 
     private Handler mHandler = new Handler();
     private OnDeviceStateChangedListener mOnDeviceStateChangedListener;
@@ -87,6 +88,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     public DeviceManager() {
         mGson = new Gson();
         mRegistered = false;
+        mClosed = false;
     }
 
     public void setOnDeviceStateChangedListener(OnDeviceStateChangedListener listener) {
@@ -106,6 +108,7 @@ public class DeviceManager implements DeviceConnection.Listener {
      * Close a connection
      */
     public void close() {
+        mClosed = true;
         if (mConnection != null) {
             mConnection.close();
         }
@@ -150,8 +153,11 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     @Override
     public void onClosed(DeviceConnection conn) {
-        reset();
-        handleError(0, R.string.connect_miner_failed);
+        if (!mClosed) {
+            reset();
+            handleError(0, R.string.connect_miner_failed);
+        }
+        mClosed = false;
     }
 
     @Override
@@ -254,8 +260,10 @@ public class DeviceManager implements DeviceConnection.Listener {
             mRegistered = true;
             startHeartbeat();
             mHandler.postDelayed(mDeviceReadyRunnable, 800);
-        } else {
+        } if (result == 1) {
             handleError(result, R.string.incompatible_protocol);
+        } else {
+            handleError(result, R.string.connect_miner_failed);
         }
     }
 

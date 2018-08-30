@@ -53,9 +53,13 @@ public class HttpServer {
     public void stop() {
         try {
             mChannelFuture.sync().channel().close().sync();
-            mWorkerGroup.shutdownGracefully();
-            mBossGroup.shutdownGracefully();
         } catch (Exception e) {
+        } finally {
+            try {
+                mWorkerGroup.shutdownGracefully();
+                mBossGroup.shutdownGracefully();
+            } catch (Exception e) {
+            }
         }
     }
 }
