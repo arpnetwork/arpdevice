@@ -182,6 +182,7 @@ public class MyEarningFragment extends BaseFragment {
 
     private void refreshData() {
         loadNextRemote();
+        exchanged = BigInteger.ZERO;
         List<EarningRecord> oneTime = EarningRecord.findAll();
         for (EarningRecord record : oneTime) {
             if (record.state == EarningRecord.STATE_SUCCESS) {
@@ -202,6 +203,7 @@ public class MyEarningFragment extends BaseFragment {
 
         List<EarningRecord> oneTime;
         if (EarningRecord.findTop() != null) {
+            exchanged = BigInteger.ZERO;
             oneTime = EarningRecord.findAll();
             Collections.reverse(oneTime); // Get latest record.
             for (EarningRecord record : oneTime) {
@@ -247,7 +249,6 @@ public class MyEarningFragment extends BaseFragment {
         if (transactionList != null && transactionList.size() > 0) {
             for (Log log : transactionList) {
                 EarningRecord newEarning = getEarningByLog(log);
-                exchanged = exchanged.add(newEarning.getEarning());
                 records.add(newEarning);
             }
         }
