@@ -89,7 +89,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
             String data = String.format(Locale.US, "%s:%s:%s:%d:%s:%s:%s", method, packageName, url, filesize, md5, nonce, walletAddr);
 
             if (verify(response, request.getId(), data, nonce, sign, dappAddr)) {
-                mAppManager.appInstall(mContext, packageName, url, filesize, md5);
+                mAppManager.appInstall(packageName, url, filesize, md5);
                 responseResult(response, request.getId(), nonce, dappAddr);
             }
         } else if ("app_uninstall".equals(method)) {

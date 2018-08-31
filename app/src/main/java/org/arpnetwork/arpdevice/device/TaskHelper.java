@@ -59,13 +59,13 @@ public class TaskHelper {
         if (intent != null) {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             CustomApplication.sInstance.startActivity(intent);
-            startCheckTopTimer();
+            startCheckTopTimer(CHECK_TOP_INTERVAL, CHECK_TOP_INTERVAL);
             return true;
         }
         return false;
     }
 
-    public void startCheckTopTimer() {
+    public void startCheckTopTimer(long delay, long period) {
         mTimer = new Timer();
         mTimer.schedule(new TimerTask() {
             @Override
@@ -79,7 +79,6 @@ public class TaskHelper {
                                 int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
                                 int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 30);
                                 sendTouch(x, y);
-                                stopCheckTopTimer();
                             } else if (!topPackage.contains(mPackageName)) {
                                 DataServer.getInstance().onClientDisconnected();
                                 stopCheckTopTimer();
@@ -88,7 +87,6 @@ public class TaskHelper {
                             int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
                             int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 30);
                             sendTouch(x, y);
-                            stopCheckTopTimer();
                         }
                     }
 
@@ -101,7 +99,7 @@ public class TaskHelper {
                     }
                 });
             }
-        }, CHECK_TOP_INTERVAL, CHECK_TOP_INTERVAL);
+        }, delay, period);
     }
 
     public void stopCheckTopTimer() {

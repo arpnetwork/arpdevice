@@ -16,7 +16,7 @@
 
 package org.arpnetwork.arpdevice.app;
 
-import android.content.Context;
+import android.os.Environment;
 import android.os.Handler;
 
 import org.arpnetwork.adb.ShellChannel;
@@ -41,6 +41,8 @@ public class AppManager {
     private static final int DOWNLOAD_FAILED = 1;
     private static final int INSTALL_FAILED = 2;
 
+    private static final int TIME_INTERVAL = 2000;
+
     private DApp mDApp;
     private Set<String> mPackageSet;
     private TaskHelper mTaskHelper;
@@ -60,8 +62,8 @@ public class AppManager {
         return mDApp;
     }
 
-    public void appInstall(Context context, final String packageName, String url, int fileSize, String md5) {
-        File destDir = context.getFilesDir();
+    public void appInstall(final String packageName, String url, int fileSize, String md5) {
+        File destDir = new File(Environment.getExternalStorageDirectory(), "arpdevice");
         if (!destDir.exists()) {
             if (!destDir.mkdirs()) {
                 DAppApi.appInstalled(packageName, DOWNLOAD_FAILED, mDApp);
@@ -110,6 +112,11 @@ public class AppManager {
     public void uninstallApp(String packageName) {
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.uninstallApp(packageName, null);
+
+        File apkFile = new File(Environment.getExternalStorageDirectory(), String.format("arpdevice/%s.apk", packageName));
+        if (apkFile.exists()) {
+            apkFile.delete();
+        }
     }
 
     public void clear() {
@@ -119,10 +126,10 @@ public class AppManager {
     }
 
     private void appInstall(File file, final String packageName) {
-        mTaskHelper.startCheckTopTimer();
+        mTaskHelper.startCheckTopTimer(TIME_INTERVAL, TIME_INTERVAL);
 
         Adb adb = new Adb(Touch.getInstance().getConnection());
-        adb.installApp(file.getAbsolutePath(), packageName, new ShellChannel.ShellListener() {
+        adb.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 mPackageSet.add(packageName);

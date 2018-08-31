@@ -342,11 +342,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 mAVDataThread = null;
             }
 
-            // kill apk
-            if (mTaskHelper != null) {
-                mTaskHelper.killLaunchedApp();
-            }
-
             mPacketQueue.clear();
             mConn.closeConnection();
 
@@ -355,6 +350,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
             stopHeartbeatTimer();
             stopHeartbeatTimeout();
+        }
+
+        // kill apk
+        if (mTaskHelper != null) {
+            mTaskHelper.killLaunchedApp();
         }
     }
 
