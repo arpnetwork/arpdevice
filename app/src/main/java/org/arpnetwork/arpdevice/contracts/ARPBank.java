@@ -220,15 +220,13 @@ public class ARPBank extends Contract {
             String spender = Wallet.get().getAddress();
             if (amount.compareTo(BigInteger.ZERO) > 0) {
                 Miner miner = BindMinerHelper.getBound(spender);
-                if (miner == null) {
-                    throw new Exception("get miner error");
-                }
-
-                BankAllowance allowance = ARPBank.allowance(miner.getAddress(), spender);
-                if (allowance == null) {
-                    throw new Exception("get allowance error");
-                } else {
-                    return amount.subtract(allowance.paid);
+                if (miner != null) {
+                    BankAllowance allowance = ARPBank.allowance(miner.getAddress(), spender);
+                    if (allowance == null) {
+                        throw new Exception("get allowance error");
+                    } else {
+                        return amount.subtract(allowance.paid);
+                    }
                 }
             }
         }

@@ -184,11 +184,6 @@ public class MyEarningFragment extends BaseFragment {
         loadNextRemote();
         exchanged = BigInteger.ZERO;
         List<EarningRecord> oneTime = EarningRecord.findAll();
-        for (EarningRecord record : oneTime) {
-            if (record.state == EarningRecord.STATE_SUCCESS) {
-                exchanged = exchanged.add(record.getEarning());
-            }
-        }
         mAdapter.setData(oneTime);
         mHeaderView.setData(getFloatExchanged(), mAdapter.getCount() > 0);
         getUnexchange();
@@ -275,6 +270,8 @@ public class MyEarningFragment extends BaseFragment {
         byte[] topic = Hex.decode(Numeric.cleanHexPrefix(log.getTopics().get(1)));
         byte[] addressByte = new byte[20];
         System.arraycopy(topic, 12, addressByte, 0, 20);
+
+        exchanged = exchanged.add(amount);
         setTopAmount(cid, amount);
 
         EarningRecord earning = EarningRecord.get(cid.toString(16) + ":" + mTopAmount.toString(16));
