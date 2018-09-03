@@ -152,12 +152,12 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
 
             case Constant.CHECK_ADB:
                 mTipText.setText(R.string.check_fail_adb);
-                mTipButton.setText(R.string.check_btn);
+                mTipButton.setText(R.string.check_btn_adb);
                 break;
 
             case Constant.CHECK_STAY_ON_WHILE_PLUGGED_IN:
                 mTipText.setText(R.string.check_fail_stay_on);
-                mTipButton.setText(R.string.check_btn);
+                mTipButton.setText(R.string.check_btn_adb);
                 break;
 
             case Constant.CHECK_TCP:
@@ -169,7 +169,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
                 SpannableStringBuilder highlight = createHighlight(getString(R.string.check_fail_auth),
                         getString(R.string.check_highlight));
                 mTipText.setText(highlight);
-                mTipButton.setText(R.string.check_btn);
+                mTipButton.setText(R.string.check_btn_setting);
                 break;
 
             case Constant.CHECK_ADB_SAFE:
@@ -178,7 +178,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
                 SpannableStringBuilder highlightSafe = createHighlight(getString(R.string.check_fail_adb_safe),
                         getString(R.string.check_highlight_safe));
                 mTipText.setText(highlightSafe);
-                mTipButton.setText(R.string.check_btn);
+                mTipButton.setText(R.string.check_btn_adb);
                 break;
 
             case Constant.CHECK_AUTH_SUCCESS:

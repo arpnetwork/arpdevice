@@ -14,7 +14,9 @@
     <string name="input_passwd_error">wallet password error,please try again</string>
 
     <string name="check_init">Device is initializing</string>
-    <string name="check_btn">setting</string>
+    <string name="check_btn_adb">Go to developer options</string>
+    <string name="check_btn_quit">quit</string>
+    <string name="check_btn_setting">setting</string>
     <string name="check_fail_os">Your device os is old. Please update to 8.0+ to be ARP Device</string>
     <string name="check_fail_disk">More than 1G disk capability is required</string>
     <string name="check_fail_adb">Please open the Developer options and USB Debug</string>
@@ -22,7 +24,6 @@
     <string name="check_fail_adb_safe">Please open %s</string>
     <string name="check_fail_tcp">Please connect your device with pc by usb and read the guild of ARP-tool</string>
     <string name="check_fail_auth">Please ensure usb debug checkbox %s, otherwise you cannot be an ARP device.</string>
-    <string name="check_btn_quit">quit</string>
     <string name="check_fail_adb_exception">Please setup adb develop mode</string>
     <string name="check_highlight">Checked</string>
     <string name="check_highlight_safe">USB debugging（Security settings）</string>

@@ -179,9 +179,6 @@ public class Touch {
             sp.edit().putString("key", mAuth.getPrivateKey()).apply();
         }
 
-        mConn = new Connection(mAuth, "127.0.0.1", 5555);
-        mConn.setListener(mConnectionListener);
-
         mUIHandler = new Handler(Looper.getMainLooper());
     }
 
