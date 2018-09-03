@@ -28,7 +28,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class ClingPortMappingExtractor {
-    private static final String TAG = "MappingExtractor";
+    private static final String TAG = "PortMappingExtractor";
 
     private final Collection<PortMapping> mappings;
     private boolean moreEntries;
@@ -66,6 +66,8 @@ public class ClingPortMappingExtractor {
                 mappings.add(portMapping);
             } catch (final ClingOperationFailedException e) {
                 handleFailureResponse(e.getResponse());
+            } catch (final ClingRouterException ignored){
+                // ignored,we loop to try again.
             }
             currentMappingNumber++;
         }
