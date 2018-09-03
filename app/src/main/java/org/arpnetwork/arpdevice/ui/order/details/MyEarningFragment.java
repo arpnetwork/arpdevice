@@ -182,7 +182,6 @@ public class MyEarningFragment extends BaseFragment {
 
     private void refreshData() {
         loadNextRemote();
-        exchanged = BigInteger.ZERO;
         List<EarningRecord> oneTime = EarningRecord.findAll();
         mAdapter.setData(oneTime);
         mHeaderView.setData(getFloatExchanged(), mAdapter.getCount() > 0);

@@ -170,7 +170,7 @@ public class ARPBank extends Contract {
     public static BigInteger estimateApproveGasLimit(String spender) {
         String functionString = FunctionEncoder.encode(getApproveFunction(spender,
                 new BigInteger(Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toString()),
-                new BigInteger("0"), ARPRegistry.CONTRACT_ADDRESS));
+                BigInteger.ZERO, ARPRegistry.CONTRACT_ADDRESS));
         return TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
     }
 

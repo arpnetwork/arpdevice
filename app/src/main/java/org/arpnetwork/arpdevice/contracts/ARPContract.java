@@ -31,6 +31,8 @@ public class ARPContract extends Contract {
     public static final String CONTRACT_ADDRESS = "0xBeB6fdF4ef6CEb975157be43cBE0047B248a8922";
     public static final String APPROVE_ARP_NUMBER = "5000";
 
+    public static final String FUNC_BALANCE_OF = "balanceOf";
+    public static final String FUNC_ALLOWANCE = "allowance";
     public static final String FUNC_APPROVE = "approve";
 
     private ARPContract(Credentials credentials,
@@ -96,14 +98,14 @@ public class ARPContract extends Contract {
     }
 
     private static Function getBalanceOfFunction(String address) {
-        return new Function("balanceOf",
+        return new Function(FUNC_BALANCE_OF,
                 Arrays.<Type>asList(new Address(address)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
                 }));
     }
 
     private static Function getAllowanceFunction(String owner, String spender) {
-        return new Function("allowance",
+        return new Function(FUNC_ALLOWANCE,
                 Arrays.<Type>asList(new Address(owner), new Address(spender)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
                 }));

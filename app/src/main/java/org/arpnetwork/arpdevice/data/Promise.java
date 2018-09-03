@@ -72,7 +72,7 @@ public class Promise {
         if (amount != null) {
             bigAmount = new BigInteger(Numeric.cleanHexPrefix(amount), 16);
         } else {
-            bigAmount = new BigInteger("0");
+            bigAmount = BigInteger.ZERO;
         }
         return bigAmount.compareTo(new BigInteger(Numeric.cleanHexPrefix(promise.amount), 16));
     }
