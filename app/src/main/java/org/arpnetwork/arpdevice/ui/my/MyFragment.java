@@ -45,6 +45,7 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.data.BankAllowance;
+import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.upnp.ClingRegistryListener;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
@@ -122,17 +123,24 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         }
     };
 
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+
+        Touch.getInstance().connect();
+        mOrderPrice = DeviceInfo.get().getPrice();
+
+        CustomApplication.sInstance.startMonitorService();
+        startUpnpService();
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setTitle(R.string.my);
         hideNavIcon();
-
-        mOrderPrice = DeviceInfo.get().getPrice();
-
-        CustomApplication.sInstance.startMonitorService();
-        startUpnpService();
     }
 
     @Override
@@ -145,6 +153,13 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        loadMinerAddr();
     }
 
     @Override
@@ -197,16 +212,21 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
             public void onDrawFrame(GL10 gl) {
             }
         });
+    }
+
+    private void loadMinerAddr() {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 final Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-                if (miner != null) {
-                    mHandler.post(new Runnable() {
+                if (mMinerName != null) {
+                    mMinerName.post(new Runnable() {
                         @Override
                         public void run() {
-                            if (mMinerName != null) {
+                            if (miner != null) {
                                 mMinerName.setText(miner.getAddress());
+                            } else {
+                                mMinerName.setText("");
                             }
                         }
                     });
@@ -381,6 +401,10 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
             case R.id.btn_order:
                 if (!NetworkHelper.getInstance().isNetworkAvailable()) {
                     showAlertDialog(R.string.network_error);
+                    return;
+                }
+                if (!NetworkHelper.getInstance().isWifiNetwork()) {
+                    showAlertDialog(R.string.no_wifi);
                     return;
                 }
                 if (!mOpenPortForward) {

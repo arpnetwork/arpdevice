@@ -69,6 +69,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
 
         mCheckThread.stopPingTimer();
         mCheckThread.quit();
+        mCheckThread = null;
     }
 
     @Override
@@ -122,8 +123,6 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
     }
 
     private void jumpToNextActivity() {
-        Touch.getInstance().connect();
-
         Intent intent = new Intent();
         if (!Wallet.exists()) {
             intent.setClass(this, WalletImporterActivity.class);

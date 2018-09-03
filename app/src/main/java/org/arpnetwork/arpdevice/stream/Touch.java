@@ -19,6 +19,7 @@ package org.arpnetwork.arpdevice.stream;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -57,7 +58,7 @@ public class Touch {
     private int mRetryCount;
 
     private boolean mDoAuth = false;
-    private Handler mCheckHandler;
+    private Handler mUIHandler;
 
     private RecordHelper mRecordHelper;
     private MonitorTouch mMonitor;
@@ -88,10 +89,8 @@ public class Touch {
     }
 
     public void ensureAuthChecked(Handler handler) {
-        mCheckHandler = handler;
-
         Connection checkAuth = new Connection(mAuth, "127.0.0.1", 5555);
-        checkAuth.setListener(mCheckListener);
+        checkAuth.setListener(new CheckConnectionListener(handler));
         checkAuth.connect();
     }
 
@@ -179,6 +178,11 @@ public class Touch {
             mAuth = new Auth();
             sp.edit().putString("key", mAuth.getPrivateKey()).apply();
         }
+
+        mConn = new Connection(mAuth, "127.0.0.1", 5555);
+        mConn.setListener(mConnectionListener);
+
+        mUIHandler = new Handler(Looper.getMainLooper());
     }
 
     private Connection.ConnectionListener mConnectionListener = new Connection.ConnectionListener() {
@@ -241,7 +245,13 @@ public class Touch {
         }
     };
 
-    private Connection.ConnectionListener mCheckListener = new Connection.ConnectionListener() {
+    private class CheckConnectionListener implements Connection.ConnectionListener {
+        private Handler mCheckHandler;
+
+        private CheckConnectionListener(Handler handler) {
+            mCheckHandler = handler;
+        }
+
         @Override
         public void onConnected(Connection conn) {
             if (mDoAuth) {
@@ -250,10 +260,11 @@ public class Touch {
                 ensureAuthChecked(mCheckHandler);
             } else {
                 if (Build.MANUFACTURER.equalsIgnoreCase("xiaomi")) {
-                    openUSBSafeDebug(conn);
+                    openUSBSafeDebug(conn, mCheckHandler);
                 } else {
                     conn.close();
                     mCheckHandler.obtainMessage(Constant.CHECK_AUTH_SUCCESS).sendToTarget();
+                    mCheckHandler = null;
                 }
             }
         }
@@ -273,9 +284,9 @@ public class Touch {
         public void onException(Connection conn, Throwable cause) {
             conn.close();
         }
-    };
+    }
 
-    private void openUSBSafeDebug(final Connection connection) {
+    private void openUSBSafeDebug(final Connection connection, final Handler mCheckHandler) {
         final StringBuilder sb = new StringBuilder();
         ShellChannel ss = connection.openShell("groups");
         ss.setListener(new ShellChannel.ShellListener() {
