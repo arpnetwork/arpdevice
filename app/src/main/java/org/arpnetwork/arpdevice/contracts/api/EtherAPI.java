@@ -16,6 +16,9 @@
 
 package org.arpnetwork.arpdevice.contracts.api;
 
+import android.content.Context;
+
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.contracts.tasks.ETHBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.util.Util;
@@ -30,12 +33,13 @@ import java.util.concurrent.ExecutionException;
 public class EtherAPI {
     private static String ETHER_NODE = "http://dev.arpnetwork.org:8545";
 
-    public static Web3j sWeb3j;
+    private static Web3j sWeb3j;
 
-    public static Web3j getWeb3J() {
+    public static synchronized Web3j getWeb3J() {
         if (sWeb3j == null) {
             HttpService httpService = new HttpService(ETHER_NODE);
-            String userAgent = Util.getAppName() + "/" + Util.getAppVersionCode();
+            Context context = CustomApplication.sInstance;
+            String userAgent = Util.getAppName(context) + "/" + Util.getAppVersionCode(context);
             httpService.addHeader("User-Agent", userAgent);
             sWeb3j = Web3jFactory.build(httpService);
         }

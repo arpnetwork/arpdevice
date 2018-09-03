@@ -226,8 +226,7 @@ public class Util {
         return showTime;
     }
 
-    public static String getAppName() {
-        Context context = CustomApplication.sInstance;
+    public static String getAppName(Context context) {
         String label = "";
         try {
             PackageManager pm = context.getPackageManager();
@@ -238,8 +237,7 @@ public class Util {
         return label;
     }
 
-    public static String getAppVersion() {
-        Context context = CustomApplication.sInstance;
+    public static String getAppVersion(Context context) {
         String appVersion = "";
         try {
             appVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
@@ -248,8 +246,7 @@ public class Util {
         return appVersion;
     }
 
-    public static int getAppVersionCode() {
-        Context context = CustomApplication.sInstance;
+    public static int getAppVersionCode(Context context) {
         int appVersionCode = 0;
         try {
             appVersionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;

@@ -151,7 +151,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public void onDestroy() {
         super.onDestroy();
 
-        stooUpnpService();
+        stopUpnpService();
         CustomApplication.sInstance.stopMonitorService();
 
         getActivity().getApplication().onTerminate();
@@ -226,7 +226,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         );
     }
 
-    private void stooUpnpService() {
+    private void stopUpnpService() {
         if (upnpService != null) {
             upnpService.getRegistry().removeListener(mClingRegistryListener);
             upnpService.get().shutdown();
@@ -385,7 +385,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 }
                 if (!mOpenPortForward) {
                     UIHelper.showToast(getActivity(), getString(R.string.no_port_forward));
-                    stooUpnpService();
+                    stopUpnpService();
                     startUpnpService();
                 } else {
                     Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
