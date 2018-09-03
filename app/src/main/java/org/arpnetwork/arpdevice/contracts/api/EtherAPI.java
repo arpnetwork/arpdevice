@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.contracts.api;
 
 import org.arpnetwork.arpdevice.contracts.tasks.ETHBalanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jFactory;
 import org.web3j.protocol.core.methods.response.EthBlock;
@@ -29,8 +30,16 @@ import java.util.concurrent.ExecutionException;
 public class EtherAPI {
     private static String ETHER_NODE = "http://dev.arpnetwork.org:8545";
 
+    public static Web3j sWeb3j;
+
     public static Web3j getWeb3J() {
-        return Web3jFactory.build(new HttpService(ETHER_NODE));
+        if (sWeb3j == null) {
+            HttpService httpService = new HttpService(ETHER_NODE);
+            String userAgent = Util.getAppName() + "/" + Util.getAppVersionCode();
+            httpService.addHeader("User-Agent", userAgent);
+            sWeb3j = Web3jFactory.build(httpService);
+        }
+        return sWeb3j;
     }
 
     public static void getEtherBalance(String address, OnValueResult<BigDecimal> onResult) {

@@ -17,8 +17,11 @@
 package org.arpnetwork.arpdevice.util;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 
 import org.arpnetwork.adb.SyncChannel;
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 
 import org.spongycastle.util.encoders.Hex;
@@ -221,6 +224,38 @@ public class Util {
         }
 
         return showTime;
+    }
+
+    public static String getAppName() {
+        Context context = CustomApplication.sInstance;
+        String label = "";
+        try {
+            PackageManager pm = context.getPackageManager();
+            ApplicationInfo appInfo = pm.getApplicationInfo(context.getPackageName(), 0);
+            label = pm.getApplicationLabel(appInfo).toString();
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        return label;
+    }
+
+    public static String getAppVersion() {
+        Context context = CustomApplication.sInstance;
+        String appVersion = "";
+        try {
+            appVersion = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        return appVersion;
+    }
+
+    public static int getAppVersionCode() {
+        Context context = CustomApplication.sInstance;
+        int appVersionCode = 0;
+        try {
+            appVersionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+        }
+        return appVersionCode;
     }
 
 }
