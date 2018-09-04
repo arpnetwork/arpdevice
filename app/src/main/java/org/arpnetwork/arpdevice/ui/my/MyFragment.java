@@ -320,29 +320,31 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         builder.setOnClickListener(new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                final String password = builder.getPassword();
-                if (TextUtils.isEmpty(password)) {
-                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
-                } else {
-                    dialog.dismiss();
-                    showProgressDialog("", false);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            SignUtil.generateSigner(password);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    hideProgressDialog();
-                                    if (!SignUtil.signerExists()) {
-                                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                                    } else {
-                                        startReceivingOrder(miner, mDataPort, mHttpPort);
+                if (which == PasswordDialog.CONFIRM) {
+                    final String password = builder.getPassword();
+                    if (TextUtils.isEmpty(password)) {
+                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
+                    } else {
+                        dialog.dismiss();
+                        showProgressDialog("", false);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                SignUtil.generateSigner(password);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        hideProgressDialog();
+                                        if (!SignUtil.signerExists()) {
+                                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                        } else {
+                                            startReceivingOrder(miner, mDataPort, mHttpPort);
+                                        }
                                     }
-                                }
-                            });
-                        }
-                    }).start();
+                                });
+                            }
+                        }).start();
+                    }
                 }
             }
         });

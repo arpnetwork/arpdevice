@@ -26,6 +26,8 @@ import android.widget.EditText;
 import org.arpnetwork.arpdevice.R;
 
 public class PasswordDialog extends Dialog {
+    public static final int CONFIRM = 0;
+    public static final int CANCEL = 1;
 
     public PasswordDialog(Context context) {
         super(context);
@@ -60,6 +62,7 @@ public class PasswordDialog extends Dialog {
             LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
             final PasswordDialog dialog = new PasswordDialog(mContext, R.style.Dialog);
+            dialog.setCancelable(false);
             View layout = inflater.inflate(R.layout.dialog_password, null);
             dialog.addContentView(layout, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -67,7 +70,16 @@ public class PasswordDialog extends Dialog {
             layout.findViewById(R.id.btn_ok).setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     if (mButtonListener != null) {
-                        mButtonListener.onClick(dialog, 0);
+                        mButtonListener.onClick(dialog, CONFIRM);
+                    }
+                }
+            });
+            layout.findViewById(R.id.btn_cancel).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                    if (mButtonListener != null) {
+                        mButtonListener.onClick(dialog, CANCEL);
                     }
                 }
             });

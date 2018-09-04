@@ -45,6 +45,7 @@ public class PayEthDialog {
     private static BigDecimal mGasPriceGWei;
     private static ProgressDialog mProgressDialog;
     private static Dialog mShowPriceDialog;
+    private static DialogInterface.OnClickListener mCancelListener;
 
     public interface OnPayListener {
         void onPay(BigInteger priceWei, String password);
@@ -62,6 +63,7 @@ public class PayEthDialog {
             final OnPayListener callback, final DialogInterface.OnClickListener negativeListener) {
         if (mShowPriceDialog != null && mShowPriceDialog.isShowing()) return;
 
+        mCancelListener = negativeListener;
         showProgressBar(context, "", false);
         new OKHttpUtils().get(Config.API_URL, new SimpleCallback<GasInfoResponse>() {
             @Override
@@ -136,32 +138,40 @@ public class PayEthDialog {
         builder.setOnClickListener(new DialogInterface.OnClickListener() {
             @Override
             public void onClick(final DialogInterface dialog, int which) {
-                final String password = builder.getPassword();
-                if (TextUtils.isEmpty(password)) {
-                    UIHelper.showToast(context, context.getString(R.string.input_passwd_tip));
-                } else {
-                    showProgressBar(context, "", false);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            final Credentials credentials = Wallet.loadCredentials(password);
-                            context.runOnUiThread(new Runnable() {
+                switch (which) {
+                    case PasswordDialog.CANCEL:
+                        mCancelListener.onClick(dialog, which);
+                        break;
+
+                    case PasswordDialog.CONFIRM:
+                        final String password = builder.getPassword();
+                        if (TextUtils.isEmpty(password)) {
+                            UIHelper.showToast(context, context.getString(R.string.input_passwd_tip));
+                        } else {
+                            showProgressBar(context, "", false);
+                            new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    hideProgressBar();
+                                    final Credentials credentials = Wallet.loadCredentials(password);
+                                    context.runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            hideProgressBar();
 
-                                    if (credentials == null) {
-                                        UIHelper.showToast(context, context.getString(R.string.input_passwd_error));
-                                    } else {
-                                        dialog.dismiss();
-                                        if (callback != null) {
-                                            callback.onPay(Convert.toWei(mGasPriceGWei, Convert.Unit.GWEI).toBigInteger(), password);
+                                            if (credentials == null) {
+                                                UIHelper.showToast(context, context.getString(R.string.input_passwd_error));
+                                            } else {
+                                                dialog.dismiss();
+                                                if (callback != null) {
+                                                    callback.onPay(Convert.toWei(mGasPriceGWei, Convert.Unit.GWEI).toBigInteger(), password);
+                                                }
+                                            }
                                         }
-                                    }
+                                    });
                                 }
-                            });
+                            }).start();
                         }
-                    }).start();
+                        break;
                 }
             }
         });
