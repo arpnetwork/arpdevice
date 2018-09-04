@@ -22,6 +22,7 @@ import org.arpnetwork.adb.Channel;
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.util.DeviceUtil;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.io.File;
@@ -37,8 +38,22 @@ public class AssetCopyHelper {
     private static final String DIR = "/data/local/tmp/";
     private static final String ARPTOUCH_FILE_NAME = "arptouch";
     private static final String ARP_PROPERTIES_NAME = "arp.properties";
-    private static final String ARPCAP_FILE_NAME = "arpcap";
-    private static final String LIB_ARPCAP_FILE_NAME = "libarpcap.so";
+    private static final String DEST_CAP_FILE_NAME = "arpcap";
+    private static final String DEST_LIB_ARPCAP_FILE_NAME = "libarpcap.so";
+
+    private static final String ABI_TARGET;
+    private static final String ASSET_ARPCAP_FILE_NAME;
+    private static final String ASSET_LIB_ARPCAP_FILE_NAME;
+
+    static {
+        if (DeviceUtil.is64bit()) {
+            ABI_TARGET = "arm64-v8a";
+        } else {
+            ABI_TARGET = "armeabi-v7a";
+        }
+        ASSET_ARPCAP_FILE_NAME = ABI_TARGET + "/arpcap";
+        ASSET_LIB_ARPCAP_FILE_NAME = ABI_TARGET + "/libarpcap.so";
+    }
 
     public interface PushCallback {
         void onStart();
@@ -51,11 +66,11 @@ public class AssetCopyHelper {
     }
 
     public static void pushCap(final SyncChannel ss, PushCallback listener) {
-        pushFileFromAsset(ss, DIR + ARPCAP_FILE_NAME, ARPCAP_FILE_NAME, listener);
+        pushFileFromAsset(ss, DIR + DEST_CAP_FILE_NAME, ASSET_ARPCAP_FILE_NAME, listener);
     }
 
     public static void pushLibCap(final SyncChannel ss, PushCallback listener) {
-        pushFileFromAsset(ss, DIR + LIB_ARPCAP_FILE_NAME, LIB_ARPCAP_FILE_NAME, listener);
+        pushFileFromAsset(ss, DIR + DEST_LIB_ARPCAP_FILE_NAME, ASSET_LIB_ARPCAP_FILE_NAME, listener);
     }
 
     public static void pushFile(final SyncChannel ss, final String destFilePath,
@@ -93,11 +108,11 @@ public class AssetCopyHelper {
     }
 
     public static boolean isValidCapBinary() {
-        return isValidFile(DIR + ARPCAP_FILE_NAME, "cap_md5");
+        return isValidFile(DIR + DEST_CAP_FILE_NAME, ABI_TARGET + "-" + "cap_md5");
     }
 
     public static boolean isValidCapLib() {
-        return isValidFile(DIR + LIB_ARPCAP_FILE_NAME, "lib_cap_md5");
+        return isValidFile(DIR + DEST_LIB_ARPCAP_FILE_NAME, ABI_TARGET + "-" + "lib_cap_md5");
     }
 
     public static boolean isValidFile(String destFilePath, String keyOfMd5) {

@@ -51,7 +51,7 @@ public class CheckThread {
     }
 
     public void doCheck() {
-        if (DeviceUtil.getSdk() < Build.VERSION_CODES.O || !DeviceUtil.is64bit()) {
+        if (DeviceUtil.getSdk() < Build.VERSION_CODES.O) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_OS);
             mUIHandler.sendMessage(message);
         } else if (DeviceUtil.getExternalDiskAvailable(mContext) < DISK_REQUEST) {
@@ -79,6 +79,10 @@ public class CheckThread {
         mWorkerHandler.removeCallbacksAndMessages(null);
     }
 
+    public void setShouldPing(boolean should) {
+        mShouldPing = should;
+    }
+
     public void quit() {
         mThread.quit();
     }
@@ -104,10 +108,6 @@ public class CheckThread {
             }
         }
     };
-
-    public void setShouldPing(boolean should) {
-        mShouldPing = should;
-    }
 
     private boolean isPortInOpened(String host, int port) {
         // Assume no connection is possible.
