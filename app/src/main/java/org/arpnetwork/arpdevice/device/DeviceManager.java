@@ -64,7 +64,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     private DeviceConnection mConnection;
     private Gson mGson;
     private Miner mMiner;
-
+    private DApp mDapp;
     private VerifyData mVerifyData;
     private ByteBuf mSpeedDataBuf;
     private boolean mRegistered;
@@ -128,6 +128,10 @@ public class DeviceManager implements DeviceConnection.Listener {
         return mRegistered;
     }
 
+    public DApp getDapp() {
+        return mDapp;
+    }
+
     @Override
     public void onConnected(DeviceConnection conn) {
         mHandler.post(new Runnable() {
@@ -181,16 +185,18 @@ public class DeviceManager implements DeviceConnection.Listener {
                     break;
                 case DEVICE_ASSIGNED:
                     final DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
+                    mDapp = res.data;
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             if (mOnDeviceStateChangedListener != null) {
-                                mOnDeviceStateChangedListener.onDeviceAssigned(res.data);
+                                mOnDeviceStateChangedListener.onDeviceAssigned(mDapp);
                             }
                         }
                     });
                     break;
                 case DEVICE_RELEASED:
+                    mDapp = null;
                     mHandler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -259,7 +265,7 @@ public class DeviceManager implements DeviceConnection.Listener {
         if (result == 0) {
             mRegistered = true;
             startHeartbeat();
-            mHandler.postDelayed(mDeviceReadyRunnable, 800);
+            mHandler.postDelayed(mDeviceReadyRunnable, 500);
         } else if (result == 1) {
             handleError(result, R.string.incompatible_protocol);
         } else {
@@ -270,8 +276,10 @@ public class DeviceManager implements DeviceConnection.Listener {
     private Runnable mDeviceReadyRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mOnDeviceStateChangedListener != null) {
-                mOnDeviceStateChangedListener.onDeviceReady();
+            if (mDapp == null) {
+                if (mOnDeviceStateChangedListener != null) {
+                    mOnDeviceStateChangedListener.onDeviceReady();
+                }
             }
         }
     };
@@ -338,5 +346,6 @@ public class DeviceManager implements DeviceConnection.Listener {
     private void reset() {
         mRegistered = false;
         mHandler.removeCallbacksAndMessages(null);
+        mDapp = null;
     }
 }

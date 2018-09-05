@@ -64,13 +64,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private DeviceManager mDeviceManager;
     private HttpServer mHttpServer;
     private AppManager mAppManager;
-    private DApp mDApp;
     private Miner mMiner;
 
     private BigInteger mLastAmount = BigInteger.ZERO;
     private BigInteger mReceivedAmount = BigInteger.ZERO;
     private int mQuality;
     private int mTotalTime;
+    private boolean mStartService;
 
     private TouchLocalReceiver mTouchLocalReceiver;
     private ChargingReceiver mChargingReceiver;
@@ -87,6 +87,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
+
         mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
         int[] ports = getArguments().getIntArray(Constant.KEY_PORTS);
         mDataPort = ports[0];
@@ -105,13 +106,25 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
         startDeviceService();
         mOrderStateView.setText(R.string.connecting_miners);
     }
 
     @Override
-    public void onDestroy() {
+    public void onPause() {
+        super.onPause();
+
         stopDeviceService();
+    }
+
+    @Override
+    public void onDestroy() {
         unregisterReceiver();
 
         super.onDestroy();
@@ -126,42 +139,52 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void startDeviceService() {
-        TaskHelper taskHelper = new TaskHelper(getContext().getApplicationContext());
+        if (!mStartService) {
+            TaskHelper taskHelper = new TaskHelper(getContext().getApplicationContext());
 
-        DataServer.getInstance().setListener(mConnectionListener);
-        DataServer.getInstance().setTaskHelper(taskHelper);
-        DataServer.getInstance().startServer(mDataPort);
+            DataServer.getInstance().setListener(mConnectionListener);
+            DataServer.getInstance().setTaskHelper(taskHelper);
+            DataServer.getInstance().startServer(mDataPort);
 
-        mAppManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
+            mAppManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
 
-        mDeviceManager = new DeviceManager();
-        mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
-        mDeviceManager.connect(mMiner);
+            mDeviceManager = new DeviceManager();
+            mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
+            mDeviceManager.connect(mMiner);
 
-        DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
-        dispatcher.setAppManager(mAppManager);
-        dispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
-        startHttpServer(dispatcher);
+            DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
+            dispatcher.setAppManager(mAppManager);
+            dispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
+            startHttpServer(dispatcher);
+
+            mStartService = true;
+        }
     }
 
     private void stopDeviceService() {
-        releaseDApp();
+        if (mStartService) {
+            releaseDApp();
 
-        DownloadManager.getInstance().cancelAll();
-        stopHttpServer();
-        DataServer.getInstance().shutdown();
-        if (mDeviceManager != null) {
-            mDeviceManager.setOnDeviceStateChangedListener(null);
-            mDeviceManager.close();
+            DownloadManager.getInstance().cancelAll();
+            stopHttpServer();
+            DataServer.getInstance().shutdown();
+            if (mDeviceManager != null) {
+                mDeviceManager.setOnDeviceStateChangedListener(null);
+                mDeviceManager.close();
+            }
+
+            mStartService = false;
         }
     }
 
     private void startHttpServer(Dispatcher dispatcher) {
-        try {
-            mHttpServer = new HttpServer(mHttpPort, dispatcher);
-            mHttpServer.start();
-        } catch (Exception e) {
-            showAlertDialog(getString(R.string.start_service_failed));
+        if (mHttpServer == null) {
+            try {
+                mHttpServer = new HttpServer(mHttpPort, dispatcher);
+                mHttpServer.start();
+            } catch (Exception e) {
+                showAlertDialog(getString(R.string.start_service_failed));
+            }
         }
     }
 
@@ -208,11 +231,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private boolean checkPromiseAmount() {
-        if (mDApp == null) {
+        if (mDeviceManager.getDapp() == null) {
             return false;
         }
         if (mTotalTime > 0) {
-            BigInteger totalAmount = mDApp.getAmount(mTotalTime)
+            BigInteger totalAmount = mDeviceManager.getDapp().getAmount(mTotalTime)
                     .multiply(new BigInteger(String.valueOf((int) ((1 - Config.FEE_PERCENT) * 100))))
                     .divide(new BigInteger("100"))
                     .add(mLastAmount);
@@ -224,15 +247,19 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void releaseDApp() {
-        if (mDeviceManager != null) {
+        if (mDeviceManager != null && mDeviceManager.getDapp() != null) {
             mDeviceManager.releaseDevice();
         }
+        onDeviceReleased();
+    }
+
+    private void onDeviceReleased() {
         mHandler.removeCallbacksAndMessages(null);
-        mDApp = null;
         if (mAppManager != null) {
             mAppManager.clear();
         }
         DataServer.getInstance().releaseDApp();
+
         mOrderStateView.setText(R.string.wait_for_order);
     }
 
@@ -302,7 +329,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onException(Throwable cause) {
-            releaseDApp();
         }
     };
 
@@ -328,7 +354,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 }
                 mTotalTime = 0;
 
-                mDApp = dApp;
                 mAppManager.setDApp(dApp);
                 DataServer.getInstance().setDApp(dApp);
 
@@ -350,7 +375,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onDeviceReleased() {
-            releaseDApp();
+            ReceiveOrderFragment.this.onDeviceReleased();
         }
 
         @Override
