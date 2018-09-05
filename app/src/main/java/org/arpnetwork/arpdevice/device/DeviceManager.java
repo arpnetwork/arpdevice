@@ -277,13 +277,13 @@ public class DeviceManager implements DeviceConnection.Listener {
     };
 
     private void handleError(final int result, final int msg) {
-        close();
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 if (mOnDeviceStateChangedListener != null) {
                     mOnDeviceStateChangedListener.onError(result, msg);
                 }
+                close();
             }
         });
     }
