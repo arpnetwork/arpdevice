@@ -21,6 +21,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,12 +38,14 @@ import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.dialog.MessageDialog;
+import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
+import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
@@ -95,7 +98,7 @@ public class MyWalletFragment extends BaseFragment {
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getUnexchange();
+                checkAuthor();
             }
         });
 
@@ -125,10 +128,27 @@ public class MyWalletFragment extends BaseFragment {
         }
     }
 
-    private void resetWallet() {
-        Intent intent = new Intent(getActivity(), WalletImporterActivity.class);
-        startActivity(intent);
-        finish();
+    private void checkAuthor() {
+        final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
+        builder.setOnClickListener(new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == PasswordDialog.CONFIRM) {
+                    final String password = builder.getPassword();
+                    if (TextUtils.isEmpty(password)) {
+                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
+                    } else {
+                        dialog.dismiss();
+                        if (Wallet.loadCredentials(password) != null) {
+                            getUnexchange();
+                        } else {
+                            Toast.makeText(getContext(), getString(R.string.input_passwd_error), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }
+        });
+        builder.create().show();
     }
 
     private void getUnexchange() {
@@ -175,6 +195,12 @@ public class MyWalletFragment extends BaseFragment {
         } else {
             resetWallet();
         }
+    }
+
+    private void resetWallet() {
+        Intent intent = new Intent(getActivity(), WalletImporterActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private void withdraw(final Credentials credentials, final BigInteger amount, final BigInteger gasPrice, final BigInteger gasLimit) {
