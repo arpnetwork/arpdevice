@@ -19,13 +19,16 @@ package org.arpnetwork.arpdevice.config;
 public class Constant {
     public static final int CHECK_DEFAULT = -1;
     public static final int CHECK_OS = 1;
-    public static final int CHECK_ADB = 2;
-    public static final int CHECK_TCP = 3;
-    public static final int CHECK_AUTH = 4;
-    public static final int CHECK_ADB_SAFE = 5;
-    public static final int CHECK_AUTH_SUCCESS = 6;
-    public static final int CHECK_DISK_AVAILABLE = 7;
-    public static final int CHECK_STAY_ON_WHILE_PLUGGED_IN = 8;
+    public static final int CHECK_DISK_AVAILABLE = 2;
+    public static final int CHECK_ADB = 3;
+    public static final int CHECK_TCP = 4;
+    public static final int CHECK_AUTH = 5;
+    public static final int CHECK_ADB_SAFE = 6;
+    public static final int CHECK_TOUCH = 7;
+    public static final int CHECK_INSTALLATION = 8;
+    public static final int CHECK_INSTALLATION_FAILED = 9;
+    public static final int CHECK_UPNP = 10;
+    public static final int CHECK_AUTH_SUCCESS = 11;
 
     // Defines a custom Intent action
     public static final String BROADCAST_ACTION_STATUS = "org.arpnetwork.arpdevice.ACTION_STATUS";

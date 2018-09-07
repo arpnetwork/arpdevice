@@ -51,7 +51,7 @@ public class CheckThread {
     }
 
     public void doCheck() {
-        if (DeviceUtil.getSdk() < Build.VERSION_CODES.O) {
+        if (DeviceUtil.getSdk() < Build.VERSION_CODES.N) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_OS);
             mUIHandler.sendMessage(message);
         } else if (DeviceUtil.getExternalDiskAvailable(mContext) < DISK_REQUEST) {
@@ -61,8 +61,7 @@ public class CheckThread {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_ADB);
             mUIHandler.sendMessage(message);
         } else if (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.STAY_ON_WHILE_PLUGGED_IN, 0) == 0) {
-            Message message = mUIHandler.obtainMessage(Constant.CHECK_STAY_ON_WHILE_PLUGGED_IN);
-            mUIHandler.sendMessage(message);
+            // TODO：turn on stay on while plugged in by code
         } else if (mShouldPing) {
             startPingTimer();
         }
