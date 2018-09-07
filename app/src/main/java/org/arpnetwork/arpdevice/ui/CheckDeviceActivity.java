@@ -75,7 +75,6 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
     protected void onDestroy() {
         super.onDestroy();
 
-        mCheckThread.stopPingTimer();
         mCheckThread.quit();
         mCheckThread = null;
     }

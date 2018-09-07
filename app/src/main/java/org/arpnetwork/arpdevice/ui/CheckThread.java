@@ -51,6 +51,8 @@ public class CheckThread {
     }
 
     public void doCheck() {
+        stopPingTimer();
+
         if (DeviceUtil.getSdk() < Build.VERSION_CODES.N) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_OS);
             mUIHandler.sendMessage(message);
@@ -67,23 +69,25 @@ public class CheckThread {
         }
     }
 
-    public void startPingTimer() {
-        if (mWorkerHandler != null) {
-            mWorkerHandler.removeCallbacksAndMessages(null);
-            mWorkerHandler.postDelayed(mPingRunnable, PING_INTERVAL);
-        }
-    }
-
-    public void stopPingTimer() {
-        mWorkerHandler.removeCallbacksAndMessages(null);
-    }
-
     public void setShouldPing(boolean should) {
         mShouldPing = should;
     }
 
     public void quit() {
         mThread.quit();
+        
+        stopPingTimer();
+    }
+
+    private void stopPingTimer() {
+        mWorkerHandler.removeCallbacksAndMessages(null);
+    }
+
+    private void startPingTimer() {
+        if (mWorkerHandler != null) {
+            mWorkerHandler.removeCallbacksAndMessages(null);
+            mWorkerHandler.postDelayed(mPingRunnable, PING_INTERVAL);
+        }
     }
 
     private Runnable mPingRunnable = new Runnable() {
@@ -93,9 +97,6 @@ public class CheckThread {
             mShouldPing = !opened;
 
             if (opened) {
-                Message message = mUIHandler.obtainMessage(Constant.CHECK_AUTH);
-                mUIHandler.sendMessage(message);
-
                 stopPingTimer();
 
                 Touch.getInstance().ensureAuthChecked(mUIHandler);
