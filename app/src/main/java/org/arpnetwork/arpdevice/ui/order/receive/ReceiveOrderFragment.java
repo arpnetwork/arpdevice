@@ -123,7 +123,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onPause() {
         super.onPause();
 
-        stopDeviceService();
+        if (mAppManager.getState() != AppManager.State.INSTALLING && mAppManager.getState() != AppManager.State.LAUNCHING) {
+            stopDeviceService();
+        }
     }
 
     @Override

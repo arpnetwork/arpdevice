@@ -47,14 +47,32 @@ public class AppManager {
     private Set<String> mPackageSet;
     private TaskHelper mTaskHelper;
     private Handler mHandler;
+    private State mState;
+
+    public enum State {
+        IDLE,
+        DOWNLOADING,
+        INSTALLING,
+        INSTALLED,
+        LAUNCHING,
+        LAUNCHED
+    }
 
     public AppManager(Handler handler, TaskHelper helper) {
+        if (helper == null) {
+            throw new IllegalArgumentException("TaskHelper is null");
+        }
         mHandler = handler;
         mTaskHelper = helper;
         mPackageSet = new HashSet<>();
+        mState = State.IDLE;
     }
 
-    public void setDApp(DApp dApp) {
+    public State getState() {
+        return mState;
+    }
+
+    public synchronized void setDApp(DApp dApp) {
         mDApp = dApp;
     }
 
@@ -63,6 +81,11 @@ public class AppManager {
     }
 
     public void appInstall(final String packageName, String url, int fileSize, String md5) {
+        if (mState == State.LAUNCHING || mState == State.LAUNCHED) {
+            DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
+            return;
+        }
+
         File destDir = new File(Environment.getExternalStorageDirectory(), "arpdevice");
         if (!destDir.exists()) {
             if (!destDir.mkdirs()) {
@@ -81,6 +104,7 @@ public class AppManager {
         }
 
         if (!apkExists) {
+            mState = State.DOWNLOADING;
             DownloadManager.getInstance().start(url, apkFile, new IDownloadListener() {
                 @Override
                 public void onFinish(File file) {
@@ -100,16 +124,32 @@ public class AppManager {
     }
 
     public void startApp(String packageName) {
-        if (mTaskHelper != null) {
-            if (mTaskHelper.launchApp(packageName)) {
-                mHandler.sendEmptyMessageDelayed(DataServer.MSG_CONNECTED_TIMEOUT, DataServer.CONNECTED_TIMEOUT);
-            } else {
+        if (mPackageSet.contains(packageName)) {
+            mState = State.LAUNCHING;
+
+            boolean success = mTaskHelper.launchApp(packageName, new Runnable() {
+                @Override
+                public void run() {
+                    mState = State.LAUNCHED;
+                    mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_SUCCESS);
+                    mHandler.sendEmptyMessageDelayed(DataServer.MSG_CONNECTED_TIMEOUT, DataServer.CONNECTED_TIMEOUT);
+                }
+            });
+            if (!success) {
+                mState = State.INSTALLED;
                 mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
             }
         }
     }
 
+    public void stopApp() {
+        mState = State.IDLE;
+        mTaskHelper.killLaunchedApp();
+    }
+
     public void uninstallApp(String packageName) {
+        mState = State.IDLE;
+
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.uninstallApp(packageName, null);
 
@@ -120,18 +160,21 @@ public class AppManager {
     }
 
     public void clear() {
+        mState = State.IDLE;
         uninstallAll();
         mPackageSet.clear();
         mDApp = null;
     }
 
-    private void appInstall(File file, final String packageName) {
+    private synchronized void appInstall(File file, final String packageName) {
+        mState = State.INSTALLING;
         mTaskHelper.startCheckTopTimer(TIME_INTERVAL, TIME_INTERVAL);
 
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
+                mState = State.INSTALLED;
                 mPackageSet.add(packageName);
                 mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
@@ -141,6 +184,7 @@ public class AppManager {
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
+                mState = State.IDLE;
                 mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
                     DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);

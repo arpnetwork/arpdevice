@@ -42,7 +42,8 @@ import io.netty.buffer.ByteBuf;
 
 public final class DataServer implements NettyConnection.ConnectionListener {
     public static final int MSG_CONNECTED_TIMEOUT = 1;
-    public static final int MSG_LAUNCH_APP_FAILED = MSG_CONNECTED_TIMEOUT + 1;
+    public static final int MSG_LAUNCH_APP_SUCCESS = MSG_CONNECTED_TIMEOUT + 1;
+    public static final int MSG_LAUNCH_APP_FAILED = MSG_LAUNCH_APP_SUCCESS + 1;
     public static final int CONNECTED_TIMEOUT = 10000;
 
     private static final String TAG = "DataServer";
@@ -156,7 +157,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         heartbeat();
 
         if (mDApp == null) {
-            stop();
+            close();
             return;
         }
 
@@ -166,9 +167,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     @Override
     public void onClosed(NettyConnection conn) {
-        stop();
-
         if (mDApp != null) {
+            stop();
             DAppApi.clientDisconnected(mSession, mDApp);
         }
         mSession = null;
@@ -203,6 +203,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Log.e(TAG, "onException. cause = " + cause.getMessage());
 
         stop();
+
         if (mListener != null) {
             mListener.onException(cause);
         }
@@ -212,6 +213,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         mConn = new NettyConnection(this);
         mGson = new Gson();
         mHandler = new DataServerHandler(this);
+        mStop = true;
     }
 
     private void onReceiveHeartbeat() {
@@ -248,7 +250,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                         @Override
                         public void run() {
                             onConnectFirstReq(connectReq);
-                            start();
                         }
                     }, new Runnable() {
                         @Override
@@ -358,6 +359,12 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         }
     }
 
+    private void close() {
+        if (mConn != null) {
+            mConn.closeConnection();
+        }
+    }
+
     private static class DataServerHandler extends Handler {
         private SoftReference<DataServer> mWeakDataServer;
 
@@ -371,12 +378,17 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             switch (msg.what) {
                 case MSG_CONNECTED_TIMEOUT:
                     if (dataServer != null && !dataServer.sessionExists()) {
-                        dataServer.stop();
+                        dataServer.close();
+                    }
+                    break;
+                case MSG_LAUNCH_APP_SUCCESS:
+                    if (dataServer != null) {
+                        dataServer.start();
                     }
                     break;
                 case MSG_LAUNCH_APP_FAILED:
                     if (dataServer != null) {
-                        dataServer.stop();
+                        dataServer.close();
                     }
                     break;
                 default:

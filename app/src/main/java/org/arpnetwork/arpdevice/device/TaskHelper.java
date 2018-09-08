@@ -41,19 +41,21 @@ public class TaskHelper {
     private final Adb mAdb;
     private Timer mTimer;
     private Context mContext;
+    private Runnable mLaunchRunnable;
 
     public TaskHelper(Context context) {
         mContext = context;
         mAdb = new Adb(Touch.getInstance().getConnection());
     }
 
-    public boolean launchApp(String packageName) {
+    public boolean launchApp(String packageName, Runnable runnable) {
         if (TextUtils.isEmpty(packageName)) {
             return false;
         }
 
         stopCheckTopTimer();
         mPackageName = packageName;
+        mLaunchRunnable = runnable;
         PackageManager packageManager = CustomApplication.sInstance.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(mPackageName);
         if (intent != null) {
@@ -70,34 +72,7 @@ public class TaskHelper {
         mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                mAdb.getTopAndroidTask(new ShellChannel.ShellListener() {
-                    @Override
-                    public void onStdout(ShellChannel ch, byte[] data) {
-                        String topPackage = getTopPackage(new String(data));
-                        if (mPackageName != null) {
-                            if (topPackage.contains("com.miui.wakepath")) {
-                                int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
-                                int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 30);
-                                sendTouch(x, y);
-                            } else if (!topPackage.contains(mPackageName)) {
-                                DataServer.getInstance().onClientDisconnected();
-                                stopCheckTopTimer();
-                            }
-                        } else if (topPackage.contains("com.miui.securitycenter")) {
-                            int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
-                            int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 30);
-                            sendTouch(x, y);
-                        }
-                    }
-
-                    @Override
-                    public void onStderr(ShellChannel ch, byte[] data) {
-                    }
-
-                    @Override
-                    public void onExit(ShellChannel ch, int code) {
-                    }
-                });
+                getTopTask();
             }
         }, delay, period);
     }
@@ -111,9 +86,47 @@ public class TaskHelper {
 
     public void killLaunchedApp() {
         stopCheckTopTimer();
-        mAdb.killApp(mPackageName);
-        mAdb.clearApplicationUserData(mPackageName);
-        mPackageName = null;
+        if (mPackageName != null) {
+            mAdb.killApp(mPackageName);
+            mAdb.clearApplicationUserData(mPackageName);
+            mPackageName = null;
+        }
+    }
+
+    private void getTopTask() {
+        mAdb.getTopAndroidTask(new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+                String topPackage = getTopPackage(new String(data));
+                if (mPackageName != null) {
+                    if (topPackage.contains(mPackageName)) {
+                        if (mLaunchRunnable != null) {
+                            mLaunchRunnable.run();
+                            mLaunchRunnable = null;
+                        }
+                    } else if (topPackage.contains("com.miui.wakepath")) {
+                        int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
+                        int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
+                        sendTouch(x, y);
+                    } else {
+                        DataServer.getInstance().onClientDisconnected();
+                        stopCheckTopTimer();
+                    }
+                } else if (topPackage.contains("com.miui.securitycenter")) {
+                    int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
+                    int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
+                    sendTouch(x, y);
+                }
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+            }
+        });
     }
 
     private String getTopPackage(String topTaskPackages) {
