@@ -180,6 +180,7 @@
     <string name="receive_order_tips">接到单后请勿触碰屏幕，否则将会退出接到的订单，影响您的收入和他人体验</string>
     <string name="exit_order">退出接单</string>
     <string name="confirm_to_exit">确定退出接单?</string>
+    <string name="device_offline">您的帐户已在其他设备上登录</string>
 
     <!-- 兑换 -->
     <string name="exchange_tip_title">请尽快兑换凭证</string>

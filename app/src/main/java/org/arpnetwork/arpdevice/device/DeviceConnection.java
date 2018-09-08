@@ -126,8 +126,12 @@ public class DeviceConnection {
         mChannelFuture.removeListener(mChannelFutureListener);
         try {
             mChannelFuture.sync().channel().close().sync();
-            mWorkerGroup.shutdownGracefully();
         } catch (Exception e) {
+        } finally {
+            try {
+                mWorkerGroup.shutdownGracefully();
+            } catch (Exception e) {
+            }
         }
     }
 

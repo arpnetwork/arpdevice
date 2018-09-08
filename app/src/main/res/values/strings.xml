@@ -60,7 +60,7 @@
     <string name="start_to_import">Import</string>
     <string name="complete_info">Please complete the information</string>
     <string name="invalid_private_key">Invalid private key specified</string>
-    <string name="use_more_characters_password">Password must bec 8 or more characters</string>
+    <string name="use_more_characters_password">Password must be 8 or more characters</string>
     <string name="inconsistent_password">Inconsistent password</string>
     <string name="importing">Importing</string>
     <string name="import_success">Import success</string>
@@ -183,6 +183,7 @@
     <string name="receive_order_tips">Do not touch the screen after receiving the order, otherwise you will withdraw from the order, affecting your income and other people\'s experience.</string>
     <string name="exit_order">Exit order</string>
     <string name="confirm_to_exit">Confirm to exit receiving order?</string>
+    <string name="device_offline">Your account is already signed in on another device</string>
 
     <!-- exchange -->
     <string name="exchange_tip_title">Please exchange your promise soon</string>

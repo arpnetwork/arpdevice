@@ -55,6 +55,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     public static final int DEVICE_ASSIGNED = 6;
     public static final int DEVICE_RELEASED = 7;
     public static final int SPEED_RESULT = 9;
+    public static final int DEVICE_OFFLINE = 10;
 
     private static final int MSG_SPEED = 1;
     private static final int MSG_DEVICE = 2;
@@ -167,9 +168,6 @@ public class DeviceManager implements DeviceConnection.Listener {
     @Override
     public void onException(DeviceConnection conn, Throwable cause) {
         Log.e(TAG, "onException. message = " + cause.getMessage());
-
-        reset();
-        handleError(0, R.string.connect_miner_failed);
     }
 
     private void onDeviceMessage(Message msg) {
@@ -213,6 +211,9 @@ public class DeviceManager implements DeviceConnection.Listener {
                     } else {
                         handleError(0, R.string.low_upload_speed);
                     }
+                    break;
+                case DEVICE_OFFLINE:
+                    handleError(0, R.string.device_offline);
                     break;
                 default:
                     break;
@@ -264,9 +265,8 @@ public class DeviceManager implements DeviceConnection.Listener {
     private void onRegister(int result) {
         if (result == 0) {
             mRegistered = true;
-            startHeartbeat();
             mHandler.postDelayed(mDeviceReadyRunnable, 500);
-        } else if (result == 1) {
+        } else if (result == -1) {
             handleError(result, R.string.incompatible_protocol);
         } else {
             handleError(result, R.string.connect_miner_failed);
@@ -276,6 +276,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     private Runnable mDeviceReadyRunnable = new Runnable() {
         @Override
         public void run() {
+            startHeartbeat();
             if (mDapp == null) {
                 if (mOnDeviceStateChangedListener != null) {
                     mOnDeviceStateChangedListener.onDeviceReady();
