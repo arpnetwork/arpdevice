@@ -38,7 +38,8 @@ public class DeviceInfo {
     public String gpu;
     public long ram;
     public long storage;
-    public String resolution;
+    public int width;
+    public int height;
     public BigInteger price;
 
     @SerializedName("os_ver")
@@ -66,7 +67,8 @@ public class DeviceInfo {
             info.gpu = "";
             info.ram = DeviceUtil.getMemoryTotal(context);
             info.storage = DeviceUtil.getExternalDiskAvailable(context);
-            info.resolution = DeviceUtil.getResolutionStr(context);
+            info.width = DeviceUtil.getResolution(context)[0];
+            info.height = DeviceUtil.getResolution(context)[1];
             info.osVer = DeviceUtil.getAndroidVersion();
             info.systemVer = DeviceUtil.getSysUIVersion();
             info.connectivity = -1;
