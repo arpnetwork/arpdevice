@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
@@ -53,6 +54,7 @@ import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+import org.arpnetwork.arpdevice.util.NetworkHelper;
 
 import java.math.BigInteger;
 
@@ -76,6 +78,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private ChargingReceiver mChargingReceiver;
     private MinerStateChangedReceiver mStateChangedReceiver;
 
+    private Dialog mAlertDialog;
     private Handler mHandler = new Handler();
 
     private int mDataPort;
@@ -94,6 +97,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mHttpPort = ports[1];
 
         registerReceiver();
+        NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
     }
 
     @Override
@@ -113,7 +117,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onResume();
 
         startDeviceService();
-        mOrderStateView.setText(R.string.connecting_miners);
     }
 
     @Override
@@ -125,7 +128,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     @Override
     public void onDestroy() {
+        NetworkHelper.getInstance().unregisterNetworkListener(mNetworkChangeListener);
+        stopDeviceService();
         unregisterReceiver();
+        if (mAlertDialog != null) {
+            mAlertDialog.dismiss();
+        }
 
         super.onDestroy();
     }
@@ -148,16 +156,17 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
             mAppManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
 
-            mDeviceManager = new DeviceManager();
-            mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
-            mDeviceManager.connect(mMiner);
-
             DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
             dispatcher.setAppManager(mAppManager);
             dispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
             startHttpServer(dispatcher);
 
+            mDeviceManager = new DeviceManager();
+            mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
+            mDeviceManager.connect(mMiner);
+
             mStartService = true;
+            mOrderStateView.setText(R.string.connecting_miners);
         }
     }
 
@@ -264,17 +273,19 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void showAlertDialog(String msg) {
-        Dialog dialog = new AlertDialog.Builder(getContext())
-                .setMessage(msg)
-                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
-                .create();
-        dialog.setCancelable(false);
-        dialog.show();
+        if (mAlertDialog == null) {
+            mAlertDialog = new AlertDialog.Builder(getContext())
+                    .setMessage(msg)
+                    .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create();
+            mAlertDialog.setCancelable(false);
+        }
+        mAlertDialog.show();
     }
 
     private void showExitDialog() {
@@ -381,6 +392,25 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onError(int code, int msg) {
             showAlertDialog(getString(msg));
+        }
+    };
+
+    private NetworkHelper.NetworkChangeListener mNetworkChangeListener = new NetworkHelper.NetworkChangeListener() {
+        @Override
+        public void onNetworkChange(NetworkInfo info) {
+            stopDeviceService();
+            if (info != null) {
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mAlertDialog != null) {
+                            mAlertDialog.dismiss();
+                            mAlertDialog = null;
+                        }
+                        startDeviceService();
+                    }
+                }, 500);
+            }
         }
     };
 
