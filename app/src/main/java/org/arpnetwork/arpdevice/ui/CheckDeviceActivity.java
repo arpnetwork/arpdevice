@@ -69,6 +69,8 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
         super.onResume();
 
         mCheckThread.doCheck();
+
+        Touch.getInstance().connect();
     }
 
     @Override
@@ -146,6 +148,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
     private void jumpToNextActivity() {
         Intent intent = new Intent();
         if (!Wallet.exists()) {
+            intent.putExtra(Constant.KEY_FROM_LAUNCHER, true);
             intent.setClass(this, WalletImporterActivity.class);
         } else {
             intent.setClass(this, MyActivity.class);

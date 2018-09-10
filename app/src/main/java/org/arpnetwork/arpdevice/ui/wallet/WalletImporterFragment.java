@@ -27,6 +27,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.my.MyActivity;
 import org.arpnetwork.arpdevice.util.UIHelper;
@@ -38,6 +39,7 @@ public class WalletImporterFragment extends BaseFragment {
     private EditText mEditPassword;
     private EditText mEditConfirmedPassword;
     private Button mBtnImport;
+    private boolean mFromLauncher;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,11 @@ public class WalletImporterFragment extends BaseFragment {
 
         setTitle(R.string.import_wallet);
         hideNavIcon();
+
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            mFromLauncher = bundle.getBoolean(Constant.KEY_FROM_LAUNCHER);
+        }
     }
 
     @Override
@@ -57,6 +64,10 @@ public class WalletImporterFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
+    }
+
+    public boolean onExitApp() {
+        return mFromLauncher;
     }
 
     private void initViews() {

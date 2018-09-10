@@ -18,7 +18,9 @@ package org.arpnetwork.arpdevice.ui.wallet;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 
+import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 
 public class WalletImporterActivity extends BaseActivity {
@@ -28,5 +30,14 @@ public class WalletImporterActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 
         setContentFragment(WalletImporterFragment.class);
+    }
+
+    @Override
+    protected boolean onExitApp() {
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.content_frame);
+        if (fragment instanceof WalletImporterFragment) {
+            return ((WalletImporterFragment) fragment).onExitApp();
+        }
+        return false;
     }
 }

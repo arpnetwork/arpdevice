@@ -28,4 +28,9 @@ public class MyActivity extends BaseActivity {
 
         setContentFragment(MyFragment.class);
     }
+
+    @Override
+    protected boolean onExitApp() {
+        return true;
+    }
 }

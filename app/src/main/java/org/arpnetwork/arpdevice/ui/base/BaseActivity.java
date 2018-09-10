@@ -28,7 +28,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.arpnetwork.arpdevice.ui.my.MyActivity;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
@@ -38,6 +37,73 @@ public class BaseActivity extends AppCompatActivity {
     private OnBackListener mOnBackListener;
 
     private long mExitTime = 0;
+
+    public interface OnBackListener {
+        boolean onBacked();
+    }
+
+    public void setOnBackListener(OnBackListener listener) {
+        mOnBackListener = listener;
+    }
+
+    public Toolbar getToolbar() {
+        return mToolbar;
+    }
+
+    public void showToolbar() {
+        mToolbar.setVisibility(View.VISIBLE);
+    }
+
+    public void hideToolbar() {
+        mToolbar.setVisibility(View.GONE);
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        super.setTitle("");
+
+        mTitleView.setText(title);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                FragmentManager fm = getSupportFragmentManager();
+                if (fm.getBackStackEntryCount() > 0) {
+                    fm.popBackStack();
+                } else {
+                    boolean pressed = false;
+                    if (mOnBackListener != null) {
+                        pressed = mOnBackListener.onBacked();
+                    }
+                    if (!pressed) {
+                        finish();
+                    }
+                }
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+        return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        boolean pressed = onBack();
+        if (!pressed) {
+            if (onExitApp()) {
+                if ((System.currentTimeMillis() - mExitTime) > 2000) {
+                    UIHelper.showToast(getApplicationContext(), R.string.exit_app, Toast.LENGTH_SHORT);
+                    mExitTime = System.currentTimeMillis();
+                } else {
+                    exit();
+                }
+            } else {
+                super.onBackPressed();
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,29 +150,6 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                FragmentManager fm = getSupportFragmentManager();
-                if (fm.getBackStackEntryCount() > 0) {
-                    fm.popBackStack();
-                } else {
-                    boolean pressed = false;
-                    if (mOnBackListener != null) {
-                        pressed = mOnBackListener.onBacked();
-                    }
-                    if (!pressed) {
-                        finish();
-                    }
-                }
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-        return true;
-    }
-
     protected void setContentView() {
         setContentView(R.layout.content_frame);
     }
@@ -121,25 +164,6 @@ public class BaseActivity extends AppCompatActivity {
 
     protected void setToolbar(Toolbar toolbar) {
         mToolbar = toolbar;
-    }
-
-    public Toolbar getToolbar() {
-        return mToolbar;
-    }
-
-    public void showToolbar() {
-        mToolbar.setVisibility(View.VISIBLE);
-    }
-
-    public void hideToolbar() {
-        mToolbar.setVisibility(View.GONE);
-    }
-
-    @Override
-    public void setTitle(CharSequence title) {
-        super.setTitle("");
-
-        mTitleView.setText(title);
     }
 
     protected void setContentFragment(Class<? extends BaseFragment> fragmentClass) {
@@ -165,32 +189,11 @@ public class BaseActivity extends AppCompatActivity {
         return pressed;
     }
 
-    @Override
-    public void onBackPressed() {
-        boolean pressed = onBack();
-        if (!pressed) {
-            if ((this instanceof MyActivity) && (System.currentTimeMillis() - mExitTime) > 2000) {
-                UIHelper.showToast(getApplicationContext(), R.string.exit_app, Toast.LENGTH_SHORT);
-                mExitTime = System.currentTimeMillis();
-            } else {
-                super.onBackPressed();
-
-                if (this instanceof MyActivity) {
-                    exit();
-                }
-            }
-        }
+    protected boolean onExitApp() {
+        return false;
     }
 
     private void exit() {
         getApplication().onTerminate();
-    }
-
-    public void setOnBackListener(OnBackListener listener) {
-        mOnBackListener = listener;
-    }
-
-    public interface OnBackListener {
-        boolean onBacked();
     }
 }
