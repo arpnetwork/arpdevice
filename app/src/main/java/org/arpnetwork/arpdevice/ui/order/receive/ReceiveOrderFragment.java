@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
@@ -150,6 +151,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private void startDeviceService() {
         if (!mStartService) {
+            silentOn();
+
             TaskHelper taskHelper = new TaskHelper(getContext().getApplicationContext());
 
             DataServer.getInstance().setListener(mConnectionListener);
@@ -183,6 +186,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 mDeviceManager.setOnDeviceStateChangedListener(null);
                 mDeviceManager.close();
             }
+            silentOff();
 
             mStartService = false;
         }
@@ -272,6 +276,22 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         DataServer.getInstance().releaseDApp();
 
         mOrderStateView.setText(R.string.wait_for_order);
+    }
+
+    private void silentOn() {
+        AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+            audioManager.getStreamVolume(AudioManager.STREAM_RING);
+        }
+    }
+
+    private void silentOff() {
+        AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+            audioManager.getStreamVolume(AudioManager.STREAM_RING);
+        }
     }
 
     private void showAlertDialog(String msg) {
