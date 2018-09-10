@@ -69,8 +69,6 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
         super.onResume();
 
         mCheckThread.doCheck();
-
-        Touch.getInstance().connect();
     }
 
     @Override

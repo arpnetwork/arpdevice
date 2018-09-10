@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.ui.my;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -85,6 +86,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     private int mDataPort;
     private int mHttpPort;
 
+    private PasswordDialog mPasswordDialog;
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
 
         @Override
@@ -123,7 +126,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         }
     };
 
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -159,7 +161,16 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
 
+        regBatteryChangedReceiver();
         loadMinerAddr();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        unregBatteryChangedReceiver();
+        dismissPasswordDialog();
     }
 
     @Override
@@ -170,6 +181,31 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         CustomApplication.sInstance.stopMonitorService();
 
         getActivity().getApplication().onTerminate();
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.layout_wallet:
+                startActivity(MyWalletActivity.class);
+                break;
+
+            case R.id.layout_miner:
+                startActivity(BindMinerActivity.class);
+                break;
+
+            case R.id.layout_order_price:
+                showOrderPriceDialog();
+                break;
+
+            case R.id.layout_order_details:
+                startActivity(MyEarningActivity.class);
+                break;
+
+            case R.id.btn_order:
+                startReceiveOrder();
+                break;
+        }
     }
 
     private void initViews() {
@@ -338,7 +374,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                                         if (!SignUtil.signerExists()) {
                                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                         } else {
-                                            startReceivingOrder(miner, mDataPort, mHttpPort);
+                                            startReceiveOrderActivity(miner, mDataPort, mHttpPort);
                                         }
                                     }
                                 });
@@ -348,7 +384,15 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 }
             }
         });
-        builder.create().show();
+        mPasswordDialog = builder.create();
+        mPasswordDialog.show();
+    }
+
+    private void dismissPasswordDialog() {
+        if (mPasswordDialog != null) {
+            mPasswordDialog.dismiss();
+            mPasswordDialog = null;
+        }
     }
 
     private boolean isCharging() {
@@ -360,7 +404,32 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         return isCharging;
     }
 
-    private void startReceivingOrder(Miner miner, int dataPort, int httpPort) {
+    private void regBatteryChangedReceiver() {
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        getActivity().registerReceiver(mBatteryChangedReceiver, intentFilter);
+    }
+
+    private void unregBatteryChangedReceiver() {
+        getActivity().unregisterReceiver(mBatteryChangedReceiver);
+    }
+
+    private void startReceiveOrderActivity(Miner miner, int dataPort, int httpPort) {
+        int[] ports = {dataPort, httpPort};
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constant.KEY_MINER, miner);
+        bundle.putIntArray(Constant.KEY_PORTS, ports);
+        startActivity(ReceiveOrderActivity.class, bundle);
+    }
+
+    private void startReceiveOrder() {
+        if (!NetworkHelper.getInstance().isNetworkAvailable()) {
+            showAlertDialog(R.string.network_error);
+            return;
+        }
+        if (!NetworkHelper.getInstance().isWifiNetwork()) {
+            showAlertDialog(R.string.no_wifi);
+            return;
+        }
         if (!isCharging()) {
             UIHelper.showToast(getActivity(), getString(R.string.no_charging));
         } else if (Settings.Global.getInt(getActivity().getContentResolver(),
@@ -372,71 +441,32 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 }
             });
             UIHelper.showToast(getActivity(), getString(R.string.check_fail_stay_on));
+        } else if (!mOpenPortForward) {
+            UIHelper.showToast(getActivity(), getString(R.string.no_port_forward));
+            stopUpnpService();
+            startUpnpService();
         } else {
-            int[] ports = {dataPort, httpPort};
-            Bundle bundle = new Bundle();
-            bundle.putSerializable(Constant.KEY_MINER, miner);
-            bundle.putIntArray(Constant.KEY_PORTS, ports);
-            startActivity(ReceiveOrderActivity.class, bundle);
-        }
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.layout_wallet:
-                startActivity(MyWalletActivity.class);
-                break;
-
-            case R.id.layout_miner:
-                startActivity(BindMinerActivity.class);
-                break;
-
-            case R.id.layout_order_price:
-                showOrderPriceDialog();
-                break;
-
-            case R.id.layout_order_details:
-                startActivity(MyEarningActivity.class);
-                break;
-
-            case R.id.btn_order:
-                if (!NetworkHelper.getInstance().isNetworkAvailable()) {
-                    showAlertDialog(R.string.network_error);
+            Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
+            if (miner != null) {
+                BankAllowance bankAllowance = BankAllowance.get();
+                if (bankAllowance == null) {
+                    CustomApplication.sInstance.startMonitorService();
+                    showAlertDialog(R.string.load_data_error);
                     return;
                 }
-                if (!NetworkHelper.getInstance().isWifiNetwork()) {
-                    showAlertDialog(R.string.no_wifi);
-                    return;
-                }
-                if (!mOpenPortForward) {
-                    UIHelper.showToast(getActivity(), getString(R.string.no_port_forward));
-                    stopUpnpService();
-                    startUpnpService();
+
+                if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+                    showAlertDialog(R.string.unbinding_miner);
+                } else if (!miner.expiredValid() || !bankAllowance.valid()) {
+                    showAlertDialog(R.string.invalid_miner);
+                } else if (!SignUtil.signerExists()) {
+                    showPasswordDialog(miner);
                 } else {
-                    Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-                    if (miner != null) {
-                        BankAllowance bankAllowance = BankAllowance.get();
-                        if (bankAllowance == null) {
-                            CustomApplication.sInstance.startMonitorService();
-                            showAlertDialog(R.string.load_data_error);
-                            return;
-                        }
-
-                        if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
-                            showAlertDialog(R.string.unbinding_miner);
-                        } else if (!miner.expiredValid() || !bankAllowance.valid()) {
-                            showAlertDialog(R.string.invalid_miner);
-                        } else if (!SignUtil.signerExists()) {
-                            showPasswordDialog(miner);
-                        } else {
-                            startReceivingOrder(miner, mDataPort, mHttpPort);
-                        }
-                    } else {
-                        showNoBindingDialog();
-                    }
+                    startReceiveOrderActivity(miner, mDataPort, mHttpPort);
                 }
-                break;
+            } else {
+                showNoBindingDialog();
+            }
         }
     }
 
@@ -452,4 +482,18 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
             UIHelper.showToast(getActivity(), getString(R.string.check_fail_adb_exception));
         }
     }
+
+    private BroadcastReceiver mBatteryChangedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_BATTERY_CHANGED.equals(intent.getAction())) {
+                int status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                        status == BatteryManager.BATTERY_STATUS_FULL;
+                if (!isCharging) {
+                    dismissPasswordDialog();
+                }
+            }
+        }
+    };
 }
