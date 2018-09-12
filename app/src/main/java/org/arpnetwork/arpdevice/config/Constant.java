@@ -18,17 +18,18 @@ package org.arpnetwork.arpdevice.config;
 
 public class Constant {
     public static final int CHECK_DEFAULT = -1;
-    public static final int CHECK_OS = 1;
-    public static final int CHECK_DISK_AVAILABLE = 2;
-    public static final int CHECK_ADB = 3;
-    public static final int CHECK_TCP = 4;
-    public static final int CHECK_AUTH = 5;
-    public static final int CHECK_ADB_SAFE = 6;
-    public static final int CHECK_TOUCH = 7;
-    public static final int CHECK_INSTALLATION = 8;
-    public static final int CHECK_INSTALLATION_FAILED = 9;
-    public static final int CHECK_UPNP = 10;
-    public static final int CHECK_AUTH_SUCCESS = 11;
+    public static final int CHECK_OS_FAILED = 1;
+    public static final int CHECK_DISK_FAILED = 2;
+    public static final int CHECK_ADB_FAILED = 3;
+    public static final int CHECK_TCP_FAILED = 4;
+    public static final int ACTION_CHECK_AUTH = 5;
+    public static final int CHECK_ADB_SAFE_FAILED = 6;
+    public static final int CHECK_TOUCH_FAILED = 7;
+    public static final int ACTION_CHECK_INSTALL = 8;
+    public static final int CHECK_INSTALL_FAILED = 9;
+    public static final int ACTION_CHECK_UPNP = 10;
+    public static final int CHECK_UPNP_COMPLETE = 11;
+    public static final int CHECK_TOUCH_COPY_FAILED = 12;
 
     // Defines a custom Intent action
     public static final String BROADCAST_ACTION_STATUS = "org.arpnetwork.arpdevice.ACTION_STATUS";
@@ -47,11 +48,12 @@ public class Constant {
     public static final String KEY_GASLIMIT = "gas_limit";
     public static final String KEY_BINDPROMISE = "bind_promise";
     public static final String KEY_MINER = "miner";
-    public static final String KEY_PORTS = "ports";
     public static final String KEY_FROM_LAUNCHER = "from_launcher";
+    public static final String KEY_FROM_MY = "from_my";
     public static final String KEY_BIND_STATE = "bind_state";
 
     public static final String ORDER_PRICE = "order_price";
 
     public static final String STATE_INVALID = "state_invalid";
+    public static final String KEY_INSTALL_USB = "install_via_usb";
 }

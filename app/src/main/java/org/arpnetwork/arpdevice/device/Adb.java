@@ -71,4 +71,10 @@ public class Adb {
             mConnection.openShell("pm clear " + packageName);
         }
     }
+
+    public void stayOn() {
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            mConnection.openShell("settings put global stay_on_while_plugged_in 7");
+        }
+    }
 }

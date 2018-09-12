@@ -5,7 +5,7 @@ import android.os.Message;
 import android.util.Log;
 
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.ui.my.MyFragment;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.upnp.action.ActionService;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
 import org.fourthline.cling.controlpoint.ControlPoint;
@@ -59,7 +59,6 @@ public class ClingRegistryListener extends DefaultRegistryListener {
         mHandler = handler;
         mControlPoint = controlPoint;
     }
-
 
     public void setMapping(PortMapping[] portMappings) {
         this.portMappings = portMappings;
@@ -133,7 +132,7 @@ public class ClingRegistryListener extends DefaultRegistryListener {
                             activeForService.add(pm);
 
                             Message message = new Message();
-                            message.what = MyFragment.MSG_PORT_SUCCESS;
+                            message.what = Constant.CHECK_UPNP_COMPLETE;
                             message.arg1 = finalDefaultDataPort;
                             message.arg2 = finalDefaultHttpPort;
                             mHandler.sendMessage(message);
@@ -145,7 +144,7 @@ public class ClingRegistryListener extends DefaultRegistryListener {
                             handleFailureMessage("Reason: " + defaultMsg);
 
                             Message message = new Message();
-                            message.what = MyFragment.MSG_PORT_FAILED;
+                            message.what = Constant.CHECK_UPNP_COMPLETE;
                             mHandler.sendMessage(message);
                         }
                     }.run(); // Synchronous!
@@ -153,7 +152,7 @@ public class ClingRegistryListener extends DefaultRegistryListener {
                 activePortMappings.put(connectionService, activeForService);
             } else {
                 Message message = new Message();
-                message.what = MyFragment.MSG_PORT_SUCCESS;
+                message.what = Constant.CHECK_UPNP_COMPLETE;
                 message.arg1 = (int) existDataPort;
                 message.arg2 = (int) existHttpPort;
                 mHandler.sendMessage(message);

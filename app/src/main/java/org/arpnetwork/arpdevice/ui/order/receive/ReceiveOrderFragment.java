@@ -94,7 +94,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         getBaseActivity().setOnBackListener(mOnBackListener);
 
         mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
-        int[] ports = getArguments().getIntArray(Constant.KEY_PORTS);
+
+        int[] ports = CustomApplication.sInstance.getPortArray();
         mDataPort = ports[0];
         mHttpPort = ports[1];
 
@@ -507,10 +508,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private class TouchLocalReceiver extends BroadcastReceiver {
-        private TouchLocalReceiver() {
-            // prevents instantiation by other packages.
-        }
-
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();

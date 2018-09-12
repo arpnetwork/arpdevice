@@ -44,6 +44,8 @@
     <string name="check_again">已开启，继续</string>
     <string name="check_success">检测完成</string>
     <string name="check_success_tip">设备初始化成功</string>
+    <string name="check_failed">检测失败，请重试</string>
+    <string name="check_failed_action">请重试</string>
     <string name="check_btn_adb">进入开发者选项</string>
     <string name="check_btn_quit">退出</string>
     <string name="check_fail_adb">您的设备尚未打开开发者选项，请点击设置按钮打开开发者选项，并打开 USB调试 开关</string>

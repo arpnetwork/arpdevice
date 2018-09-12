@@ -16,11 +16,9 @@
 
 package org.arpnetwork.arpdevice.stream;
 
-import android.content.SharedPreferences;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.preference.PreferenceManager;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -28,17 +26,18 @@ import org.arpnetwork.adb.Auth;
 import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.adb.SyncChannel;
-import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.monitor.MonitorTouch;
 import org.arpnetwork.arpdevice.server.DataServer;
+import org.arpnetwork.arpdevice.util.PreferenceManager;
 
 import java.security.spec.InvalidKeySpecException;
 
 public class Touch {
     private static final String TAG = "Touch";
     private static final boolean DEBUG = Config.DEBUG;
+    private static final String KEY = "key";
 
     public static final int STATE_INIT = -1;
     public static final int STATE_CLOSED = 0;
@@ -74,24 +73,25 @@ public class Touch {
         return sInstance;
     }
 
-    public void connect() {
+    public void connect(Handler handler) {
         if (mConn == null) {
             mConn = new Connection(mAuth, "127.0.0.1", 5555);
-            mConn.setListener(mConnectionListener);
         }
-        mConn.connect();
+
+        mConn.setListener(new CheckConnectionListener(handler));
+        if (mDoAuth) {
+            close();
+            mConn.connect();
+        } else if (getState() != Touch.STATE_CONNECTED) {
+            mConn.connect();
+        }
     }
 
     public void close() {
+        mState = STATE_CLOSED;
         if (mConn != null) {
             mConn.close();
         }
-    }
-
-    public void ensureAuthChecked(Handler handler) {
-        Connection checkAuth = new Connection(mAuth, "127.0.0.1", 5555);
-        checkAuth.setListener(new CheckConnectionListener(handler));
-        checkAuth.connect();
     }
 
     public Connection getConnection() {
@@ -141,7 +141,7 @@ public class Touch {
         return mRecordHelper != null && mRecordHelper.isRecording();
     }
 
-    private void startTouch() {
+    private void startTouch(final Handler handler) {
         ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
         mShell = ss;
         ss.setListener(new ShellChannel.ShellListener() {
@@ -149,11 +149,12 @@ public class Touch {
             public void onStdout(ShellChannel ch, byte[] data) {
                 // contacts x y pressure major minor\n
                 mBanner = new String(data).trim();
+                openUSBSafeDebug(handler);
             }
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
-                Log.e(TAG, "STDERR:" + new String(data));
+                handler.obtainMessage(Constant.CHECK_TOUCH_FAILED).sendToTarget();
             }
 
             @Override
@@ -166,9 +167,8 @@ public class Touch {
     private Touch() {
         mState = STATE_INIT;
 
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(CustomApplication.sInstance.getApplicationContext());
-        String key = sp.getString("key", null);
-        if (key != null) {
+        String key = PreferenceManager.getInstance().getString(KEY);
+        if (!TextUtils.isEmpty(key)) {
             try {
                 mAuth = new Auth(key);
             } catch (InvalidKeySpecException e) {
@@ -176,71 +176,11 @@ public class Touch {
             }
         } else {
             mAuth = new Auth();
-            sp.edit().putString("key", mAuth.getPrivateKey()).apply();
+            PreferenceManager.getInstance().putString(KEY, mAuth.getPrivateKey());
         }
 
         mUIHandler = new Handler(Looper.getMainLooper());
     }
-
-    private Connection.ConnectionListener mConnectionListener = new Connection.ConnectionListener() {
-        @Override
-        public void onConnected(Connection conn) {
-            mState = STATE_CONNECTED;
-
-            if (AssetCopyHelper.isValidTouchBinary()) {
-                startTouch();
-            } else {
-                SyncChannel ss = mConn.openSync();
-                AssetCopyHelper.pushTouch(ss, new AssetCopyHelper.PushCallback() {
-                    @Override
-                    public void onStart() {
-                    }
-
-                    @Override
-                    public void onComplete(boolean success, Throwable throwable) {
-                        if (success) {
-                            startTouch();
-                        } else {
-                            Log.e(TAG, "push error: " + throwable);
-                        }
-                    }
-                });
-            }
-
-            if (!AssetCopyHelper.isValidCapBinary()) {
-                SyncChannel capChannel = mConn.openSync();
-                AssetCopyHelper.pushCap(capChannel, null);
-            }
-            if (!AssetCopyHelper.isValidCapLib()) {
-                SyncChannel capLibChannel = mConn.openSync();
-                AssetCopyHelper.pushLibCap(capLibChannel, null);
-            }
-        }
-
-        @Override
-        public void onClosed(Connection conn) {
-            mState = STATE_CLOSED;
-            // Reconnect.
-            if (mRetryCount < RETRY_COUNT) {
-                mRetryCount++;
-                connect();
-            } else {
-                mRetryCount = 0;
-                DataServer.getInstance().onClientDisconnected();
-            }
-        }
-
-        @Override
-        public void onAuth(Connection conn, String key) {
-            mConn.auth();
-        }
-
-        @Override
-        public void onException(Connection conn, Throwable cause) {
-            Log.e(TAG, "EXCEPTION: " + cause.getMessage());
-            mState = STATE_CLOSED;
-        }
-    };
 
     private class CheckConnectionListener implements Connection.ConnectionListener {
         private Handler mCheckHandler;
@@ -254,49 +194,126 @@ public class Touch {
             if (mDoAuth) {
                 mDoAuth = false;
                 conn.close();
-                ensureAuthChecked(mCheckHandler);
+                mState = STATE_CLOSED;
+                connect(mCheckHandler);
             } else {
-                if (Build.MANUFACTURER.equalsIgnoreCase("xiaomi")) {
-                    openUSBSafeDebug(conn, mCheckHandler);
+                mState = STATE_CONNECTED;
+
+                if (AssetCopyHelper.isValidTouchBinary()) {
+                    startTouch(mCheckHandler);
                 } else {
-                    conn.close();
-                    mCheckHandler.obtainMessage(Constant.CHECK_AUTH_SUCCESS).sendToTarget();
-                    mCheckHandler = null;
+                    SyncChannel ss = mConn.openSync();
+                    AssetCopyHelper.pushTouch(ss, new AssetCopyHelper.PushCallback() {
+                        @Override
+                        public void onStart() {
+                        }
+
+                        @Override
+                        public void onComplete(boolean success, Throwable throwable) {
+                            if (success) {
+                                startTouch(mCheckHandler);
+                            } else {
+                                Log.e(TAG, "pushTouch error: " + throwable);
+                                handleCopyFailed();
+                            }
+                        }
+                    });
+                }
+
+                if (!AssetCopyHelper.isValidCapBinary()) {
+                    SyncChannel capChannel = mConn.openSync();
+                    AssetCopyHelper.pushCap(capChannel, new AssetCopyHelper.PushCallback() {
+                        @Override
+                        public void onStart() {
+                        }
+
+                        @Override
+                        public void onComplete(boolean success, Throwable throwable) {
+                            if (!success) {
+                                Log.e(TAG, "pushCap error: " + throwable);
+                                handleCopyFailed();
+                            }
+                        }
+                    });
+                }
+                if (!AssetCopyHelper.isValidCapLib()) {
+                    SyncChannel capLibChannel = mConn.openSync();
+                    AssetCopyHelper.pushLibCap(capLibChannel, new AssetCopyHelper.PushCallback() {
+                        @Override
+                        public void onStart() {
+                        }
+
+                        @Override
+                        public void onComplete(boolean success, Throwable throwable) {
+                            if (!success) {
+                                Log.e(TAG, "pushLibCap error: " + throwable);
+                                handleCopyFailed();
+                            }
+                        }
+                    });
                 }
             }
         }
 
         @Override
         public void onClosed(Connection conn) {
+            mState = STATE_CLOSED;
+            // Reconnect.
+            if (mRetryCount < RETRY_COUNT) {
+                mRetryCount++;
+                connect(mCheckHandler);
+            } else {
+                mRetryCount = 0;
+                DataServer.getInstance().onClientDisconnected();
+            }
         }
 
         @Override
         public void onAuth(Connection conn, String key) {
             conn.auth();
             mDoAuth = true;
-            mCheckHandler.obtainMessage(Constant.CHECK_AUTH).sendToTarget();
+            Message message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_AUTH);
+            message.obj = mAuth.getPublicKeyDigest();
+            message.sendToTarget();
         }
 
         @Override
         public void onException(Connection conn, Throwable cause) {
             conn.close();
+            mState = STATE_CLOSED;
+        }
+
+        private void handleCopyFailed() {
+            close();
+            mCheckHandler.obtainMessage(Constant.CHECK_TOUCH_COPY_FAILED).sendToTarget();
         }
     }
 
-    private void openUSBSafeDebug(final Connection connection, final Handler mCheckHandler) {
-        final StringBuilder sb = new StringBuilder();
-        ShellChannel ss = connection.openShell("groups");
+    private void openUSBSafeDebug(final Handler mCheckHandler) {
+        ShellChannel ss = mConn.openShell("groups");
         ss.setListener(new ShellChannel.ShellListener() {
+            StringBuilder sb = new StringBuilder();
+            boolean findInput = false;
+
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 // Check whether contains input.
                 sb.append(new String(data).trim());
                 if (sb.toString().contains("input")) {
-                    connection.close();
-                    mCheckHandler.obtainMessage(Constant.CHECK_AUTH_SUCCESS).sendToTarget();
+                    if (!findInput) {
+                        findInput = true;
+                        Message message;
+                        boolean installViaUsb = PreferenceManager.getInstance().getBoolean(Constant.KEY_INSTALL_USB);
+                        if (!installViaUsb) {
+                            message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL);
+                        } else {
+                            message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_UPNP);
+                        }
+                        message.sendToTarget();
+                    }
                 } else {
-                    connection.close();
-                    mCheckHandler.obtainMessage(Constant.CHECK_ADB_SAFE).sendToTarget();
+                    close();
+                    mCheckHandler.obtainMessage(Constant.CHECK_ADB_SAFE_FAILED).sendToTarget();
                 }
             }
 

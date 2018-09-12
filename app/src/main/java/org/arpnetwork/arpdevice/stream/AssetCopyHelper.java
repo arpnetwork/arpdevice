@@ -128,7 +128,7 @@ public class AssetCopyHelper {
         return success;
     }
 
-    private static void pushFileFromAsset(final SyncChannel ss, final String destFilePath,
+    public static void pushFileFromAsset(final SyncChannel ss, final String destFilePath,
             final String assetFileName, final PushCallback listener) {
 
         ss.setStreamListener(new Channel.ChannelListener() {

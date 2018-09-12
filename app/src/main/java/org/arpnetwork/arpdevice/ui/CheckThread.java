@@ -18,22 +18,34 @@ package org.arpnetwork.arpdevice.ui;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.provider.Settings;
 
+import org.arpnetwork.adb.ShellChannel;
+import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.device.Adb;
+import org.arpnetwork.arpdevice.stream.AssetCopyHelper;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
+import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.arpnetwork.arpdevice.util.Util;
+import org.web3j.utils.Numeric;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 
 public class CheckThread {
+    private static final String TAG = "CheckThread";
     private static final int PING_INTERVAL = 800;
     private static final long DISK_REQUEST = 1024 * 1024 * 1024;
+    private static final String sCheckerPkgName = "org.arpnetwork.arpchecker";
+    private static final String sMd5 = "2e4e4cdd8edfa310228b08b89e256847";
 
     private final Context mContext;
     private final HandlerThread mThread;
@@ -54,16 +66,14 @@ public class CheckThread {
         stopPingTimer();
 
         if (DeviceUtil.getSdk() < Build.VERSION_CODES.N) {
-            Message message = mUIHandler.obtainMessage(Constant.CHECK_OS);
+            Message message = mUIHandler.obtainMessage(Constant.CHECK_OS_FAILED);
             mUIHandler.sendMessage(message);
         } else if (DeviceUtil.getExternalDiskAvailable(mContext) < DISK_REQUEST) {
-            Message message = mUIHandler.obtainMessage(Constant.CHECK_DISK_AVAILABLE);
+            Message message = mUIHandler.obtainMessage(Constant.CHECK_DISK_FAILED);
             mUIHandler.sendMessage(message);
         } else if (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.ADB_ENABLED, 0) == 0) {
-            Message message = mUIHandler.obtainMessage(Constant.CHECK_ADB);
+            Message message = mUIHandler.obtainMessage(Constant.CHECK_ADB_FAILED);
             mUIHandler.sendMessage(message);
-        } else if (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.STAY_ON_WHILE_PLUGGED_IN, 0) == 0) {
-            // TODO：turn on stay on while plugged in by code
         } else if (mShouldPing) {
             startPingTimer();
         }
@@ -73,10 +83,60 @@ public class CheckThread {
         mShouldPing = should;
     }
 
+    public void turnOnStay() {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.stayOn();
+    }
+
     public void quit() {
         mThread.quit();
-        
         stopPingTimer();
+    }
+
+    public void checkInstall() {
+        stopCheckPackageTimer();
+        uninstallApp(sCheckerPkgName);
+
+        File destDir = new File(Environment.getExternalStorageDirectory(), "arpdevice");
+        if (!destDir.exists()) {
+            if (!destDir.mkdirs()) {
+                mUIHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL).sendToTarget();
+                return;
+            }
+        }
+
+        boolean apkExists = false;
+        final File apkFile = new File(destDir, String.format("%s.apk", sCheckerPkgName));
+        if (apkFile.exists() && apkFile.length() > 0) {
+            String fileMd5 = Util.md5(apkFile);
+            if (fileMd5 != null && fileMd5.equalsIgnoreCase(Numeric.cleanHexPrefix(sMd5))) {
+                apkExists = true;
+            }
+        }
+
+        if (!apkExists) {
+            try {
+                SyncChannel ss = Touch.getInstance().getConnection().openSync();
+                AssetCopyHelper.pushFileFromAsset(ss, apkFile.getCanonicalPath(), "arpchecker.apk", new AssetCopyHelper.PushCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onComplete(boolean success, Throwable throwable) {
+                        if (success) {
+                            appInstall(apkFile, sCheckerPkgName);
+                        } else {
+                            mUIHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL).sendToTarget();
+                        }
+                    }
+                });
+            } catch (IOException e) {
+                mUIHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL).sendToTarget();
+            }
+        } else {
+            appInstall(apkFile, sCheckerPkgName);
+        }
     }
 
     private void stopPingTimer() {
@@ -99,9 +159,9 @@ public class CheckThread {
             if (opened) {
                 stopPingTimer();
 
-                Touch.getInstance().ensureAuthChecked(mUIHandler);
+                Touch.getInstance().connect(mUIHandler);
             } else {
-                Message message = mUIHandler.obtainMessage(Constant.CHECK_TCP);
+                Message message = mUIHandler.obtainMessage(Constant.CHECK_TCP_FAILED);
                 mUIHandler.sendMessage(message);
 
                 mWorkerHandler.postDelayed(this, PING_INTERVAL);
@@ -124,4 +184,57 @@ public class CheckThread {
 
         return result;
     }
+
+    private void appInstall(File file, final String packageName) {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+                startCheckPackageTimer();
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+                stopCheckPackageTimer();
+                mUIHandler.obtainMessage(Constant.CHECK_INSTALL_FAILED).sendToTarget();
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+            }
+        });
+    }
+
+    private void uninstallApp(String packageName) {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.uninstallApp(packageName, null);
+    }
+
+    private void stopCheckPackageTimer() {
+        mWorkerHandler.removeCallbacksAndMessages(null);
+    }
+
+    private void startCheckPackageTimer() {
+        if (mWorkerHandler != null) {
+            mWorkerHandler.removeCallbacksAndMessages(null);
+            mWorkerHandler.postDelayed(mCheckPackageRunnable, PING_INTERVAL);
+        }
+    }
+
+    private Runnable mCheckPackageRunnable = new Runnable() {
+        @Override
+        public void run() {
+            boolean hasInstalled = Util.hasPackage(mContext, sCheckerPkgName);
+
+            if (hasInstalled) {
+                stopCheckPackageTimer();
+
+                Message message = mUIHandler.obtainMessage(Constant.ACTION_CHECK_UPNP);
+                mUIHandler.sendMessage(message);
+
+                PreferenceManager.getInstance().putBoolean(Constant.KEY_INSTALL_USB, true);
+                uninstallApp(sCheckerPkgName);
+            }
+        }
+    };
 }

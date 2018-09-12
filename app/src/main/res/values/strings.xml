@@ -44,6 +44,8 @@
     <string name="check_again">Check again</string>
     <string name="check_success">Checked success</string>
     <string name="check_success_tip">Initialized</string>
+    <string name="check_failed">Check failed,please try again</string>
+    <string name="check_failed_action">Try again</string>
     <string name="check_btn_adb">Go to developer options</string>
     <string name="check_btn_quit">quit</string>
     <string name="check_fail_adb">Please open the Developer options and USB Debug</string>

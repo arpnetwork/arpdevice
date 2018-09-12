@@ -16,25 +16,17 @@
 
 package org.arpnetwork.arpdevice.ui.my;
 
-import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
-import android.provider.Settings;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,9 +41,11 @@ import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.stream.Touch;
+
 import org.arpnetwork.arpdevice.ui.miner.MinerListActivity;
 import org.arpnetwork.arpdevice.ui.miner.RegisterActivity;
-import org.arpnetwork.arpdevice.upnp.ClingRegistryListener;
+
+import org.arpnetwork.arpdevice.ui.CheckDeviceActivity;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
@@ -61,14 +55,11 @@ import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
-import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 import org.arpnetwork.arpdevice.util.UIHelper;
-import org.fourthline.cling.android.AndroidUpnpService;
-import org.fourthline.cling.android.AndroidUpnpServiceImpl;
-import org.fourthline.cling.android.FixedAndroidLogHandler;
+
 import org.web3j.utils.Convert;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -77,68 +68,19 @@ import javax.microedition.khronos.opengles.GL10;
 public class MyFragment extends BaseFragment implements View.OnClickListener {
     private static final String TAG = "MyFragment";
 
-    public final static int MSG_PORT_SUCCESS = 1;
-    public final static int MSG_PORT_FAILED = 2;
-
     private TextView mOrderPriceView;
     private TextView mMinerName;
     private int mOrderPrice;
 
-    private AndroidUpnpService upnpService;
-    private ClingRegistryListener mClingRegistryListener;
-    private boolean mOpenPortForward;
-    private int mDataPort;
-    private int mHttpPort;
-
     private PasswordDialog mPasswordDialog;
-
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            Log.d(TAG, "AndroidUpnpService onServiceConnected.");
-            upnpService = (AndroidUpnpService) service;
-
-            mClingRegistryListener = new ClingRegistryListener(mHandler, upnpService.getControlPoint());
-
-            upnpService.getRegistry().addListener(mClingRegistryListener);
-            upnpService.getControlPoint().search();
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            upnpService = null;
-        }
-    };
-
-    @SuppressLint("HandlerLeak")
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_PORT_SUCCESS:
-                    mOpenPortForward = true;
-                    mDataPort = msg.arg1;
-                    mHttpPort = msg.arg2;
-                    DeviceInfo.get().setDataPort(mDataPort);
-                    break;
-                case MSG_PORT_FAILED:
-                    mOpenPortForward = false;
-                    break;
-                default:
-                    break;
-            }
-        }
-    };
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
 
-        Touch.getInstance().connect();
         mOrderPrice = DeviceInfo.get().getPrice();
 
         CustomApplication.sInstance.startMonitorService();
-        startUpnpService();
     }
 
     @Override
@@ -178,16 +120,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        stopUpnpService();
-        CustomApplication.sInstance.stopMonitorService();
-
-        getActivity().getApplication().onTerminate();
-    }
-
-    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.layout_wallet:
@@ -220,6 +152,10 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.btn_order:
+                if (!NetworkHelper.getInstance().isWifiNetwork()) {
+                    showAlertDialog(R.string.no_wifi);
+                    return;
+                }
                 startReceiveOrder();
                 break;
         }
@@ -286,26 +222,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 }
             }
         }).start();
-    }
-
-    private void startUpnpService() {
-        org.seamless.util.logging.LoggingUtil.resetRootHandler(
-                new FixedAndroidLogHandler()
-        );
-        getActivity().bindService(
-                new Intent(getActivity(), AndroidUpnpServiceImpl.class),
-                serviceConnection,
-                Context.BIND_AUTO_CREATE
-        );
-    }
-
-    private void stopUpnpService() {
-        if (upnpService != null) {
-            upnpService.getRegistry().removeListener(mClingRegistryListener);
-            upnpService.get().shutdown();
-        }
-        // This will stop the UPnP service if nobody else is bound to it
-        getActivity().unbindService(serviceConnection);
     }
 
     private void showOrderPriceDialog() {
@@ -391,7 +307,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                                         if (!SignUtil.signerExists()) {
                                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                         } else {
-                                            startReceiveOrderActivity(miner, mDataPort, mHttpPort);
+                                            startCheckActivity(miner);
                                         }
                                     }
                                 });
@@ -430,38 +346,18 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         getActivity().unregisterReceiver(mBatteryChangedReceiver);
     }
 
-    private void startReceiveOrderActivity(Miner miner, int dataPort, int httpPort) {
-        int[] ports = {dataPort, httpPort};
+    private void startCheckActivity(Miner miner) {
+        Touch.getInstance().close();
+
         Bundle bundle = new Bundle();
         bundle.putSerializable(Constant.KEY_MINER, miner);
-        bundle.putIntArray(Constant.KEY_PORTS, ports);
-        startActivity(ReceiveOrderActivity.class, bundle);
+        bundle.putBoolean(Constant.KEY_FROM_MY, true);
+        startActivity(CheckDeviceActivity.class, bundle);
     }
 
     private void startReceiveOrder() {
-        if (!NetworkHelper.getInstance().isNetworkAvailable()) {
-            showAlertDialog(R.string.network_error);
-            return;
-        }
-        if (!NetworkHelper.getInstance().isWifiNetwork()) {
-            showAlertDialog(R.string.no_wifi);
-            return;
-        }
         if (!isCharging()) {
             UIHelper.showToast(getActivity(), getString(R.string.no_charging));
-        } else if (Settings.Global.getInt(getActivity().getContentResolver(),
-                Settings.Global.STAY_ON_WHILE_PLUGGED_IN, 0) == 0) {
-            showAlertDialog(R.string.check_fail_stay_on, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    jumpToSettingADB();
-                }
-            });
-            UIHelper.showToast(getActivity(), getString(R.string.check_fail_stay_on));
-        } else if (!mOpenPortForward) {
-            UIHelper.showToast(getActivity(), getString(R.string.no_port_forward));
-            stopUpnpService();
-            startUpnpService();
         } else {
             Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
             if (miner != null) {
@@ -479,24 +375,11 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 } else if (!SignUtil.signerExists()) {
                     showPasswordDialog(miner);
                 } else {
-                    startReceiveOrderActivity(miner, mDataPort, mHttpPort);
+                    startCheckActivity(miner);
                 }
             } else {
                 showNoBindingDialog();
             }
-        }
-    }
-
-    private void jumpToSettingADB() {
-        try {
-            ComponentName componentName = new ComponentName("com.android.settings", "com.android.settings.DevelopmentSettings");
-            Intent intent = new Intent();
-            intent.setComponent(componentName);
-            intent.setAction("android.intent.action.View");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (Exception e) {
-            UIHelper.showToast(getActivity(), getString(R.string.check_fail_adb_exception));
         }
     }
 

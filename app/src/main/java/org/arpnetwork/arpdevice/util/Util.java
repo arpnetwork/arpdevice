@@ -16,7 +16,9 @@
 
 package org.arpnetwork.arpdevice.util;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
@@ -275,4 +277,30 @@ public class Util {
         return appVersionCode;
     }
 
+    public static void jumpToSettingADB(Context context) {
+        try {
+            ComponentName componentName = new ComponentName("com.android.settings", "com.android.settings.DevelopmentSettings");
+            Intent intent = new Intent();
+            intent.setComponent(componentName);
+            intent.setAction("android.intent.action.View");
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        } catch (Exception e) {
+            UIHelper.showToast(context, context.getString(R.string.check_fail_adb_exception));
+        }
+    }
+
+    public static boolean hasPackage(Context context, String packageName) {
+        if (null == context || null == packageName) {
+            return false;
+        }
+
+        boolean bHas = true;
+        try {
+            context.getPackageManager().getPackageInfo(packageName, PackageManager.GET_GIDS);
+        } catch (PackageManager.NameNotFoundException e) {
+            bHas = false;
+        }
+        return bHas;
+    }
 }
