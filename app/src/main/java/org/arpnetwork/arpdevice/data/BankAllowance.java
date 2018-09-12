@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.data;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -23,7 +24,10 @@ import com.google.gson.JsonSyntaxException;
 
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.arpnetwork.arpdevice.util.Util;
+import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class BankAllowance {
@@ -50,6 +54,14 @@ public class BankAllowance {
 
     public boolean amountValid() {
         return amount != null && (amount.subtract(paid).compareTo(BigInteger.ZERO) > 0);
+    }
+
+    public BigDecimal getAmountHumanic() {
+        return Convert.fromWei(amount.toString(), Convert.Unit.ETHER);
+    }
+
+    public String getExpiredHumanic(Context context) {
+        return Util.getLongDurationString(context, expired.longValue());
     }
 
     public void save() {

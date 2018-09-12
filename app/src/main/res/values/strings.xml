@@ -11,7 +11,7 @@
 
     <!-- dialog -->
     <string name="input_passwd_tip">Please input wallet password</string>
-    <string name="input_passwd_error">wallet password error,please try again</string>
+    <string name="input_passwd_error">Wallet password error,please try again</string>
 
     <string name="check_init">Device is initializing</string>
     <string name="check_device_error">Sorry, there is something wrong with your device.</string>
@@ -96,10 +96,49 @@
     <string name="unexchange_tip_changing_wallet">You have accumulated %.2f ARP, please exchange your promise. if you cancel the exchange, the promise will become invalid automatically</string>
     <string name="tip_changing_wallet">You have accumulated some ARP. please make sure the promise have been exchanged, or it would be invalid after wallet changed.</string>
 
+    <!-- register -->
+    <string name="register_device">Register device</string>
+    <string name="register_authoring">Authoring...</string>
+    <string name="register_transferring">Transferring...</string>
+    <string name="register_locking">Locking up...</string>
+    <string name="register_author">①Author</string>
+    <string name="register_transfer"> → ②Transfer</string>
+    <string name="register_lock"> → ③Lock up</string>
+    <string name="register_author_tip">Author ARP to contract, cost no ARP</string>
+    <string name="register_transfer_tip">Transfer 500ARP for locking up</string>
+    <string name="register_lock_tip">Lock up the 500ARP transferred last step</string>
+    <string name="register_transfer_amount">Transfer</string>
+    <string name="register_lock_amount">Lock up(cost no ARP)</string>
+    <string name="register_total_amount">total %.2f ARP</string>
+    <string name="register_token_amount">%s ARP</string>
+    <string name="register_cost_amount">- 500 ARP</string>
+    <string name="register_insufficient_balance">Insufficient balance of ARP</string>
+    <string name="register_underpaid">Not enough ether for gas fee</string>
+    <string name="register_cost_token">ARP</string>
+    <string name="register_gas">ETH gas</string>
+    <string name="register_gas_value_without_yuan">%.6f ether</string>
+    <string name="register_gas_value">%.6f ether ≈ ￥ %.2f</string>
+    <string name="register_password">Password</string>
+    <string name="register_password_tip">Enter password</string>
+    <string name="register_next_step">Next step</string>
+    <string name="register_finished">Finish</string>
+
+    <!-- miner list -->
+    <string name="miner_list">Miner list</string>
+
     <!-- bind miner -->
+    <string name="bind_tip">Miners promises that you can get rewards no more than the authorized amount by taking orders within a limited time. \n(Time limits and the authorized amount could increase automatically due to the specific situation)</string>
+    <string name="bind_miner_address">Miner address</string>
+    <string name="bind_author_time">Time</string>
+    <string name="bind_author_amount">Amount</string>
+    <string name="binding_other">Binding other miner</string>
+    <string name="unbinding_other">Unbinding other miner</string>
+    <string name="binding">Binding, please wait</string>
+    <string name="unbinding">Unbinding, please wait</string>
+
     <string name="bind_miner_error_balance_insufficient">Balance insufficient for binding miner.</string>
     <string name="bind_miner">Bind miner</string>
-    <string name="bind_hint">Bind miner,he will make a match</string>
+    <string name="bind_hint">Choose a miner to make matches</string>
     <string name="bind_success">Bind success</string>
     <string name="bind_running">Bind is in process</string>
     <string name="bind_failed">Bind miner failed,please try again</string>
@@ -113,10 +152,14 @@
     <string name="bind_approving">Approve is in process,please wait</string>
     <string name="bind_approve_success">Approve success</string>
     <string name="bind_approve_failed">Approve failed,please try again.</string>
+    <string name="bind_deposit_success">Deposit success</string>
+    <string name="bind_deposit_failed">Deposit failed,please try again.</string>
+    <string name="bind_lock_success">Lock up success</string>
+    <string name="bind_lock_failed">Lock up failed,please try again.</string>
     <string name="bind_apply">Apply bind miner</string>
     <string name="bind_apply_message">miner approve amount is %sARP，are you sure to bind?</string>
     <string name="bind_apply_expired">apply for binding is expired</string>
-    <string name="load_promise_failed">load miner info failed,please try again.</string>
+    <string name="load_promise_failed">Load miner info failed, please try others.</string>
     <string name="unbind">Unbind</string>
     <string name="unbind_success">Unbind success,you can go to my wallet to refund of your deposit</string>
     <string name="unbind_running">Unbind is in process</string>
@@ -148,6 +191,19 @@
     <string name="unexchanged">Unexchanged:%.2f ARP</string>
     <string name="exchanged_records">Exchanged records</string>
     <string name="earning_detail_format">Earnings:%.2fARP, Miner:%s</string>
+    <string name="duration_permanent">permanent</string>
+    <plurals name="duration_year">
+        <item quantity="one">%d year</item>
+        <item quantity="other">%d years</item>
+    </plurals>
+    <plurals name="duration_month">
+        <item quantity="one">%d month</item>
+        <item quantity="other">%d months</item>
+    </plurals>
+    <plurals name="duration_day">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
     <plurals name="duration_hour">
         <item quantity="one">%d hour</item>
         <item quantity="other">%d hours</item>

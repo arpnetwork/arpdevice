@@ -16,13 +16,17 @@
 
 package org.arpnetwork.arpdevice.ui.bean;
 
+import android.content.Context;
+
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.util.Util;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.crypto.Sign;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public class BindPromise implements Serializable {
@@ -49,12 +53,16 @@ public class BindPromise implements Serializable {
         return Numeric.toBigInt(amount);
     }
 
-    public BigInteger getAmountHumanic() {
-        return Convert.fromWei(getAmount().toString(), Convert.Unit.ETHER).toBigInteger();
+    public BigDecimal getAmountHumanic() {
+        return Convert.fromWei(getAmount().toString(), Convert.Unit.ETHER);
     }
 
     public BigInteger getExpired() {
         return new BigInteger(String.valueOf(expired));
+    }
+
+    public String getExpiredHumanic(Context context) {
+        return Util.getLongDurationString(context, expired);
     }
 
     public BigInteger getSignExpired() {

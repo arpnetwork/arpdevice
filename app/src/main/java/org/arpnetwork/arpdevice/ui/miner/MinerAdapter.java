@@ -145,6 +145,18 @@ final class MinerAdapter extends BaseAdapter {
                 && mStateMap.get(miner.getAddress()) == StateHolder.STATE_BIND_SUCCESS;
     }
 
+    public void removeState(String address) {
+        for (int i = 0; i < mItems.size(); i++) {
+            Miner miner = mItems.get(i);
+            if (miner.getAddress().equals(address)) {
+                mStateMap.remove(address);
+
+                notifyDataSetChanged();
+                break;
+            }
+        }
+    }
+
     public void updateBindState(String address, int state) {
         for (int i = 0; i < mItems.size(); i++) {
             Miner miner = mItems.get(i);

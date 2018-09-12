@@ -205,6 +205,26 @@ public class Util {
         return dateTime;
     }
 
+    public static String getLongDurationString(Context context, long deadLine) {
+        if (deadLine == 0) {
+            return context.getString(R.string.duration_permanent);
+        }
+
+        long duration = deadLine - System.currentTimeMillis() / 1000;
+        final long day = 60 * 60 * 1000 * 24;
+        final long month = 30 * day;
+        final long year = 365 * day;
+        if (duration > year) {
+            return context.getResources().getQuantityString(R.plurals.duration_year, (int) (duration / year), (int) (duration / year));
+        } else if (duration > month) {
+            return context.getResources().getQuantityString(R.plurals.duration_month, (int) (duration / month), (int) (duration / month));
+        } else if (duration > day) {
+            return context.getResources().getQuantityString(R.plurals.duration_day, (int) (duration / day), (int) (duration / day));
+        } else {
+            return getDurationString(context, duration);
+        }
+    }
+
     public static String getDurationString(Context context, long duration) {
         final long second = 1000;
         final long minute = 60 * second;

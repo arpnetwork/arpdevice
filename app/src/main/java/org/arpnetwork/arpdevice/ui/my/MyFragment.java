@@ -45,15 +45,18 @@ import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.contracts.ARPBank;
+import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.ui.miner.MinerListActivity;
+import org.arpnetwork.arpdevice.ui.miner.RegisterActivity;
 import org.arpnetwork.arpdevice.upnp.ClingRegistryListener;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
@@ -66,6 +69,7 @@ import org.arpnetwork.arpdevice.util.UIHelper;
 import org.fourthline.cling.android.AndroidUpnpService;
 import org.fourthline.cling.android.AndroidUpnpServiceImpl;
 import org.fourthline.cling.android.FixedAndroidLogHandler;
+import org.web3j.utils.Convert;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -191,7 +195,20 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.layout_miner:
-                startActivity(BindMinerActivity.class);
+                Miner bindMiner = BindMinerHelper.getBound(Wallet.get().getAddress());
+                if (bindMiner == null) {
+                    BankAllowance allowance = ARPBank.allowance(Wallet.get().getAddress(), ARPRegistry.CONTRACT_ADDRESS);
+                    if (allowance == null || Convert.fromWei(allowance.amount.toString(),
+                            Convert.Unit.ETHER).doubleValue() < Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
+                        startActivity(RegisterActivity.class);
+                    } else {
+                        startActivity(MinerListActivity.class);
+                    }
+                } else {
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(Constant.KEY_MINER, bindMiner);
+                    startActivity(MinerListActivity.class, bundle);
+                }
                 break;
 
             case R.id.layout_order_price:

@@ -27,7 +27,7 @@ import org.web3j.protocol.Web3jFactory;
 import org.web3j.protocol.core.methods.response.EthBlock;
 import org.web3j.protocol.http.HttpService;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
 
 public class EtherAPI {
@@ -46,7 +46,7 @@ public class EtherAPI {
         return sWeb3j;
     }
 
-    public static void getEtherBalance(String address, OnValueResult<BigDecimal> onResult) {
+    public static void getEtherBalance(String address, OnValueResult<BigInteger> onResult) {
         ETHBalanceTask ethBalanceTask = new ETHBalanceTask(onResult);
         ethBalanceTask.execute(address);
     }

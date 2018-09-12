@@ -46,6 +46,8 @@ public class StateHolder {
     private static ConcurrentHashMap<TaskInfo, Integer> sTaskStateMap = new ConcurrentHashMap<>(1);
 
     public static void setState(TaskInfo task, int status) {
+        TaskInfo oldTask = getTaskByState(status);
+        if (oldTask != null) sTaskStateMap.remove(oldTask);
         sTaskStateMap.put(task, status);
     }
 

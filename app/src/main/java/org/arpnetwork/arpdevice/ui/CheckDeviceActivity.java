@@ -91,7 +91,7 @@ public class CheckDeviceActivity extends BaseActivity implements Handler.Callbac
         mImage = findViewById(R.id.iv_info);
         mProgressbar = findViewById(R.id.progressbar);
         mTitleText = findViewById(R.id.tv_title);
-        mTipText = findViewById(R.id.tv_tip);
+        mTipText = findViewById(R.id.tv_progress_tip);
         mErrorText = findViewById(R.id.tv_reason);
         mTipButton = findViewById(R.id.btn_tip);
         mTipButton.setOnClickListener(new View.OnClickListener() {

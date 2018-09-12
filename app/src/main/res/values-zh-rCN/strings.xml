@@ -96,10 +96,49 @@
     <string name="unexchange_tip_changing_wallet">您已经累积%.2f个ARP凭证，请在更换钱包前兑换，如选择放弃兑换，该凭证自动作废</string>
     <string name="tip_changing_wallet">检测到您有ARP凭证，请确认是否已兑换，更换钱包后凭证自动作废</string>
 
+    <!-- 设备登记 -->
+    <string name="register_device">设备登记</string>
+    <string name="register_authoring">正在预授权，请耐心等待</string>
+    <string name="register_transferring">正在转账，请耐心等待</string>
+    <string name="register_locking">正在锁仓，请耐心等待</string>
+    <string name="register_author">①合约预授权</string>
+    <string name="register_transfer"> → ②合约转账</string>
+    <string name="register_lock"> → ③合约锁仓</string>
+    <string name="register_author_tip">将进行合约预授权，预授权不扣ARP</string>
+    <string name="register_transfer_tip">将会转账500个ARP,用于锁仓绑定</string>
+    <string name="register_lock_tip">将把上一步转账的500个ARP锁仓,完成设备登记</string>
+    <string name="register_transfer_amount">合约转账</string>
+    <string name="register_lock_amount">ARP锁仓（不扣ARP）</string>
+    <string name="register_total_amount">余额 %.2f ARP</string>
+    <string name="register_token_amount">%s ARP</string>
+    <string name="register_cost_amount">- 500 ARP</string>
+    <string name="register_insufficient_balance">ARP余额不足</string>
+    <string name="register_underpaid">eth不足以支付矿工费</string>
+    <string name="register_cost_token">ARP</string>
+    <string name="register_gas">以太坊矿工费用</string>
+    <string name="register_gas_value_without_yuan">%.6f ether</string>
+    <string name="register_gas_value">%.6f ether ≈ ￥ %.2f</string>
+    <string name="register_password">钱包密码</string>
+    <string name="register_password_tip">请输入密码</string>
+    <string name="register_next_step">下一步</string>
+    <string name="register_finished">完成登记</string>
+
+    <!--矿工列表-->
+    <string name="miner_list">矿工列表</string>
+
     <!-- 绑定矿工 -->
+    <string name="bind_tip">矿工承诺您在授权时间内可通过接单获得\n不高于授权额度的收益\n（授权时间和授权额度会根据接单情况自动追加）</string>
+    <string name="bind_miner_address">矿工地址</string>
+    <string name="bind_author_time">授权时间</string>
+    <string name="bind_author_amount">授权额度</string>
+    <string name="binding_other">正在绑定其他矿工</string>
+    <string name="unbinding_other">正在解绑其他矿工</string>
+    <string name="binding">正在绑定，请耐心等待</string>
+    <string name="unbinding">正在解绑，请耐心等待</string>
+
     <string name="bind_miner_error_balance_insufficient">账户余额不足以支撑绑定矿工请求</string>
     <string name="bind_miner">绑定矿工</string>
-    <string name="bind_hint">绑定矿工，他会为您撮合订单</string>
+    <string name="bind_hint">选择一个矿工，他会为您撮合订单</string>
     <string name="bind_success">绑定成功</string>
     <string name="bind_running">正在绑定</string>
     <string name="bind_failed">绑定矿工失败，请重试</string>
@@ -113,10 +152,14 @@
     <string name="bind_approving">正在预授权，请耐心等待</string>
     <string name="bind_approve_success">授权成功</string>
     <string name="bind_approve_failed">授权失败，请重试</string>
+    <string name="bind_deposit_success">转账成功</string>
+    <string name="bind_deposit_failed">转账失败，请重试</string>
+    <string name="bind_lock_success">锁仓成功</string>
+    <string name="bind_lock_failed">锁仓失败，请重试</string>
     <string name="bind_apply">申请绑定</string>
     <string name="bind_apply_message">矿工授权额度是%s个ARP，申请绑定吗？</string>
     <string name="bind_apply_expired">申请绑定已过期</string>
-    <string name="load_promise_failed">获取矿工信息失败，请重试</string>
+    <string name="load_promise_failed">获取矿工信息失败，请选择其他矿工绑定</string>
     <string name="unbind">解绑</string>
     <string name="unbind_success">解绑成功，您可以到我的钱包页面取回押金</string>
     <string name="unbind_running">正在解绑</string>
@@ -148,6 +191,16 @@
     <string name="unexchanged">未兑换：%.2f ARP</string>
     <string name="exchanged_records">兑换记录</string>
     <string name="earning_detail_format">收入：%.2fARP，矿工：%s</string>
+    <string name="duration_permanent">永久</string>
+    <plurals name="duration_year">
+        <item quantity="other">%d 年</item>
+    </plurals>
+    <plurals name="duration_month">
+        <item quantity="other">%d 月</item>
+    </plurals>
+    <plurals name="duration_day">
+        <item quantity="other">%d 天</item>
+    </plurals>
     <plurals name="duration_hour">
         <item quantity="other">%d 小时</item>
     </plurals>

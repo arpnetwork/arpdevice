@@ -16,6 +16,8 @@
 
 package org.arpnetwork.arpdevice.ui.bean;
 
+import android.content.Context;
+
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.io.Serializable;
@@ -76,6 +78,10 @@ public class Miner implements Serializable {
 
     public BigInteger getExpired() {
         return expired;
+    }
+
+    public String getExpiredHumanic(Context context) {
+        return Util.getLongDurationString(context, expired.longValue());
     }
 
     public MinerInfo getMinerInfo() {

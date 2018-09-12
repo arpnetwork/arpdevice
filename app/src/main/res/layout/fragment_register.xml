@@ -6,13 +6,25 @@
     android:keepScreenOn="true">
 
     <LinearLayout
-        android:id="@+id/ll_bind"
+        android:id="@+id/ll_register"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <TextView
-            android:id="@+id/tv_bind_tip"
+            android:id="@+id/tv_step_indicate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/register_margin"
+            android:layout_marginRight="@dimen/register_margin"
+            android:layout_marginTop="20dp"
+            android:gravity="center_horizontal"
+            android:text="@string/register_author"
+            android:textColor="@color/register_step_text_color" />
+
+        <TextView
+            android:id="@+id/tv_step_tip"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
@@ -20,11 +32,11 @@
             android:layout_marginRight="@dimen/register_margin"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
-            android:text="@string/bind_tip"
+            android:text="@string/register_author_tip"
             android:textColor="@color/register_step_text_color" />
 
         <LinearLayout
-            android:id="@+id/ll_author"
+            android:id="@+id/ll_amount"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/white"
@@ -32,24 +44,25 @@
             android:padding="17dp">
 
             <TextView
-                android:id="@+id/tv_miner_text"
-                android:layout_width="match_parent"
+                android:id="@+id/tv_amount_text"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:text="@string/bind_miner_address"
+                android:text="@string/register_transfer_amount"
                 android:textColor="@color/register_title_text_color" />
 
             <TextView
-                android:id="@+id/tv_address"
-                android:layout_width="match_parent"
+                android:id="@+id/tv_amount"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:text="@string/register_token_amount"
                 android:textAlignment="textEnd"
-                android:textColor="@color/register_step_text_color" />
+                android:textColor="@color/colorPrimary" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/ll_cost"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:color/white"
@@ -67,52 +80,19 @@
                 android:padding="@dimen/register_margin">
 
                 <TextView
+                    android:id="@+id/tv_cost_text"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="@string/bind_author_time"
+                    android:text="@string/register_cost_token"
                     android:textColor="@color/register_title_text_color" />
 
                 <TextView
-                    android:id="@+id/tv_author_time"
+                    android:id="@+id/tv_cost_amount"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:textAlignment="textEnd"
-                    android:textColor="@color/colorPrimary" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:orientation="vertical">
-
-            <View
-                style="@style/Divider"
-                android:layout_marginLeft="@dimen/register_margin"
-                android:layout_marginRight="@dimen/register_margin" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="@dimen/register_margin">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="@string/bind_author_amount"
-                    android:textColor="@color/register_title_text_color" />
-
-                <TextView
-                    android:id="@+id/tv_author_amount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="@string/register_token_amount"
+                    android:text="@string/register_cost_amount"
                     android:textAlignment="textEnd"
                     android:textColor="@color/colorPrimary" />
             </LinearLayout>
@@ -156,12 +136,12 @@
         </LinearLayout>
 
         <Button
-            android:id="@+id/btn_task"
+            android:id="@+id/btn_forward"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/register_margin"
             android:background="@color/colorPrimary"
-            android:text="@string/bind_miner"
+            android:text="@string/register_next_step"
             android:textAllCaps="false"
             android:textColor="@android:color/white"
             android:textSize="16sp" />

@@ -25,16 +25,17 @@ import org.web3j.utils.Convert;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
-public class ETHBalanceTask extends AsyncTask<String, String, BigDecimal> {
-    private OnValueResult<BigDecimal> onResult;
+public class ETHBalanceTask extends AsyncTask<String, String, BigInteger> {
+    private OnValueResult<BigInteger> onResult;
 
-    public ETHBalanceTask (OnValueResult<BigDecimal> onValueResult) {
+    public ETHBalanceTask (OnValueResult<BigInteger> onValueResult) {
         onResult = onValueResult;
     }
 
     @Override
-    protected BigDecimal doInBackground(String... param) {
+    protected BigInteger doInBackground(String... param) {
         String address = param[0];
         EthGetBalance balance = null;
         try {
@@ -48,11 +49,11 @@ public class ETHBalanceTask extends AsyncTask<String, String, BigDecimal> {
             return null;
         }
 
-        return Convert.fromWei(balance.getBalance().toString(), Convert.Unit.ETHER);
+        return balance.getBalance();
     }
 
     @Override
-    protected void onPostExecute(BigDecimal result) {
+    protected void onPostExecute(BigInteger result) {
         if (!isCancelled() && onResult != null) {
             onResult.onValueResult(result);
         }

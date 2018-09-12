@@ -74,7 +74,7 @@ public class ARPContract extends Contract {
                     .sendAsync().get();
         } catch (Exception e) {
             Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause());
-            return BigInteger.ZERO;
+            return null;
         }
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());

@@ -35,7 +35,6 @@ import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
 
 import static org.arpnetwork.arpdevice.config.Constant.KEY_ADDRESS;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_BINDPROMISE;
@@ -43,12 +42,6 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_GASLIMIT;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_GASPRICE;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
-import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_ARP_APPROVE;
-import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_BANK_APPROVE;
-import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_BANK_DEPOSIT;
-import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_BIND;
-import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_CANCEL_APPROVE;
-import static org.arpnetwork.arpdevice.ui.miner.BindMinerFragment.OPERATION_UNBIND;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_FAILED;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_SUCCESS;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_RUNNING;
@@ -70,6 +63,13 @@ import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_UNBIND_SUCCESS
 
 public class BindMinerIntentService extends IntentService {
     private static final String TAG = "BindMinerIntentService";
+
+    public static final int OPERATION_ARP_APPROVE = 1;
+    public static final int OPERATION_BANK_APPROVE = 2;
+    public static final int OPERATION_BANK_DEPOSIT = 3;
+    public static final int OPERATION_BIND = 4;
+    public static final int OPERATION_UNBIND = 5;
+    public static final int OPERATION_CANCEL_APPROVE = 6;
 
     private BroadcastNotifier mBroadcaster = new BroadcastNotifier(this);
 

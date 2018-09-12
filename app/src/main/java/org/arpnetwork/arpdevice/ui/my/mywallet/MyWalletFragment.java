@@ -87,10 +87,14 @@ public class MyWalletFragment extends BaseFragment {
         getARPBalance(myWallet.getAddress());
 
         final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);
-        EtherAPI.getEtherBalance(myWallet.getAddress(), new OnValueResult<BigDecimal>() {
+        EtherAPI.getEtherBalance(myWallet.getAddress(), new OnValueResult<BigInteger>() {
             @Override
-            public void onValueResult(BigDecimal result) {
-                setBalance(result, ethBalanceText);
+            public void onValueResult(BigInteger result) {
+                if (result != null) {
+                    ethBalanceText.setText(String.format("%.4f", Convert.fromWei(new BigDecimal(result), Convert.Unit.ETHER)));
+                } else {
+                    showErrorAlertDialog();
+                }
             }
         });
 
@@ -234,7 +238,6 @@ public class MyWalletFragment extends BaseFragment {
                                     Toast.LENGTH_SHORT).show();
                         }
                     });
-
                 } else {
                     handler.post(new Runnable() {
                         @Override
@@ -253,14 +256,10 @@ public class MyWalletFragment extends BaseFragment {
     private void getARPBalance(String address) {
         TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
         BigInteger balance = ARPContract.balanceOf(address);
-        setBalance(Convert.fromWei(balance.toString(), Convert.Unit.ETHER), arpBalanceText);
-    }
-
-    private void setBalance(BigDecimal balance, TextView textView) {
         if (balance == null) {
             showErrorAlertDialog();
         } else {
-            textView.setText(String.format("%.4f", balance));
+            arpBalanceText.setText(String.format("%.4f", Convert.fromWei(balance.toString(), Convert.Unit.ETHER)));
         }
     }
 
@@ -272,6 +271,7 @@ public class MyWalletFragment extends BaseFragment {
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            alertShown = false;
                             finish();
                         }
                     })
