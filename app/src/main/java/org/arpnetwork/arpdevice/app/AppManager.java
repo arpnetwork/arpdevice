@@ -139,6 +139,9 @@ public class AppManager {
                 mState = State.INSTALLED;
                 mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
             }
+        } else {
+            mState = State.IDLE;
+            mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
         }
     }
 

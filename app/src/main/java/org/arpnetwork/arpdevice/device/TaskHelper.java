@@ -20,6 +20,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
@@ -27,6 +28,7 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.UIHelper;
+import org.arpnetwork.arpdevice.util.Util;
 
 import java.util.Locale;
 import java.util.Timer;
@@ -42,9 +44,19 @@ public class TaskHelper {
     private Timer mTimer;
     private Context mContext;
     private Runnable mLaunchRunnable;
+    private OnTopTaskListener mOnTopTaskListener;
 
-    public TaskHelper(Context context) {
+    public interface OnTopTaskListener {
+        void onTopTaskIllegal();
+    }
+
+    public interface OnGetTopTaskListener {
+        void onGetTopTask(String pkgName);
+    }
+
+    public TaskHelper(Context context, OnTopTaskListener listener) {
         mContext = context;
+        mOnTopTaskListener = listener;
         mAdb = new Adb(Touch.getInstance().getConnection());
     }
 
@@ -93,11 +105,30 @@ public class TaskHelper {
         }
     }
 
-    private void getTopTask() {
+    public void getTopTask(final OnGetTopTaskListener listener) {
         mAdb.getTopAndroidTask(new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 String topPackage = getTopPackage(new String(data));
+                if (listener != null) {
+                    listener.onGetTopTask(topPackage);
+                }
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+            }
+        });
+    }
+
+    private void getTopTask() {
+        getTopTask(new OnGetTopTaskListener() {
+            @Override
+            public void onGetTopTask(String topPackage) {
                 if (mPackageName != null) {
                     if (topPackage.contains(mPackageName)) {
                         if (mLaunchRunnable != null) {
@@ -109,22 +140,14 @@ public class TaskHelper {
                         int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
                         sendTouch(x, y);
                     } else {
-                        DataServer.getInstance().onClientDisconnected();
                         stopCheckTopTimer();
+                        onTopTaskIllegal();
                     }
                 } else if (topPackage.contains("com.miui.securitycenter")) {
                     int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
                     int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
                     sendTouch(x, y);
                 }
-            }
-
-            @Override
-            public void onStderr(ShellChannel ch, byte[] data) {
-            }
-
-            @Override
-            public void onExit(ShellChannel ch, int code) {
             }
         });
     }
@@ -143,5 +166,11 @@ public class TaskHelper {
         String downClick = String.format(Locale.US, "d 0 %d %d 50 5 5\nc\n", x, y);
         Touch.getInstance().sendTouch(downClick);
         Touch.getInstance().sendTouch("u 0 \nc\n");
+    }
+
+    private void onTopTaskIllegal() {
+        if (mOnTopTaskListener != null) {
+            mOnTopTaskListener.onTopTaskIllegal();
+        }
     }
 }

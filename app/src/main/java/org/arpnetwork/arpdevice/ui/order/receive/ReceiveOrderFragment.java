@@ -59,7 +59,7 @@ import org.arpnetwork.arpdevice.util.NetworkHelper;
 
 import java.math.BigInteger;
 
-public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener {
+public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener, TaskHelper.OnTopTaskListener {
     private static final String TAG = ReceiveOrderFragment.class.getSimpleName();
 
     private TextView mOrderStateView;
@@ -67,6 +67,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private DeviceManager mDeviceManager;
     private HttpServer mHttpServer;
     private AppManager mAppManager;
+    private TaskHelper mTaskHelper;
     private Miner mMiner;
 
     private BigInteger mLastAmount = BigInteger.ZERO;
@@ -141,6 +142,26 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onDestroy();
     }
 
+    @Override
+    public void onTopTaskIllegal() {
+        stopDeviceService();
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mTaskHelper != null) {
+                    mTaskHelper.getTopTask(new TaskHelper.OnGetTopTaskListener() {
+                        @Override
+                        public void onGetTopTask(String pkgName) {
+                            if (pkgName.contains(getContext().getPackageName())) {
+                                startDeviceService();
+                            }
+                        }
+                    });
+                }
+            }
+        }, 2000);
+    }
+
     private void initViews() {
         mOrderStateView = (TextView) findViewById(R.id.tv_order_state);
         mOrderStateView.setText(R.string.starting_service);
@@ -149,17 +170,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         exitButton.setOnClickListener(mOnClickExitListener);
     }
 
-    private void startDeviceService() {
+    private synchronized void startDeviceService() {
         if (!mStartService) {
             silentOn();
 
-            TaskHelper taskHelper = new TaskHelper(getContext().getApplicationContext());
+            mTaskHelper = new TaskHelper(getContext().getApplicationContext(), this);
+            mAppManager = new AppManager(DataServer.getInstance().getHandler(), mTaskHelper);
 
             DataServer.getInstance().setListener(mConnectionListener);
-            DataServer.getInstance().setTaskHelper(taskHelper);
+            DataServer.getInstance().setAppManager(mAppManager);
             DataServer.getInstance().startServer(mDataPort);
-
-            mAppManager = new AppManager(DataServer.getInstance().getHandler(), taskHelper);
 
             DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
             dispatcher.setAppManager(mAppManager);
@@ -175,18 +195,17 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     }
 
-    private void stopDeviceService() {
+    private synchronized void stopDeviceService() {
         if (mStartService) {
-            releaseDApp();
-
+            silentOff();
             DownloadManager.getInstance().cancelAll();
             stopHttpServer();
+            releaseDApp();
             DataServer.getInstance().shutdown();
             if (mDeviceManager != null) {
                 mDeviceManager.setOnDeviceStateChangedListener(null);
                 mDeviceManager.close();
             }
-            silentOff();
 
             mStartService = false;
         }
@@ -270,6 +289,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private void onDeviceReleased() {
         mHandler.removeCallbacksAndMessages(null);
+
         if (mAppManager != null) {
             mAppManager.clear();
         }
@@ -497,7 +517,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             if (!TextUtils.isEmpty(action)) {
                 switch (intent.getAction()) {
                     case Constant.BROADCAST_ACTION_TOUCH_LOCAL:
-                        releaseDApp();
+                        onTopTaskIllegal();
                         break;
 
                     default:

@@ -22,10 +22,10 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.data.DApp;
-import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.data.ChangeQualityReq;
 import org.arpnetwork.arpdevice.data.ConnectReq;
@@ -64,7 +64,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private SendThread mAVDataThread;
     private int mQuality;
     private boolean mStop;
-    private TaskHelper mTaskHelper;
+    private AppManager mAppManager;
 
     private NettyConnection mConn;
 
@@ -106,8 +106,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         stop();
     }
 
-    public void setTaskHelper(TaskHelper helper) {
-        mTaskHelper = helper;
+    public void setAppManager(AppManager appManager) {
+        mAppManager = appManager;
     }
 
     public Handler getHandler() {
@@ -203,7 +203,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Log.e(TAG, "onException. cause = " + cause.getMessage());
 
         stop();
-
         if (mListener != null) {
             mListener.onException(cause);
         }
@@ -244,7 +243,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                     stop();
                 } else if (!verifySession(connectReq)) {
                     stop(); // close client.
-                } else {
+                } else if (mAppManager != null
+                        && (mAppManager.getState() == AppManager.State.LAUNCHING
+                        || mAppManager.getState() == AppManager.State.LAUNCHED)) {
                     mSession = connectReq.data.session;
                     DAppApi.clientConnected(connectReq.data.session, mDApp, new Runnable() {
                         @Override
@@ -257,6 +258,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                             stop();
                         }
                     });
+                } else {
+                    stop();
                 }
                 break;
 
@@ -353,9 +356,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             stopHeartbeatTimeout();
         }
 
-        // kill apk
-        if (mTaskHelper != null) {
-            mTaskHelper.killLaunchedApp();
+        if (mAppManager != null) {
+            mAppManager.stopApp();
         }
     }
 
