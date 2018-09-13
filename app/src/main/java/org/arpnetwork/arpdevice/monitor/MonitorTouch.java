@@ -17,6 +17,8 @@
 package org.arpnetwork.arpdevice.monitor;
 
 import android.content.Intent;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -25,98 +27,196 @@ import org.arpnetwork.adb.RawChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.web3j.utils.Numeric;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
+import java.io.StringReader;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MonitorTouch {
     private static final String TAG = "MonitorTouch";
+    private static final int MONITOR_DURATION = 100; // ms
 
+    private final LinkedBlockingQueue<String> mRemotePacketQueue = new LinkedBlockingQueue<String>();
+    private final ConcurrentLinkedQueue<String> mCmdQueue = new ConcurrentLinkedQueue<String>();
+    private final LinkedBlockingQueue<String> mLocalPacketQueue = new LinkedBlockingQueue<String>();
+    private final ConcurrentLinkedQueue<String> mLocalOutQueue = new ConcurrentLinkedQueue<String>();
+
+    private RemoteParseThread mRemoteParseThread;
+    private LocalParseThread mLocalParseThread;
+
+    private HandlerThread mWorker;
+    private Handler mHandler;
     private long mRemoteCommits = 0;
-    private final LinkedBlockingQueue<String> mPacketQueue = new LinkedBlockingQueue<String>();
-    private ParseThread mParseThread;
+    private long mTimerCount = 0;
+    private int mNeedDeleteCount;
 
     public void startMonitor(String monitorPath) {
         if (TextUtils.isEmpty(monitorPath)) return;
 
         stopMonitor();
-        mParseThread = new ParseThread();
-        mParseThread.start();
+        mRemoteParseThread = new RemoteParseThread();
+        mRemoteParseThread.start();
+        mLocalParseThread = new LocalParseThread();
+        mLocalParseThread.start();
+
+        mWorker = new HandlerThread(TAG);
+        mWorker.start();
+
+        mHandler = new Handler(mWorker.getLooper());
+        mHandler.postDelayed(mMonitorRunnable, MONITOR_DURATION);
 
         RawChannel ss = Touch.getInstance().getConnection().openExec("getevent -l " + monitorPath);
         ss.setListener(new RawChannel.RawListener() {
             @Override
             public void onRaw(RawChannel ch, byte[] data) {
-                mPacketQueue.add(new String(data));
+                mLocalPacketQueue.add(new String(data));
             }
         });
     }
 
     public void stopMonitor() {
         mRemoteCommits = 0;
-        if (mParseThread != null) {
-            mParseThread.cancel();
-            mParseThread.interrupt();
+        mTimerCount = 0;
+        if (mRemoteParseThread != null) {
+            mRemoteParseThread.cancel();
+            mRemoteParseThread.interrupt();
+        }
+        if (mLocalParseThread != null) {
+            mLocalParseThread.cancel();
+            mLocalParseThread.interrupt();
+        }
+
+        if (mWorker != null) {
+            mWorker.quit();
+            mWorker = null;
+        }
+        if (mHandler != null) {
+            mHandler.removeCallbacksAndMessages(null);
         }
     }
 
-    public void increaseCount() {
-        mRemoteCommits++;
+    public void enqueueTouch(String touch) {
+        mRemotePacketQueue.add(touch);
     }
 
-    private class ParseThread extends Thread {
+    private Runnable mMonitorRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mCmdQueue.containsAll(mLocalOutQueue)) {
+
+                if (mTimerCount == 0 && mRemoteCommits >= mTimerCount) {
+                    mTimerCount++;
+                    mNeedDeleteCount = mCmdQueue.size();
+                } else if (mTimerCount != 0 && mRemoteCommits >= mTimerCount) {
+                    mTimerCount++;
+                    int m = mCmdQueue.size();
+
+                    for (int i = 0; i < mNeedDeleteCount; i++) {
+                        mCmdQueue.poll();
+                    }
+                    mNeedDeleteCount = m - mNeedDeleteCount;
+                }
+                mLocalOutQueue.clear();
+            } else {
+                Log.e(TAG, "abnormal");
+                stopMonitor();
+                sendBroadcast();
+            }
+
+            mHandler.postDelayed(this, MONITOR_DURATION);
+        }
+    };
+
+    private void sendBroadcast() {
+        Intent localIntent = new Intent();
+        localIntent.setAction(Constant.BROADCAST_ACTION_TOUCH_LOCAL);
+        LocalBroadcastManager.getInstance(CustomApplication.sInstance).sendBroadcast(localIntent);
+    }
+
+    private class RemoteParseThread extends Thread {
         private boolean mStopped;
-        private long commits;
 
         @Override
         public void run() {
-            mPacketQueue.clear();
+            mRemotePacketQueue.clear();
+            mCmdQueue.clear();
 
             while (!mStopped) {
                 try {
-                    String packet = mPacketQueue.take();
-                    handleMonitor(packet);
+                    String packet = mRemotePacketQueue.take();
+                    if (!TextUtils.isEmpty(packet)) {
+                        int packetCount = addPacket(packet);
+                        if (packetCount > 0) {
+                            mRemoteCommits++;
+                        }
+                    }
                 } catch (InterruptedException e) {
-                    Log.e(TAG, "ParseThread interrupted.");
+                    Log.e(TAG, "RemoteParseThread interrupted.");
                 } catch (Exception e) {
-                    Log.e(TAG, "ParseThread failed.");
+                    Log.e(TAG, "RemoteParseThread failed.");
                 }
             }
         }
 
-        private void handleMonitor(String packet) {
-            // parse line:  EV_SYN       SYN_REPORT           00000000
-            try {
-                commits += parsePacket(packet);
-                if (commits > mRemoteCommits) {
-                    Log.e(TAG, "abnormal");
-                    sendBroadcast();
+        private int addPacket(String packet) throws IOException {
+            int matchCount = 0;
+            BufferedReader br = new BufferedReader(new StringReader(packet));
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("d") || line.contains("m")) {
+                    String positionXDec = line.split(" ")[2];
+                    mCmdQueue.add(positionXDec);
+                    matchCount++;
                 }
-            } catch (IOException ignored) {
             }
-        }
 
-        private void sendBroadcast() {
-            Intent localIntent = new Intent();
-            localIntent.setAction(Constant.BROADCAST_ACTION_TOUCH_LOCAL);
-            LocalBroadcastManager.getInstance(CustomApplication.sInstance).sendBroadcast(localIntent);
+            return matchCount;
         }
 
         private void cancel() {
-            commits = 0;
+            mStopped = true;
+        }
+    }
+
+    private class LocalParseThread extends Thread {
+        private final String ABS_POS_X = "ABS_MT_POSITION_X";
+        private final int ABS_POS_X_LEN = "ABS_MT_POSITION_X".length();
+        private boolean mStopped;
+
+        @Override
+        public void run() {
+            mLocalPacketQueue.clear();
+            mLocalOutQueue.clear();
+
+            while (!mStopped) {
+                try {
+                    String packet = mLocalPacketQueue.take();
+                    parsePacket(packet);
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "LocalParseThread interrupted.");
+                } catch (Exception e) {
+                    Log.e(TAG, "LocalParseThread failed.");
+                }
+            }
+        }
+
+        private void cancel() {
             mStopped = true;
         }
 
         private int parsePacket(String packet) throws IOException {
+            // parse line:  EV_SYN       ABS_MT_POSITION_X
             int matchCount = 0;
-            BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(packet.getBytes(Charset.forName("utf8"))), Charset.forName("utf8")));
+            BufferedReader br = new BufferedReader(new StringReader(packet));
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.contains("EV_SYN       SYN_REPORT")) {
+                if (line.contains("EV_ABS       ABS_MT_POSITION_X")) {
+                    String posX = line.substring(line.indexOf(ABS_POS_X) + ABS_POS_X_LEN).trim();
+                    String positionXDec = Numeric.toBigInt(posX).toString(10);
+                    mLocalOutQueue.add(positionXDec);
                     matchCount++;
                 }
             }

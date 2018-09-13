@@ -106,7 +106,7 @@ public class Touch {
         if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mShell != null) {
             mShell.write(touchInfo);
             if (mMonitor != null) {
-                mMonitor.increaseCount();
+                mMonitor.enqueueTouch(touchInfo);
             }
         }
     }
