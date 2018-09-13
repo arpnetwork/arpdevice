@@ -141,29 +141,6 @@ public class Touch {
         return mRecordHelper != null && mRecordHelper.isRecording();
     }
 
-    private void startTouch(final Handler handler) {
-        ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
-        mShell = ss;
-        ss.setListener(new ShellChannel.ShellListener() {
-            @Override
-            public void onStdout(ShellChannel ch, byte[] data) {
-                // contacts x y pressure major minor\n
-                mBanner = new String(data).trim();
-                openUSBSafeDebug(handler);
-            }
-
-            @Override
-            public void onStderr(ShellChannel ch, byte[] data) {
-                handler.obtainMessage(Constant.CHECK_TOUCH_FAILED).sendToTarget();
-            }
-
-            @Override
-            public void onExit(ShellChannel ch, int code) {
-                Log.e(TAG, "onExit:" + code);
-            }
-        });
-    }
-
     private Touch() {
         mState = STATE_INIT;
 
@@ -198,60 +175,7 @@ public class Touch {
                 connect(mCheckHandler);
             } else {
                 mState = STATE_CONNECTED;
-
-                if (AssetCopyHelper.isValidTouchBinary()) {
-                    startTouch(mCheckHandler);
-                } else {
-                    SyncChannel ss = mConn.openSync();
-                    AssetCopyHelper.pushTouch(ss, new AssetCopyHelper.PushCallback() {
-                        @Override
-                        public void onStart() {
-                        }
-
-                        @Override
-                        public void onComplete(boolean success, Throwable throwable) {
-                            if (success) {
-                                startTouch(mCheckHandler);
-                            } else {
-                                Log.e(TAG, "pushTouch error: " + throwable);
-                                handleCopyFailed();
-                            }
-                        }
-                    });
-                }
-
-                if (!AssetCopyHelper.isValidCapBinary()) {
-                    SyncChannel capChannel = mConn.openSync();
-                    AssetCopyHelper.pushCap(capChannel, new AssetCopyHelper.PushCallback() {
-                        @Override
-                        public void onStart() {
-                        }
-
-                        @Override
-                        public void onComplete(boolean success, Throwable throwable) {
-                            if (!success) {
-                                Log.e(TAG, "pushCap error: " + throwable);
-                                handleCopyFailed();
-                            }
-                        }
-                    });
-                }
-                if (!AssetCopyHelper.isValidCapLib()) {
-                    SyncChannel capLibChannel = mConn.openSync();
-                    AssetCopyHelper.pushLibCap(capLibChannel, new AssetCopyHelper.PushCallback() {
-                        @Override
-                        public void onStart() {
-                        }
-
-                        @Override
-                        public void onComplete(boolean success, Throwable throwable) {
-                            if (!success) {
-                                Log.e(TAG, "pushLibCap error: " + throwable);
-                                handleCopyFailed();
-                            }
-                        }
-                    });
-                }
+                openUSBSafeDebug();
             }
         }
 
@@ -283,47 +207,127 @@ public class Touch {
             mState = STATE_CLOSED;
         }
 
+        private void openUSBSafeDebug() {
+            ShellChannel ss = mConn.openShell("groups");
+            ss.setListener(new ShellChannel.ShellListener() {
+                StringBuilder sb = new StringBuilder();
+                boolean findInput = false;
+
+                @Override
+                public void onStdout(ShellChannel ch, byte[] data) {
+                    // Check whether contains input.
+                    sb.append(new String(data).trim());
+                    if (sb.toString().contains("input")) {
+                        if (!findInput) {
+                            findInput = true;
+                            checkTouch();
+                        }
+                    } else {
+                        close();
+                        mCheckHandler.obtainMessage(Constant.CHECK_ADB_SAFE_FAILED).sendToTarget();
+                    }
+                }
+
+                @Override
+                public void onStderr(ShellChannel ch, byte[] data) {
+                }
+
+                @Override
+                public void onExit(ShellChannel ch, int code) {
+                }
+            });
+        }
+
+        private void checkTouch() {
+            if (AssetCopyHelper.isValidTouchBinary()) {
+                startTouch();
+            } else {
+                SyncChannel ss = mConn.openSync();
+                AssetCopyHelper.pushTouch(ss, new AssetCopyHelper.PushCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onComplete(boolean success, Throwable throwable) {
+                        if (success) {
+                            startTouch();
+                        } else {
+                            Log.e(TAG, "pushTouch error: " + throwable);
+                            handleCopyFailed();
+                        }
+                    }
+                });
+            }
+
+            if (!AssetCopyHelper.isValidCapBinary()) {
+                SyncChannel capChannel = mConn.openSync();
+                AssetCopyHelper.pushCap(capChannel, new AssetCopyHelper.PushCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onComplete(boolean success, Throwable throwable) {
+                        if (!success) {
+                            Log.e(TAG, "pushCap error: " + throwable);
+                            handleCopyFailed();
+                        }
+                    }
+                });
+            }
+            if (!AssetCopyHelper.isValidCapLib()) {
+                SyncChannel capLibChannel = mConn.openSync();
+                AssetCopyHelper.pushLibCap(capLibChannel, new AssetCopyHelper.PushCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onComplete(boolean success, Throwable throwable) {
+                        if (!success) {
+                            Log.e(TAG, "pushLibCap error: " + throwable);
+                            handleCopyFailed();
+                        }
+                    }
+                });
+            }
+        }
+
+        private void startTouch() {
+            ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
+            mShell = ss;
+            ss.setListener(new ShellChannel.ShellListener() {
+                @Override
+                public void onStdout(ShellChannel ch, byte[] data) {
+                    // contacts x y pressure major minor\n
+                    mBanner = new String(data).trim();
+
+                    Message message;
+                    boolean installViaUsb = PreferenceManager.getInstance().getBoolean(Constant.KEY_INSTALL_USB);
+                    if (!installViaUsb) {
+                        message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL);
+                    } else {
+                        message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_UPNP);
+                    }
+                    message.sendToTarget();
+                }
+
+                @Override
+                public void onStderr(ShellChannel ch, byte[] data) {
+                    mCheckHandler.obtainMessage(Constant.CHECK_TOUCH_FAILED).sendToTarget();
+                }
+
+                @Override
+                public void onExit(ShellChannel ch, int code) {
+                }
+            });
+        }
+
         private void handleCopyFailed() {
             close();
             mCheckHandler.obtainMessage(Constant.CHECK_TOUCH_COPY_FAILED).sendToTarget();
         }
-    }
 
-    private void openUSBSafeDebug(final Handler mCheckHandler) {
-        ShellChannel ss = mConn.openShell("groups");
-        ss.setListener(new ShellChannel.ShellListener() {
-            StringBuilder sb = new StringBuilder();
-            boolean findInput = false;
-
-            @Override
-            public void onStdout(ShellChannel ch, byte[] data) {
-                // Check whether contains input.
-                sb.append(new String(data).trim());
-                if (sb.toString().contains("input")) {
-                    if (!findInput) {
-                        findInput = true;
-                        Message message;
-                        boolean installViaUsb = PreferenceManager.getInstance().getBoolean(Constant.KEY_INSTALL_USB);
-                        if (!installViaUsb) {
-                            message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL);
-                        } else {
-                            message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_UPNP);
-                        }
-                        message.sendToTarget();
-                    }
-                } else {
-                    close();
-                    mCheckHandler.obtainMessage(Constant.CHECK_ADB_SAFE_FAILED).sendToTarget();
-                }
-            }
-
-            @Override
-            public void onStderr(ShellChannel ch, byte[] data) {
-            }
-
-            @Override
-            public void onExit(ShellChannel ch, int code) {
-            }
-        });
     }
 }
