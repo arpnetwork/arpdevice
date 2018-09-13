@@ -140,12 +140,11 @@ public class CheckThread {
     }
 
     private void stopPingTimer() {
-        mWorkerHandler.removeCallbacksAndMessages(null);
+        mWorkerHandler.removeCallbacks(mPingRunnable);
     }
 
     private void startPingTimer() {
         if (mWorkerHandler != null) {
-            mWorkerHandler.removeCallbacksAndMessages(null);
             mWorkerHandler.postDelayed(mPingRunnable, PING_INTERVAL);
         }
     }
@@ -211,12 +210,11 @@ public class CheckThread {
     }
 
     private void stopCheckPackageTimer() {
-        mWorkerHandler.removeCallbacksAndMessages(null);
+        mWorkerHandler.removeCallbacks(mCheckPackageRunnable);
     }
 
     private void startCheckPackageTimer() {
         if (mWorkerHandler != null) {
-            mWorkerHandler.removeCallbacksAndMessages(null);
             mWorkerHandler.postDelayed(mCheckPackageRunnable, PING_INTERVAL);
         }
     }
@@ -234,6 +232,8 @@ public class CheckThread {
 
                 PreferenceManager.getInstance().putBoolean(Constant.KEY_INSTALL_USB, true);
                 uninstallApp(sCheckerPkgName);
+            } else {
+                mWorkerHandler.postDelayed(this, PING_INTERVAL);
             }
         }
     };
