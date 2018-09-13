@@ -17,10 +17,9 @@
 package org.arpnetwork.arpdevice.stream;
 
 import android.content.Context;
-import android.util.Log;
 
 import org.arpnetwork.adb.Connection;
-import org.arpnetwork.adb.ShellChannel;
+import org.arpnetwork.adb.RawChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.data.Message;
@@ -36,7 +35,7 @@ public class RecordHelper {
     private static final String TAG = "RecordHelper";
     private static final boolean DEBUG = Config.DEBUG;
 
-    private ShellChannel mVideoShell;
+    private RawChannel mVideoShell;
     private final ByteBuf mBuffer = Unpooled.buffer(1024 * 2);
 
     public void startRecord(int quality, Connection connection) {
@@ -44,9 +43,10 @@ public class RecordHelper {
         int height = getVideoHeight();
         DataServer.getInstance().onVideoChanged(width, height, quality);
 
-        mVideoShell = connection.openShell(getRecordCmd());
-        mVideoShell.setListener(new ShellChannel.ShellListener() {
-            public void onStdout(ShellChannel ch, byte[] data) {
+        mVideoShell = connection.openExec(getRecordCmd());
+        mVideoShell.setListener(new RawChannel.RawListener() {
+            @Override
+            public void onRaw(RawChannel ch, byte[] data) {
                 // Continue callback data format: int size + video data.
                 mBuffer.writeBytes(data);
 
@@ -68,18 +68,6 @@ public class RecordHelper {
                     mBuffer.discardReadBytes();
 
                 } while (mBuffer.readableBytes() > 4);
-            }
-
-            @Override
-            public void onStderr(ShellChannel ch, byte[] data) {
-                Log.e(TAG, "av STDERR:" + new String(data));
-            }
-
-            @Override
-            public void onExit(ShellChannel ch, int code) {
-                Log.e(TAG, "av onExit:" + code);
-                mVideoShell = null;
-                DataServer.getInstance().onClientDisconnected();
             }
         });
     }
