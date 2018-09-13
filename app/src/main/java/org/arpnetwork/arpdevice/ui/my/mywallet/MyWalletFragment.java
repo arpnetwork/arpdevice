@@ -178,9 +178,9 @@ public class MyWalletFragment extends BaseFragment {
             String message = String.format(getString(R.string.unexchange_tip_changing_wallet),
                     Convert.fromWei(unexchanged.toString(), Convert.Unit.ETHER).floatValue());
             MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.exchange_change_miner_title))
+            builder.setTitle(getString(R.string.exchange_unchanged_promise_found))
                     .setMessage(message)
-                    .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
+                    .setPositiveButton(getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             Intent intent = new Intent();
@@ -188,7 +188,7 @@ public class MyWalletFragment extends BaseFragment {
                             startActivity(intent);
                         }
                     })
-                    .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
+                    .setNegativeButton(getString(R.string.exchange_change_wallet_ignore), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             resetWallet();

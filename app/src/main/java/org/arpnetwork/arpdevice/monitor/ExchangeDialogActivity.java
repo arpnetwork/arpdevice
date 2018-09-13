@@ -73,7 +73,7 @@ public class ExchangeDialogActivity extends Activity {
         });
 
         Button ok = findViewById(R.id.btn_ok);
-        ok.setText(getString(R.string.exchange));
+        ok.setText(getString(R.string.go_exchange));
         ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -39,9 +39,13 @@ public class StateHolder {
     public static final int STATE_BANK_APPROVE_SUCCESS = 14;
     public static final int STATE_BANK_APPROVE_FAILED = 15;
 
-    public static final int STATE_BANK_CANCEL_APPROVE_RUNNING = 16;
-    public static final int STATE_BANK_CANCEL_APPROVE_SUCCESS = 17;
-    public static final int STATE_BANK_CANCEL_APPROVE_FAILED = 18;
+    public static final int STATE_BANK_CASH_RUNNING = 16;
+    public static final int STATE_BANK_CASH_SUCCESS = 17;
+    public static final int STATE_BANK_CASH_FAILED = 18;
+
+    public static final int STATE_BANK_WITHDRAW_RUNNING = 19;
+    public static final int STATE_BANK_WITHDRAW_SUCCESS = 20;
+    public static final int STATE_BANK_WITHDRAW_FAILED = 21;
 
     private static ConcurrentHashMap<TaskInfo, Integer> sTaskStateMap = new ConcurrentHashMap<>(1);
 

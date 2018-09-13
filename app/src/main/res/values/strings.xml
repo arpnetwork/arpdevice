@@ -97,6 +97,7 @@
     <string name="withdraw_failed">Withdraw failed</string>
     <string name="unexchange_tip_changing_wallet">You have accumulated %.2f ARP, please exchange your promise. if you cancel the exchange, the promise will become invalid automatically</string>
     <string name="tip_changing_wallet">You have accumulated some ARP. please make sure the promise have been exchanged, or it would be invalid after wallet changed.</string>
+    <string name="exchange_change_wallet_ignore">Go on change wallet</string>
 
     <!-- register -->
     <string name="register_device">Register device</string>
@@ -188,7 +189,7 @@
     <string name="bind_change_bind_msg">Please unbind first and then bind new.</string>
 
     <!-- my earning -->
-    <string name="exchange">Exchange</string>
+    <string name="go_exchange">Exchange</string>
     <string name="exchanged">Exchanged:%.2f ARP</string>
     <string name="unexchanged">Unexchanged:%.2f ARP</string>
     <string name="exchanged_records">Exchanged records</string>
@@ -244,11 +245,18 @@
     <string name="device_offline">Your account is already signed in on another device</string>
 
     <!-- exchange -->
+    <string name="exchange_arp">Exchange ARP</string>
+    <string name="exchange_arp_amount">+ %.2f ARP</string>
+    <string name="exchange_total_amount">total %.2f ARP</string>
+    <string name="exchange">Exchange</string>
+    <string name="cashing">Exchanging, pleas wait...</string>
+    <string name="withdrawing">Withdrawing, pleas wait...</string>
     <string name="exchange_tip_title">Please exchange your promise soon</string>
     <string name="exchange_tip_msg">You have accumulated %s ARP,the bound miner expired is %s</string>
     <string name="exchange_tip_cancel">Pending exchange</string>
-    <string name="exchange_change_miner_title">Please exchange your promise before change your miner</string>
-    <string name="exchange_change_miner_msg">You have accumulated %.2f ARP,please exchange your promise. if you cancel the exchange,the promise will become invalid automatically</string>
-    <string name="exchange_change_miner_cancel">Abandon</string>
-
+    <string name="exchange_unchanged_promise_found">Please exchange your promise before change your miner</string>
+    <string name="exchange_change_miner_msg">You have accumulated %.2f ARP, please get exchange before changing miner, or the promise will become invalid automatically</string>
+    <string name="exchange_unbind_miner_msg">You have accumulated %.2f ARP, please get exchange before unbinding miner, or the promise will become invalid automatically</string>
+    <string name="exchange_change_miner_ignore">Go on change</string>
+    <string name="exchange_unbind_miner_ignore">Go on unbind</string>
 </resources>

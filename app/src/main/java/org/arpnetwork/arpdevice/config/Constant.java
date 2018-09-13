@@ -50,7 +50,8 @@ public class Constant {
     public static final String KEY_MINER = "miner";
     public static final String KEY_FROM_LAUNCHER = "from_launcher";
     public static final String KEY_FROM_MY = "from_my";
-    public static final String KEY_BIND_STATE = "bind_state";
+    public static final String KEY_EXCHANGE_TYPE = "exchange_type";
+    public static final String KEY_EXCHANGE_AMOUNT = "exchange_amount";
 
     public static final String ORDER_PRICE = "order_price";
 

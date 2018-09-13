@@ -153,7 +153,7 @@ public class RegisterFragment extends BaseFragment {
                         } else if (result.compareTo(mGasView.getGasCost()) < 0) {
                             UIHelper.showToast(getActivity(), R.string.register_underpaid);
                         } else {
-                            startServiceIntent(mStep, mGasLimit);
+                            startServiceIntent(mStep);
                         }
                     }
                 });
@@ -230,12 +230,12 @@ public class RegisterFragment extends BaseFragment {
         mForwardBtn.setEnabled(true);
     }
 
-    private void startServiceIntent(int opType, BigInteger gasLimit) {
+    private void startServiceIntent(int opType) {
         Intent serviceIntent = new Intent(getActivity(), BindMinerIntentService.class);
         serviceIntent.putExtra(KEY_OP, opType);
         serviceIntent.putExtra(KEY_PASSWD, mPasswordText.getText().toString());
         serviceIntent.putExtra(KEY_GASPRICE, mGasView.getGasPrice().toString());
-        serviceIntent.putExtra(KEY_GASLIMIT, gasLimit.toString());
+        serviceIntent.putExtra(KEY_GASLIMIT, mGasLimit.toString());
         getActivity().startService(serviceIntent);
     }
 

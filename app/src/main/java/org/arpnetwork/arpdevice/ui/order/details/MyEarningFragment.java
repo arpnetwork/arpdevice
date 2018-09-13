@@ -17,9 +17,14 @@
 package org.arpnetwork.arpdevice.ui.order.details;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -30,11 +35,11 @@ import android.widget.Toast;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
+import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.data.Promise;
-import org.arpnetwork.arpdevice.dialog.PayEthDialog;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
@@ -52,6 +57,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
+import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
+
 public class MyEarningFragment extends BaseFragment {
     private static final String TAG = MyEarningFragment.class.getSimpleName();
 
@@ -64,11 +73,15 @@ public class MyEarningFragment extends BaseFragment {
     private BigInteger mTopCid = BigInteger.ZERO;
     private BigInteger mTopAmount = BigInteger.ZERO;
 
+    private BindStateReceiver mBindStateReceiver;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setTitle(R.string.my_earnings);
+
+        registerReceiver();
     }
 
     @Override
@@ -87,6 +100,20 @@ public class MyEarningFragment extends BaseFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (mBindStateReceiver != null) {
+            LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mBindStateReceiver);
+            mBindStateReceiver = null;
+        }
+    }
+
+    private void registerReceiver() {
+        IntentFilter statusIntentFilter = new IntentFilter(
+                Constant.BROADCAST_ACTION_STATUS);
+        statusIntentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+        mBindStateReceiver = new BindStateReceiver();
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
+                mBindStateReceiver,
+                statusIntentFilter);
     }
 
     private void initViews() {
@@ -102,14 +129,10 @@ public class MyEarningFragment extends BaseFragment {
                 } else if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
                     UIHelper.showToast(CustomApplication.sInstance, getString(R.string.unbinding_exchange), Toast.LENGTH_SHORT);
                 } else {
-                    final String spender = Wallet.get().getAddress();
-                    final BigInteger gasLimit = ARPBank.estimateCashGasLimit(promise, spender);
-                    PayEthDialog.showPayEthDialog(getActivity(), gasLimit, new PayEthDialog.OnPayListener() {
-                        @Override
-                        public void onPay(BigInteger priceWei, String password) {
-                            payForExchange(password, priceWei, gasLimit, promise, spender);
-                        }
-                    });
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
+                    bundle.putString(KEY_EXCHANGE_AMOUNT, mUnexchanged.toString());
+                    startActivity(ExchangeActivity.class, bundle);
                 }
             }
         });
@@ -118,54 +141,6 @@ public class MyEarningFragment extends BaseFragment {
         ListView listView = (ListView) findViewById(R.id.listview);
         listView.addHeaderView(mHeaderView);
         listView.setAdapter(mAdapter);
-    }
-
-    private void payForExchange(final String password, final BigInteger priceWei, final BigInteger gasLimit, final Promise promise, final String spender) {
-        final EarningRecord localRecord = savePendingToDb(promise.getCid() + ":" + promise.getAmount());
-        List<EarningRecord> local = new ArrayList<>(1);
-        local.add(localRecord);
-        mAdapter.addData(local);
-
-        final Handler handler = new Handler();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                ARPBank bank = ARPBank.load(Wallet.loadCredentials(password), priceWei, gasLimit);
-                TransactionReceipt receipt = null;
-                try {
-                    receipt = bank.cash(promise, spender).send();
-                } catch (Exception e) {
-                    android.util.Log.e(TAG, "onPay, cash error:" + e.getCause());
-                    UIHelper.showToast(CustomApplication.sInstance,
-                            getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
-                    return;
-                }
-                boolean success = TransactionAPI.isStatusOK(receipt.getStatus());
-                Runnable callBack;
-                if (success) {
-                    callBack = new Runnable() {
-                        @Override
-                        public void run() {
-                            if (getActivity() != null && !getActivity().isDestroyed()) {
-                                refreshData();
-                            }
-                            UIHelper.showToast(CustomApplication.sInstance,
-                                    CustomApplication.sInstance.getString(R.string.exchange_success), Toast.LENGTH_SHORT);
-                        }
-                    };
-                } else {
-                    callBack = new Runnable() {
-                        @Override
-                        public void run() {
-                            UIHelper.showToast(CustomApplication.sInstance,
-                                    CustomApplication.sInstance.getString(R.string.exchange_failed), Toast.LENGTH_SHORT);
-                        }
-                    };
-                }
-                handler.post(callBack);
-            }
-        };
-        new Thread(runnable).start();
     }
 
     private EarningRecord savePendingToDb(String key) {
@@ -314,5 +289,35 @@ public class MyEarningFragment extends BaseFragment {
 
     private float getFloatExchanged() {
         return Convert.fromWei(exchanged.toString(), Convert.Unit.ETHER).floatValue();
+    }
+
+    private class BindStateReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS, StateHolder.STATE_BANK_CASH_RUNNING)) {
+                case StateHolder.STATE_BANK_CASH_RUNNING:
+                    Promise promise = Promise.get();
+                    EarningRecord localRecord = savePendingToDb(promise.getCid() + ":" + promise.getAmount());
+                    List<EarningRecord> local = new ArrayList<>(1);
+                    local.add(localRecord);
+                    mAdapter.addData(local);
+                    break;
+
+                case StateHolder.STATE_BANK_CASH_SUCCESS:
+                    UIHelper.showToast(getActivity(), getString(R.string.exchange_success));
+                    refreshData();
+                    break;
+
+                case StateHolder.STATE_BANK_CASH_FAILED:
+                    UIHelper.showToast(getActivity(), getString(R.string.exchange_failed));
+                    refreshData();
+
+                    break;
+
+                default:
+                    break;
+            }
+        }
     }
 }

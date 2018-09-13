@@ -16,10 +16,8 @@
 
 package org.arpnetwork.arpdevice.ui.miner;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -32,17 +30,16 @@ import android.widget.ListView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AtomicNonce;
-import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.config.Constant;
-import org.arpnetwork.arpdevice.dialog.MessageDialog;
+import org.arpnetwork.arpdevice.dialog.PromiseDialog;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
+import org.arpnetwork.arpdevice.ui.order.details.ExchangeActivity;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
-import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -51,6 +48,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static org.arpnetwork.arpdevice.config.Config.API_SERVER_INFO;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
+import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 
 public class MinerListFragment extends BaseFragment {
     private Miner mBoundMiner;
@@ -112,69 +112,54 @@ public class MinerListFragment extends BaseFragment {
         mMinerList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Miner miner = mAdapter.getItem(position);
+                if (mBoundMiner != null && mBoundMiner.getAddress().equals(miner.getAddress())) {
+                    showMinerPage(miner);
+                    return;
+                }
+
                 TaskInfo bindingTask = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
                 TaskInfo unbindingTask = StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING);
-                Miner miner = mAdapter.getItem(position);
 
                 if (bindingTask != null && !miner.getAddress().equals(bindingTask.address)) {
-                    if (mBoundMiner != null && mBoundMiner.getAddress().equals(miner.getAddress())) {
-                        bindMiner(miner);
-                    } else {
-                        UIHelper.showToast(getActivity(), R.string.binding_other);
-                    }
+                    UIHelper.showToast(getActivity(), R.string.binding_other);
                 } else if (unbindingTask != null && !miner.getAddress().equals(unbindingTask.address)) {
                     UIHelper.showToast(getActivity(), R.string.unbinding_other);
                 } else {
-                    bindMiner(miner);
+                    checkPromise(miner);
                 }
             }
         });
     }
 
-    private void bindMiner(final Miner miner) {
-        BigInteger unexchanged = null;
-        try {
-            unexchanged = ARPBank.getUnexchange();
-        } catch (Exception e) {
-            new AlertDialog.Builder(getContext())
-                    .setMessage(R.string.network_error)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .setCancelable(false)
-                    .show();
-            return;
-        }
-        if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
-            String message = String.format(getString(R.string.exchange_change_miner_msg),
-                    Convert.fromWei(unexchanged.toString(), Convert.Unit.ETHER).floatValue());
-            MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.exchange_change_miner_title))
-                    .setMessage(message)
-                    .setPositiveButton(getString(R.string.exchange), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            // todo: show exchange page
-                        }
-                    })
-                    .setNegativeButton(getString(R.string.exchange_change_miner_cancel), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Bundle bundle = new Bundle();
-                            bundle.putSerializable(Constant.KEY_MINER, miner);
-                            startActivity(BindMinerActivity.class, bundle);
-                        }
-                    })
-                    .create()
-                    .show();
-        } else {
-            Bundle bundle = new Bundle();
-            bundle.putSerializable(Constant.KEY_MINER, miner);
-            startActivity(BindMinerActivity.class, bundle);
-        }
+    private void checkPromise(final Miner miner) {
+        PromiseDialog.show(getContext(), R.string.exchange_change_miner_msg, getString(R.string.exchange_change_miner_ignore),
+                new PromiseDialog.PromiseListener() {
+                    @Override
+                    public void onError() {
+                        finish();
+                    }
+
+                    @Override
+                    public void onExchange(BigInteger unexchanged) {
+                        Bundle bundle = new Bundle();
+                        bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
+                        bundle.putString(KEY_EXCHANGE_AMOUNT, unexchanged.toString());
+                        bundle.putSerializable(Constant.KEY_MINER, miner);
+                        startActivity(ExchangeActivity.class, bundle);
+                    }
+
+                    @Override
+                    public void onIgnore() {
+                        showMinerPage(miner);
+                    }
+                });
+    }
+
+    private void showMinerPage(Miner miner) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constant.KEY_MINER, miner);
+        startActivity(BindMinerActivity.class, bundle);
     }
 
     private void startLoad() {

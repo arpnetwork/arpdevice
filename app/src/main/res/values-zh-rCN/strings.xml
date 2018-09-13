@@ -95,8 +95,9 @@
     <string name="get_balance_error_msg">获取金额失败</string>
     <string name="withdraw_success">取回成功</string>
     <string name="withdraw_failed">取回失败</string>
-    <string name="unexchange_tip_changing_wallet">您已经累积%.2f个ARP凭证，请在更换钱包前兑换，如选择放弃兑换，该凭证自动作废</string>
-    <string name="tip_changing_wallet">检测到您有ARP凭证，请确认是否已兑换，更换钱包后凭证自动作废</string>
+    <string name="unexchange_tip_changing_wallet">您还有%.2f ARP未提现\n请在更换钱包钱提现，否则将自动作废</string>
+    <string name="tip_changing_wallet">请确认是否已提现，更换钱包后未提现部分收入将自动作废</string>
+    <string name="exchange_change_wallet_ignore">继续更换</string>
 
     <!-- 设备登记 -->
     <string name="register_device">设备登记</string>
@@ -111,7 +112,7 @@
     <string name="register_lock_tip">将把上一步转账的500个ARP锁仓,完成设备登记</string>
     <string name="register_transfer_amount">合约转账</string>
     <string name="register_lock_amount">ARP锁仓（不扣ARP）</string>
-    <string name="register_total_amount">余额 %.2f ARP</string>
+    <string name="register_total_amount">钱包余额 %.2f ARP</string>
     <string name="register_token_amount">%s ARP</string>
     <string name="register_cost_amount">- 500 ARP</string>
     <string name="register_insufficient_balance">ARP余额不足</string>
@@ -188,10 +189,10 @@
     <string name="bind_change_bind_msg">请先解绑再绑定新矿工</string>
 
     <!-- 我的收入 -->
-    <string name="exchange">去兑换</string>
-    <string name="exchanged">已兑换：%.2f ARP</string>
-    <string name="unexchanged">未兑换：%.2f ARP</string>
-    <string name="exchanged_records">兑换记录</string>
+    <string name="go_exchange">去提现</string>
+    <string name="exchanged">已提现：%.2f ARP</string>
+    <string name="unexchanged">未提现：%.2f ARP</string>
+    <string name="exchanged_records">提现记录</string>
     <string name="earning_detail_format">收入：%.2fARP，矿工：%s</string>
     <string name="duration_permanent">永久</string>
     <plurals name="duration_year">
@@ -214,11 +215,11 @@
     </plurals>
     <string name="pay_title">支付以太坊油费</string>
     <string name="pay_msg">该操作需要支付油费，请勿重复支付</string>
-    <string name="exchange_success">兑换成功</string>
-    <string name="exchange_failed">兑换失败，请稍后重试</string>
-    <string name="exchange_tip_no_promise">无凭证可兑换</string>
-    <string name="exchange_tip_exchanging">兑换中</string>
-    <string name="unbinding_exchange">解绑矿工中，暂不能兑换</string>
+    <string name="exchange_success">提现成功</string>
+    <string name="exchange_failed">提现失败，请稍后重试</string>
+    <string name="exchange_tip_no_promise">没有未提现收入</string>
+    <string name="exchange_tip_exchanging">提现中</string>
+    <string name="unbinding_exchange">解绑矿工中，暂不能提现</string>
 
     <!-- 接单 -->
     <string name="start_service_failed">启动服务失败</string>
@@ -237,11 +238,19 @@
     <string name="confirm_to_exit">确定退出接单?</string>
     <string name="device_offline">您的帐户已在其他设备上登录</string>
 
-    <!-- 兑换 -->
-    <string name="exchange_tip_title">请尽快兑换凭证</string>
-    <string name="exchange_tip_msg">您已经累积%s个ARP凭证，绑定的矿工有效期为%s，是否兑换</string>
-    <string name="exchange_tip_cancel">暂不兑换</string>
-    <string name="exchange_change_miner_title">更换矿工前请先将凭证兑换ARP</string>
-    <string name="exchange_change_miner_msg">您已经累积%.2f个ARP凭证，请在更换矿工前兑换，如选择放弃兑换，该凭证自动作废</string>
-    <string name="exchange_change_miner_cancel">放弃兑换</string>
+    <!-- 提现 -->
+    <string name="exchange_arp">提现ARP</string>
+    <string name="exchange_arp_amount">+ %.2f ARP</string>
+    <string name="exchange_total_amount">钱包余额 %.2f ARP</string>
+    <string name="exchange">提现</string>
+    <string name="cashing">正在提现，请耐心等待</string>
+    <string name="withdrawing">正在取回押金，请耐心等待</string>
+    <string name="exchange_tip_title">请尽快提现</string>
+    <string name="exchange_tip_msg">您已经累积收入%sARP，绑定的矿工（提现）有效期为%s，是否提现</string>
+    <string name="exchange_tip_cancel">暂不提现</string>
+    <string name="exchange_unchanged_promise_found">您还有未提现的ARP</string>
+    <string name="exchange_change_miner_msg">您还有%.2f ARP未提现\n请在换绑矿工钱提现\n否则将自动作废</string>
+    <string name="exchange_unbind_miner_msg">您还有%.2f ARP未提现\n请在解绑矿工钱提现\n否则将自动作废</string>
+    <string name="exchange_change_miner_ignore">继续换绑</string>
+    <string name="exchange_unbind_miner_ignore">继续解绑</string>
 </resources>

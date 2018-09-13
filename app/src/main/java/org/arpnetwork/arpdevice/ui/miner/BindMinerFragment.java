@@ -1,3 +1,19 @@
+/*
+ * Copyright 2018 ARP Network
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.arpnetwork.arpdevice.ui.miner;
 
 import android.app.AlertDialog;
@@ -24,10 +40,12 @@ import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.BankAllowance;
+import org.arpnetwork.arpdevice.dialog.PromiseDialog;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.order.details.ExchangeActivity;
 import org.arpnetwork.arpdevice.ui.view.GasFeeView;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
@@ -42,11 +60,14 @@ import okhttp3.Response;
 
 import static org.arpnetwork.arpdevice.config.Constant.KEY_ADDRESS;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_BINDPROMISE;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_GASLIMIT;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_GASPRICE;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_BIND;
+import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_UNBIND;
 
 public class BindMinerFragment extends BaseFragment {
@@ -183,8 +204,7 @@ public class BindMinerFragment extends BaseFragment {
                     public void onClick(View v) {
                         String password = mPasswordText.getText().toString();
                         if (Wallet.loadCredentials(password) != null) {
-                            startUnbindService(password);
-                            finish();
+                            checkPromise();
                         } else {
                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                         }
@@ -287,6 +307,30 @@ public class BindMinerFragment extends BaseFragment {
                 showErrorAlertDialog(null, getString(R.string.load_promise_failed));
             }
         });
+    }
+
+    private void checkPromise() {
+        PromiseDialog.show(getContext(), R.string.exchange_unbind_miner_msg,
+                getString(R.string.exchange_unbind_miner_ignore), new PromiseDialog.PromiseListener() {
+                    @Override
+                    public void onError() {
+                        finish();
+                    }
+
+                    @Override
+                    public void onExchange(BigInteger unexchanged) {
+                        Bundle bundle = new Bundle();
+                        bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
+                        bundle.putString(KEY_EXCHANGE_AMOUNT, unexchanged.toString());
+                        startActivity(ExchangeActivity.class, bundle);
+                    }
+
+                    @Override
+                    public void onIgnore() {
+                        startUnbindService(mPasswordText.getText().toString());
+                        finish();
+                    }
+                });
     }
 
     private class BindStateReceiver extends BroadcastReceiver {

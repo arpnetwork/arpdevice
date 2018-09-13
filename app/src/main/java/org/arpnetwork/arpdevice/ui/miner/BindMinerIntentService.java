@@ -37,19 +37,24 @@ import java.math.BigInteger;
 
 import static org.arpnetwork.arpdevice.config.Constant.KEY_ADDRESS;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_BINDPROMISE;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_GASLIMIT;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_GASPRICE;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
+import static org.arpnetwork.arpdevice.contracts.ARPBank.DEPOSIT_ARP_NUMBER;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_FAILED;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_SUCCESS;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_RUNNING;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_APPROVE_FAILED;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_APPROVE_RUNNING;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_APPROVE_SUCCESS;
-import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_CANCEL_APPROVE_FAILED;
-import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_CANCEL_APPROVE_RUNNING;
-import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_CANCEL_APPROVE_SUCCESS;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_CASH_FAILED;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_CASH_RUNNING;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_CASH_SUCCESS;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_WITHDRAW_FAILED;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_WITHDRAW_RUNNING;
+import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BANK_WITHDRAW_SUCCESS;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BIND_FAILED;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BIND_RUNNING;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_BIND_SUCCESS;
@@ -68,7 +73,8 @@ public class BindMinerIntentService extends IntentService {
     public static final int OPERATION_BANK_DEPOSIT = 3;
     public static final int OPERATION_BIND = 4;
     public static final int OPERATION_UNBIND = 5;
-    public static final int OPERATION_CANCEL_APPROVE = 6;
+    public static final int OPERATION_CASH = 6;
+    public static final int OPERATION_WITHDRAW = 7;
 
     private BroadcastNotifier mBroadcaster = new BroadcastNotifier(this);
 
@@ -168,20 +174,40 @@ public class BindMinerIntentService extends IntentService {
                 break;
             }
 
-            case OPERATION_CANCEL_APPROVE: {
-                mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_RUNNING, type, null);
-
+            case OPERATION_CASH: {
+                mBroadcaster.broadcastWithState(STATE_BANK_CASH_RUNNING, type, null);
+                Promise promise = Promise.get();
+                String address = Wallet.get().getAddress();
                 boolean result = false;
-                String address = intent.getExtras().getString(KEY_ADDRESS);
                 try {
-                    result = cancelApprove(Wallet.loadCredentials(password), address, gasPrice, gasLimit);
+                    result = cash(promise, address, Wallet.loadCredentials(password), gasPrice, gasLimit);
                 } catch (Exception e) {
-                    Log.e(TAG, "cancel approval by spender error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_BANK_CANCEL_APPROVE_FAILED, type, null);
+                    Log.e(TAG, "cash error:" + e.getCause());
+                    mBroadcaster.broadcastWithState(STATE_BANK_CASH_FAILED, type, null);
                     break;
                 }
+                mBroadcaster.broadcastWithState(result ? STATE_BANK_CASH_SUCCESS : STATE_BANK_CASH_FAILED, type, null);
+                break;
+            }
 
-                mBroadcaster.broadcastWithState(result ? STATE_BANK_CANCEL_APPROVE_SUCCESS : STATE_BANK_CANCEL_APPROVE_FAILED, type, null);
+            case OPERATION_WITHDRAW: {
+                mBroadcaster.broadcastWithState(STATE_BANK_WITHDRAW_RUNNING, type, null);
+                BigInteger amount;
+                String amountString = intent.getExtras().getString(KEY_EXCHANGE_AMOUNT);
+                if (amountString != null) {
+                    amount = new BigInteger(amountString);
+                } else {
+                    amount = Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
+                }
+                boolean result = false;
+                try {
+                    result = withdraw(amount, Wallet.loadCredentials(password), gasPrice, gasLimit);
+                } catch (Exception e) {
+                    Log.e(TAG, "withdraw error:" + e.getCause());
+                    mBroadcaster.broadcastWithState(STATE_BANK_WITHDRAW_FAILED, type, null);
+                    break;
+                }
+                mBroadcaster.broadcastWithState(result ? STATE_BANK_WITHDRAW_SUCCESS : STATE_BANK_WITHDRAW_FAILED, type, null);
                 break;
             }
 
@@ -236,13 +262,19 @@ public class BindMinerIntentService extends IntentService {
 
     private boolean deposit(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
         ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
-        TransactionReceipt receipt = bank.deposit(new BigInteger(Convert.toWei(ARPBank.DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toString())).send();
+        TransactionReceipt receipt = bank.deposit(new BigInteger(Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toString())).send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
-    private boolean cancelApprove(Credentials credentials, String address, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+    private Boolean cash(Promise promise, String address, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
         ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
-        TransactionReceipt receipt = bank.cancelApprovalBySpender(address).send();
+        TransactionReceipt receipt = bank.cash(promise, address).send();
+        return TransactionAPI.isStatusOK(receipt.getStatus());
+    }
+
+    private Boolean withdraw(BigInteger amount, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
+        TransactionReceipt receipt = bank.withdraw(amount).send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 }
