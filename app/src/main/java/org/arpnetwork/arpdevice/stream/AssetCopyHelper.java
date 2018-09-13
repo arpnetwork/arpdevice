@@ -41,6 +41,7 @@ public class AssetCopyHelper {
     private static final String DEST_CAP_FILE_NAME = "arpcap";
     private static final String DEST_LIB_ARPCAP_FILE_NAME = "libarpcap.so";
 
+    private static int SDK_INT;
     private static final String ABI_TARGET;
     private static final String ASSET_ARPCAP_FILE_NAME;
     private static final String ASSET_LIB_ARPCAP_FILE_NAME;
@@ -51,8 +52,15 @@ public class AssetCopyHelper {
         } else {
             ABI_TARGET = "armeabi-v7a";
         }
+
+        SDK_INT = DeviceUtil.getSdk();
+        if (DeviceUtil.getSdk() > 27) { // if higher than O_MR1 we use 27 libarpcap.
+            SDK_INT = 27;
+        } else if (DeviceUtil.getSdk() < 24) { // if lower than LOLLIPOP_MR1 we use 24 libarpcap.
+            SDK_INT = 24;
+        }
         ASSET_ARPCAP_FILE_NAME = ABI_TARGET + "/arpcap";
-        ASSET_LIB_ARPCAP_FILE_NAME = ABI_TARGET + "/libarpcap.so";
+        ASSET_LIB_ARPCAP_FILE_NAME = ABI_TARGET + "/" + SDK_INT + "libarpcap.so";
     }
 
     public interface PushCallback {
@@ -112,7 +120,7 @@ public class AssetCopyHelper {
     }
 
     public static boolean isValidCapLib() {
-        return isValidFile(DIR + DEST_LIB_ARPCAP_FILE_NAME, ABI_TARGET + "-" + "lib_cap_md5");
+        return isValidFile(DIR + DEST_LIB_ARPCAP_FILE_NAME, ABI_TARGET + "-" + SDK_INT + "-" + "lib_cap_md5");
     }
 
     public static boolean isValidFile(String destFilePath, String keyOfMd5) {
