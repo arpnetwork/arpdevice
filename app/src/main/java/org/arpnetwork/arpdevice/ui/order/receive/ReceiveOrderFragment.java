@@ -56,6 +56,7 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
+import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
 
@@ -371,14 +372,17 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
 
         @Override
-        public void onRecordStart(int quality) {
+        public void onStart(int quality) {
             mQuality = quality;
             startRecordIfNeeded();
         }
 
         @Override
-        public void onRecordStop() {
+        public void onStop() {
             stopRecord();
+            if (!Util.isCharging(getActivity())) {
+                finish();
+            }
         }
 
         @Override
@@ -528,8 +532,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean isCharging = intent.getBooleanExtra(Constant.EXTENDED_DATA_CHARGING, true);
-            if (!isCharging) {
-                releaseDApp();
+            if (!isCharging && mAppManager.getState() != AppManager.State.LAUNCHING
+                    && mAppManager.getState() != AppManager.State.LAUNCHED) {
+                finish();
             }
         }
     }

@@ -59,7 +59,7 @@ import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 import org.arpnetwork.arpdevice.util.UIHelper;
-
+import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Convert;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -328,15 +328,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         }
     }
 
-    private boolean isCharging() {
-        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        Intent batteryStatus = getActivity().registerReceiver(null, intentFilter);
-        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
-                status == BatteryManager.BATTERY_STATUS_FULL;
-        return isCharging;
-    }
-
     private void regBatteryChangedReceiver() {
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         getActivity().registerReceiver(mBatteryChangedReceiver, intentFilter);
@@ -356,7 +347,12 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private void startReceiveOrder() {
-        if (!isCharging()) {
+        if (!NetworkHelper.getInstance().isWifiNetwork()) {
+            showAlertDialog(R.string.no_wifi);
+            return;
+        }
+
+        if (!Util.isCharging(getActivity())) {
             UIHelper.showToast(getActivity(), getString(R.string.no_charging));
         } else {
             Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());

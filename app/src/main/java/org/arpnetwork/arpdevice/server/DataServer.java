@@ -75,9 +75,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
         void onClosed();
 
-        void onRecordStart(int quality);
+        void onStart(int quality);
 
-        void onRecordStop();
+        void onStop();
 
         void onException(Throwable cause);
     }
@@ -203,6 +203,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         Log.e(TAG, "onException. cause = " + cause.getMessage());
 
         stop();
+
         if (mListener != null) {
             mListener.onException(cause);
         }
@@ -325,7 +326,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
         // start record service.
         if (mListener != null) {
-            mListener.onRecordStart(mQuality);
+            mListener.onStart(mQuality);
         }
 
         mAVDataThread = new SendThread();
@@ -338,7 +339,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             mStop = true;
 
             if (mListener != null) {
-                mListener.onRecordStop();
+                mListener.onStop();
             }
             if (mAVDataThread != null) {
                 mAVDataThread.interrupt();
