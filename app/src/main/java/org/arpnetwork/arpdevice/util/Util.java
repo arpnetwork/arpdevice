@@ -19,11 +19,13 @@ package org.arpnetwork.arpdevice.util;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.app.Activity;
+import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.BatteryManager;
 
 import org.arpnetwork.adb.SyncChannel;
-import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 
 import org.spongycastle.util.encoders.Hex;
@@ -302,5 +304,14 @@ public class Util {
             bHas = false;
         }
         return bHas;
+    }
+
+    public static boolean isCharging(Activity activity) {
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = activity.registerReceiver(null, intentFilter);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                status == BatteryManager.BATTERY_STATUS_FULL;
+        return isCharging;
     }
 }
