@@ -2,16 +2,16 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/window_background_light_gray">
+    android:background="@color/window_background_light_gray"
+    android:orientation="vertical">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
         android:layout_marginBottom="20dp"
         android:layout_marginLeft="@dimen/plain_margin"
         android:layout_marginRight="@dimen/plain_margin"
+        android:layout_marginTop="20dp"
         android:gravity="center_horizontal"
         android:text="@string/import_wallet_tip"
         android:textColor="@color/register_step_text_color" />
@@ -20,32 +20,30 @@
         android:id="@+id/layout_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="@dimen/plain_margin"
-        android:paddingRight="@dimen/plain_margin"
         android:background="@android:color/white"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/plain_margin"
+        android:paddingRight="@dimen/plain_margin">
 
         <EditText
-            android:layout_marginTop="20dp"
             android:id="@+id/et_private_key"
             style="@style/WalletPrivateKeyText"
             android:layout_height="80dp"
-            android:text="8a314422f160f21e60cf683a405abc8a9d42a1e47a753f473acbbd692d040f9d"
+            android:layout_marginTop="20dp"
             android:hint="@string/private_key" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="25dp"
-            android:textColor="#333333"
-            android:text="@string/password_setting"/>
+            android:text="@string/password_setting"
+            android:textColor="#333333" />
 
         <EditText
             android:id="@+id/et_password"
             style="@style/WalletEditText"
             android:hint="@string/wallet_password"
             android:inputType="textPassword"
-            android:text="12345678"
             android:singleLine="true" />
 
         <View style="@style/Divider" />
@@ -55,11 +53,11 @@
             style="@style/WalletEditText"
             android:hint="@string/confirmed_password"
             android:inputType="textPassword"
-            android:text="12345678"
             android:singleLine="true" />
+
         <View
             style="@style/Divider"
-            android:layout_marginBottom="20dp"/>
+            android:layout_marginBottom="20dp" />
     </LinearLayout>
 
     <Button
