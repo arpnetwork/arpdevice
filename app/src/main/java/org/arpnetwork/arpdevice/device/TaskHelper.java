@@ -20,16 +20,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.UIHelper;
-import org.arpnetwork.arpdevice.util.Util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -54,10 +53,17 @@ public class TaskHelper {
         void onGetTopTask(String pkgName);
     }
 
-    public TaskHelper(Context context, OnTopTaskListener listener) {
+    public interface OnGetInstalledAppsListener {
+        void onGetInstalledApps(List<String> apps);
+    }
+
+    public TaskHelper(Context context) {
         mContext = context;
-        mOnTopTaskListener = listener;
         mAdb = new Adb(Touch.getInstance().getConnection());
+    }
+
+    public void setOnTopTaskListener(OnTopTaskListener listener) {
+        mOnTopTaskListener = listener;
     }
 
     public boolean launchApp(String packageName, Runnable runnable) {
@@ -103,6 +109,39 @@ public class TaskHelper {
             mAdb.clearApplicationUserData(mPackageName);
             mPackageName = null;
         }
+    }
+
+    public void getInstalledApps(final OnGetInstalledAppsListener listener) {
+        mAdb.getInstalledApps(new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+                if (data != null) {
+                    String apps = new String(data);
+                    String[] lines = apps.split("\n");
+                    List<String> list = new ArrayList<>();
+                    for (int i = 0; i < lines.length; i++) {
+                        String line = lines[i];
+                        if (line.startsWith("package:")) {
+                            list.add(line.substring(8));
+                        } else {
+                            break;
+                        }
+                    }
+
+                    if (listener != null) {
+                        listener.onGetInstalledApps(list);
+                    }
+                }
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+            }
+        });
     }
 
     public void getTopTask(final OnGetTopTaskListener listener) {

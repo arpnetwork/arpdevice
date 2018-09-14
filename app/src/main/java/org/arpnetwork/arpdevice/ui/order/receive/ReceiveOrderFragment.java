@@ -68,7 +68,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private DeviceManager mDeviceManager;
     private HttpServer mHttpServer;
     private AppManager mAppManager;
-    private TaskHelper mTaskHelper;
     private Miner mMiner;
 
     private BigInteger mLastAmount = BigInteger.ZERO;
@@ -102,6 +101,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         registerReceiver();
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
+
+        AppManager.getInstance(getContext().getApplicationContext()).getInstalledApps();
     }
 
     @Override
@@ -146,20 +147,23 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     @Override
     public void onTopTaskIllegal() {
-        stopDeviceService();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                stopDeviceService();
+            }
+        });
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (mTaskHelper != null) {
-                    mTaskHelper.getTopTask(new TaskHelper.OnGetTopTaskListener() {
-                        @Override
-                        public void onGetTopTask(String pkgName) {
-                            if (pkgName.contains(getContext().getPackageName())) {
-                                startDeviceService();
-                            }
+                mAppManager.getTopTask(new TaskHelper.OnGetTopTaskListener() {
+                    @Override
+                    public void onGetTopTask(String pkgName) {
+                        if (pkgName.contains(getContext().getPackageName())) {
+                            startDeviceService();
                         }
-                    });
-                }
+                    }
+                });
             }
         }, 2000);
     }
@@ -176,8 +180,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (!mStartService) {
             silentOn();
 
-            mTaskHelper = new TaskHelper(getContext().getApplicationContext(), this);
-            mAppManager = new AppManager(DataServer.getInstance().getHandler(), mTaskHelper);
+            mAppManager = AppManager.getInstance(getContext().getApplicationContext());
+            mAppManager.setHandler(DataServer.getInstance().getHandler());
+            mAppManager.setOnTopTaskListener(this);
 
             DataServer.getInstance().setListener(mConnectionListener);
             DataServer.getInstance().setAppManager(mAppManager);
@@ -200,6 +205,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private synchronized void stopDeviceService() {
         if (mStartService) {
             silentOff();
+
+            mAppManager.setHandler(null);
+            mAppManager.setOnTopTaskListener(null);
+
             DownloadManager.getInstance().cancelAll();
             stopHttpServer();
             releaseDApp();
@@ -518,7 +527,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             if (!TextUtils.isEmpty(action)) {
                 switch (intent.getAction()) {
                     case Constant.BROADCAST_ACTION_TOUCH_LOCAL:
-                        onTopTaskIllegal();
+                        finish();
                         break;
 
                     default:

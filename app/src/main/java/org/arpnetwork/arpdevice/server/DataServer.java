@@ -388,6 +388,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                     if (dataServer != null) {
                         dataServer.start();
                     }
+                    sendEmptyMessageDelayed(MSG_CONNECTED_TIMEOUT, CONNECTED_TIMEOUT);
                     break;
                 case MSG_LAUNCH_APP_FAILED:
                     if (dataServer != null) {

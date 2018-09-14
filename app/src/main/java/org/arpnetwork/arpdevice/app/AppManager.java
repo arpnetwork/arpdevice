@@ -16,11 +16,13 @@
 
 package org.arpnetwork.arpdevice.app;
 
+import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
 
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.data.DApp;
+import org.arpnetwork.arpdevice.database.InstalledApp;
 import org.arpnetwork.arpdevice.device.Adb;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
@@ -31,22 +33,26 @@ import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class AppManager {
     private static final String TAG = AppManager.class.getSimpleName();
 
-    private static final int SUCCESS = 0;
+    private static final int INSTALL_SUCCESS = 0;
     private static final int DOWNLOAD_FAILED = 1;
     private static final int INSTALL_FAILED = 2;
 
-    private static final int TIME_INTERVAL = 2000;
+    private static final int DELAY_START_TIMER = 2000;
+    private static final int DELAY_REMOVE_APP = 5 * 60 * 1000;
+
+    private static AppManager sInstance;
 
     private DApp mDApp;
-    private Set<String> mPackageSet;
+    private String mLastDAppAddress;
+    private List<String> mInstalledApps;
     private TaskHelper mTaskHelper;
-    private Handler mHandler;
+    private Handler mOuterHandler;
+    private Handler mInnerHandler;
     private State mState;
 
     public enum State {
@@ -58,14 +64,32 @@ public class AppManager {
         LAUNCHED
     }
 
-    public AppManager(Handler handler, TaskHelper helper) {
-        if (helper == null) {
-            throw new IllegalArgumentException("TaskHelper is null");
+    public static AppManager getInstance(Context context) {
+        if (sInstance == null) {
+            sInstance = new AppManager(context);
         }
-        mHandler = handler;
-        mTaskHelper = helper;
-        mPackageSet = new HashSet<>();
-        mState = State.IDLE;
+        return sInstance;
+    }
+
+    public void setHandler(Handler handler) {
+        mOuterHandler = handler;
+    }
+
+    public void setOnTopTaskListener(TaskHelper.OnTopTaskListener listener) {
+        mTaskHelper.setOnTopTaskListener(listener);
+    }
+
+    public void getTopTask(TaskHelper.OnGetTopTaskListener listener) {
+        mTaskHelper.getTopTask(listener);
+    }
+
+    public void getInstalledApps() {
+        mTaskHelper.getInstalledApps(new TaskHelper.OnGetInstalledAppsListener() {
+            @Override
+            public void onGetInstalledApps(List<String> apps) {
+                mInstalledApps = apps;
+            }
+        });
     }
 
     public State getState() {
@@ -73,7 +97,14 @@ public class AppManager {
     }
 
     public synchronized void setDApp(DApp dApp) {
+        if (mLastDAppAddress != null) {
+            mInnerHandler.removeCallbacksAndMessages(null);
+            if (!mLastDAppAddress.equals(dApp.address)) {
+                uninstallAll();
+            }
+        }
         mDApp = dApp;
+        mLastDAppAddress = dApp.address;
     }
 
     public DApp getDApp() {
@@ -81,7 +112,13 @@ public class AppManager {
     }
 
     public void appInstall(final String packageName, String url, int fileSize, String md5) {
-        if (mState == State.LAUNCHING || mState == State.LAUNCHED) {
+        boolean isInstalled = mInstalledApps != null && mInstalledApps.contains(packageName);
+        if (InstalledApp.exists(packageName) && isInstalled) {
+            DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
+            return;
+        }
+        if (isInstalled || mState == State.LAUNCHING
+                || mState == State.LAUNCHED) {
             DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
             return;
         }
@@ -124,24 +161,29 @@ public class AppManager {
     }
 
     public void startApp(String packageName) {
-        if (mPackageSet.contains(packageName)) {
+        if (InstalledApp.exists(packageName)) {
             mState = State.LAUNCHING;
 
             boolean success = mTaskHelper.launchApp(packageName, new Runnable() {
                 @Override
                 public void run() {
                     mState = State.LAUNCHED;
-                    mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_SUCCESS);
-                    mHandler.sendEmptyMessageDelayed(DataServer.MSG_CONNECTED_TIMEOUT, DataServer.CONNECTED_TIMEOUT);
+                    if (mOuterHandler != null) {
+                        mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_SUCCESS);
+                    }
                 }
             });
             if (!success) {
                 mState = State.INSTALLED;
-                mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
+                if (mOuterHandler != null) {
+                    mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
+                }
             }
         } else {
             mState = State.IDLE;
-            mHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
+            if (mOuterHandler != null) {
+                mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
+            }
         }
     }
 
@@ -160,28 +202,45 @@ public class AppManager {
         if (apkFile.exists()) {
             apkFile.delete();
         }
+
+        InstalledApp.delete(packageName);
     }
 
     public void clear() {
         mState = State.IDLE;
-        uninstallAll();
-        mPackageSet.clear();
         mDApp = null;
+        mInnerHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mLastDAppAddress = null;
+                uninstallAll();
+            }
+        }, DELAY_REMOVE_APP);
+    }
+
+    private AppManager(Context context) {
+        mTaskHelper = new TaskHelper(context.getApplicationContext());
+        mInnerHandler = new Handler();
+        mState = State.IDLE;
     }
 
     private synchronized void appInstall(File file, final String packageName) {
         mState = State.INSTALLING;
-        mTaskHelper.startCheckTopTimer(TIME_INTERVAL, TIME_INTERVAL);
+        mTaskHelper.startCheckTopTimer(DELAY_START_TIMER, DELAY_START_TIMER);
 
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 mState = State.INSTALLED;
-                mPackageSet.add(packageName);
+
+                InstalledApp installedApk = new InstalledApp();
+                installedApk.pkgName = packageName;
+                installedApk.saveRecord();
+
                 mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
-                    DAppApi.appInstalled(packageName, SUCCESS, mDApp);
+                    DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
                 }
             }
 
@@ -201,8 +260,9 @@ public class AppManager {
     }
 
     private void uninstallAll() {
-        for (String pkg : mPackageSet) {
-            uninstallApp(pkg);
+        List<InstalledApp> list = InstalledApp.findAll();
+        for (InstalledApp app : list) {
+            uninstallApp(app.pkgName);
         }
     }
 }

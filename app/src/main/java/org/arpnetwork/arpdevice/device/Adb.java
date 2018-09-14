@@ -38,6 +38,13 @@ public class Adb {
         }
     }
 
+    public void getInstalledApps(ShellChannel.ShellListener listener) {
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            ShellChannel ss = mConnection.openShell("pm list package");
+            ss.setListener(listener);
+        }
+    }
+
     public void installApp(String srcFilePath, ShellChannel.ShellListener listener) {
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
             ShellChannel ss = mConnection.openShell("pm install -r " + srcFilePath);
