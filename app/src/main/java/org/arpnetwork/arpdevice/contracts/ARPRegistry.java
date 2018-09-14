@@ -63,12 +63,12 @@ public class ARPRegistry extends Contract {
 
     public static final String FUNC_SERVERCOUNT = "serverCount";
 
-    protected ARPRegistry(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
-        super(BINARY, contractAddress, web3j, credentials, gasPrice, gasLimit);
+    protected ARPRegistry(String contractAddress, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
+        super(BINARY, contractAddress, EtherAPI.getWeb3J(), credentials, gasPrice, gasLimit);
     }
 
-    protected ARPRegistry(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
-        super(BINARY, contractAddress, web3j, transactionManager, gasPrice, gasLimit);
+    protected ARPRegistry(String contractAddress, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
+        super(BINARY, contractAddress, EtherAPI.getWeb3J(), transactionManager, gasPrice, gasLimit);
     }
 
     public static Function funcBindDevice(String _server, BigInteger _amount, BigInteger _expired, BigInteger _signExpired, BigInteger _v, byte[] _r, byte[] _s) {
@@ -103,12 +103,12 @@ public class ARPRegistry extends Contract {
         return executeRemoteCallTransaction(function);
     }
 
-    public static ARPRegistry load(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
-        return new ARPRegistry(contractAddress, web3j, credentials, gasPrice, gasLimit);
+    public static ARPRegistry load(String contractAddress, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
+        return new ARPRegistry(contractAddress, credentials, gasPrice, gasLimit);
     }
 
-    public static ARPRegistry load(String contractAddress, Web3j web3j, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
-        return new ARPRegistry(contractAddress, web3j, transactionManager, gasPrice, gasLimit);
+    public static ARPRegistry load(String contractAddress, TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
+        return new ARPRegistry(contractAddress, transactionManager, gasPrice, gasLimit);
     }
 
     // estimate gas limit

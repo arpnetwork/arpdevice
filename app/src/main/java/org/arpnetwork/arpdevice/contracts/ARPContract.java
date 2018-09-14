@@ -20,6 +20,7 @@ import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.Contract;
+import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
@@ -40,8 +41,16 @@ public class ARPContract extends Contract {
         super("", CONTRACT_ADDRESS, EtherAPI.getWeb3J(), credentials, gasPrice, gasLimit);
     }
 
+    private ARPContract(TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
+        super("", CONTRACT_ADDRESS, EtherAPI.getWeb3J(), transactionManager, gasPrice, gasLimit);
+    }
+
     public static ARPContract load(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         return new ARPContract(credentials, gasPrice, gasLimit);
+    }
+
+    public static ARPContract load(TransactionManager transactionManager, BigInteger gasPrice, BigInteger gasLimit) {
+        return new ARPContract(transactionManager, gasPrice, gasLimit);
     }
 
     public static BigInteger allowance(String owner, String spender) {

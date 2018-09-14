@@ -85,7 +85,6 @@ public class ARPBank extends Contract {
         super("", CONTRACT_ADDRESS, EtherAPI.getWeb3J(), transactionManager, gasPrice, gasLimit);
     }
 
-
     public static ARPBank load(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         return new ARPBank(credentials, gasPrice, gasLimit);
     }

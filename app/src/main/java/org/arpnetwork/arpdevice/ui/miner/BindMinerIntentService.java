@@ -25,7 +25,6 @@ import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
-import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
@@ -192,7 +191,7 @@ public class BindMinerIntentService extends IntentService {
     }
 
     private boolean unbindDevice(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
+        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS,
                 credentials, gasPrice, gasLimit);
 
         TransactionReceipt unbindDeviceReceipt = registry.unbindDevice().send();
@@ -208,7 +207,7 @@ public class BindMinerIntentService extends IntentService {
     }
 
     private boolean bindDevice(String address, BindPromise bindPromise, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS, EtherAPI.getWeb3J(),
+        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS,
                 credentials, gasPrice, gasLimit);
 
         TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(),
