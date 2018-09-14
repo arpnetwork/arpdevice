@@ -55,8 +55,12 @@
 
     <!-- 导入钱包 -->
     <string name="import_wallet">导入钱包</string>
-    <string name="private_key">提交私钥</string>
-    <string name="wallet_name">钱包名称</string>
+
+    <string name="import_wallet_tip">输入私钥文件内容至输入框，请留意字符大小写</string>
+    <string name="private_key">请输入明文私钥</string>
+    <string name="password_setting">设置密码（至少8位字符）</string>
+    <string name="wallet_password">钱包密码</string>
+
     <string name="password">密码</string>
     <string name="confirmed_password">重复密码</string>
     <string name="start_to_import">开始导入</string>
@@ -86,9 +90,11 @@
     <string name="unbinding_miner">解绑矿工中，暂不能开始接单</string>
 
     <!-- 我的钱包 -->
-    <string name="wallet_addr">地址</string>
-    <string name="ARP_balance">ARP金额</string>
-    <string name="ETH_balance">ETH金额</string>
+    <string name="wallet_addr">钱包地址</string>
+    <string name="ARP_balance">ARP余额</string>
+    <string name="ETH_balance">ETH余额</string>
+    <string name="wallet_deposit">登记押金</string>
+    <string name="float_arp_token">%.2f ARP</string>
     <string name="loading_balance">正在加载</string>
     <string name="reset_wallet">更换钱包</string>
     <string name="withdraw">取回押金</string>
@@ -98,6 +104,12 @@
     <string name="unexchange_tip_changing_wallet">您还有%.2f ARP未提现\n请在更换钱包钱提现，否则将自动作废</string>
     <string name="tip_changing_wallet">请确认是否已提现，更换钱包后未提现部分收入将自动作废</string>
     <string name="exchange_change_wallet_ignore">继续更换</string>
+    <string name="withdraw_title">取回押金?</string>
+    <string name="withdraw_tip_lock">押金已锁仓，需要先绑定矿工再解绑才能取回</string>
+    <string name="withdraw_tip_unbind">需要先解绑矿工才能取回押金</string>
+    <string name="go_unbind">解绑矿工</string>
+    <string name="go_bind">绑定矿工</string>
+    <string name="no_deposit">未存押金</string>
 
     <!-- 设备登记 -->
     <string name="register_device">设备登记</string>
@@ -141,6 +153,7 @@
 
     <string name="bind_miner_error_balance_insufficient">账户余额不足以支撑绑定矿工请求</string>
     <string name="bind_miner">绑定矿工</string>
+    <string name="unbind_miner">解绑矿工</string>
     <string name="bind_hint">选择一个矿工，他会为您撮合订单</string>
     <string name="bind_success">绑定成功</string>
     <string name="bind_running">正在绑定</string>

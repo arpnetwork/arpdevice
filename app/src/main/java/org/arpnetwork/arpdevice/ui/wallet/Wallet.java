@@ -29,10 +29,8 @@ import java.io.File;
 public class Wallet {
     public static final String KEYSTORE_PATH = "keystore_path";
 
-    private static final String NAME = "name";
     private static final String ADDRESS = "address";
 
-    private String name;
     private String address;
 
     public interface Callback {
@@ -42,13 +40,8 @@ public class Wallet {
     public Wallet() {
     }
 
-    public Wallet(String name, String address) {
-        this.name = name;
+    public Wallet(String address) {
         this.address = address;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public String getAddress() {
@@ -56,13 +49,11 @@ public class Wallet {
     }
 
     public void save() {
-        PreferenceManager.getInstance().putString(NAME, name);
         PreferenceManager.getInstance().putString(ADDRESS, address);
     }
 
     public static Wallet get() {
         Wallet wallet = new Wallet();
-        wallet.name = PreferenceManager.getInstance().getString(NAME);
         wallet.address = PreferenceManager.getInstance().getString(ADDRESS);
         return wallet;
     }
@@ -75,7 +66,7 @@ public class Wallet {
         return false;
     }
 
-    public static void importWallet(Context context, final String walletName, final String privateKey, final String password, final Callback callback) {
+    public static void importWallet(Context context, final String privateKey, final String password, final Callback callback) {
         final File destDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         if (!destDir.exists()) {
             if (!destDir.mkdirs()) {
@@ -91,7 +82,7 @@ public class Wallet {
             public void run() {
                 try {
                     Credentials credentials = Credentials.create(privateKey);
-                    Wallet wallet = new Wallet(walletName, credentials.getAddress());
+                    Wallet wallet = new Wallet(credentials.getAddress());
                     wallet.save();
 
                     String fileName = WalletUtils.generateWalletFile(password, credentials.getEcKeyPair(), destDir, false);

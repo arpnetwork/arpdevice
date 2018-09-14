@@ -46,6 +46,13 @@ public class MyEarningAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public void addExchanging(EarningRecord record) {
+        if (!record.key.equals(mList.get(0).key)) {
+            mList.add(0, record);
+            notifyDataSetChanged();
+        }
+    }
+
     @Override
     public int getCount() {
         return mList.size();

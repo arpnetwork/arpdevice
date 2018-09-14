@@ -36,6 +36,7 @@ import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.data.Promise;
+import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
@@ -46,7 +47,6 @@ import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.utils.Convert;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
@@ -57,6 +57,7 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
 import static org.arpnetwork.arpdevice.contracts.ARPBank.DEPOSIT_ARP_NUMBER;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_WITHDRAW;
+import static org.arpnetwork.arpdevice.util.Util.getHumanicAmount;
 
 public class ExchangeFragment extends BaseFragment {
     private static BigInteger mGasLimit = BigInteger.ZERO;
@@ -158,6 +159,8 @@ public class ExchangeFragment extends BaseFragment {
                     @Override
                     public void onClick(View v) {
                         if (isCorrectPassword()) {
+                            Promise promise = Promise.get();
+                            savePendingToDb(promise.getCid() + ":" + promise.getAmount());
                             Intent serviceIntent = getServiceIntent(OPERATION_CASH);
                             getActivity().startService(serviceIntent);
                         } else {
@@ -191,6 +194,16 @@ public class ExchangeFragment extends BaseFragment {
         }
     }
 
+    private void savePendingToDb(String key) {
+        final EarningRecord localRecord = new EarningRecord();
+        localRecord.state = EarningRecord.STATE_PENDING;
+        localRecord.time = System.currentTimeMillis();
+        localRecord.earning = mAmount.toString();
+        localRecord.key = key;
+        localRecord.minerAddress = Promise.get().getFrom();
+        localRecord.saveRecord();
+    }
+
     private void setProgressing(boolean progressing) {
         switch (mType) {
             case CASH:
@@ -207,10 +220,6 @@ public class ExchangeFragment extends BaseFragment {
     private boolean isCorrectPassword() {
         String password = mPasswordText.getText().toString();
         return !TextUtils.isEmpty(password) && Wallet.loadCredentials(password) != null;
-    }
-
-    private float getHumanicAmount(BigInteger amount) {
-        return Convert.fromWei(new BigDecimal(amount), Convert.Unit.ETHER).floatValue();
     }
 
     private Intent getServiceIntent(int opType) {

@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -170,6 +171,7 @@ public class BindMinerFragment extends BaseFragment {
         mProgressView.setVisibility(View.GONE);
         switch (state) {
             case BIND:
+                setTitle(R.string.bind_miner);
                 String url = "http://" + mMiner.getIpString() + ":" + mMiner.getPortHttpInt();
                 loadPromiseForBind(url);
 
@@ -194,6 +196,7 @@ public class BindMinerFragment extends BaseFragment {
                 break;
 
             case UNBIND:
+                setTitle(R.string.unbind_miner);
                 loadAllowance();
                 mTaskBtn.setBackgroundColor(getResources().getColor(R.color.colorPrimaryRed));
                 mTaskBtn.setText(R.string.bind_btn_unbind);
@@ -203,10 +206,10 @@ public class BindMinerFragment extends BaseFragment {
                     @Override
                     public void onClick(View v) {
                         String password = mPasswordText.getText().toString();
-                        if (Wallet.loadCredentials(password) != null) {
-                            checkPromise();
-                        } else {
+                        if (TextUtils.isEmpty(password) || Wallet.loadCredentials(password) == null) {
                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                        } else {
+                            checkPromise();
                         }
                     }
                 });

@@ -55,8 +55,12 @@
 
     <!-- wallet -->
     <string name="import_wallet">Import wallet</string>
-    <string name="private_key">Private key</string>
-    <string name="wallet_name">Wallet name</string>
+
+    <string name="import_wallet_tip">Enter private key, mind the capitals</string>
+    <string name="private_key">Enter private key</string>
+    <string name="password_setting">Set password (at least 8 character)</string>
+    <string name="wallet_password">password</string>
+
     <string name="password">Password</string>
     <string name="confirmed_password">Confirm password</string>
     <string name="start_to_import">Import</string>
@@ -89,6 +93,8 @@
     <string name="wallet_addr">Address</string>
     <string name="ARP_balance">ARP account</string>
     <string name="ETH_balance">ETH account</string>
+    <string name="deposit_balance">Deposit balance</string>
+    <string name="float_arp_token">%.2f ARP</string>
     <string name="loading_balance">loading</string>
     <string name="reset_wallet">Reset wallet</string>
     <string name="withdraw">Withdraw</string>
@@ -98,6 +104,12 @@
     <string name="unexchange_tip_changing_wallet">You have accumulated %.2f ARP, please exchange your promise. if you cancel the exchange, the promise will become invalid automatically</string>
     <string name="tip_changing_wallet">You have accumulated some ARP. please make sure the promise have been exchanged, or it would be invalid after wallet changed.</string>
     <string name="exchange_change_wallet_ignore">Go on change wallet</string>
+    <string name="withdraw_title">Withdraw all deposit?</string>
+    <string name="withdraw_tip_lock">Deposit has been lock. You need to bind and unbind a miner to get it back.</string>
+    <string name="withdraw_tip_unbind">Withdraw after unbinding miner.</string>
+    <string name="go_unbind">Go unbinding</string>
+    <string name="go_bind">Go binding</string>
+    <string name="no_deposit">Have not deposited</string>
 
     <!-- register -->
     <string name="register_device">Register device</string>
@@ -141,6 +153,7 @@
 
     <string name="bind_miner_error_balance_insufficient">Balance insufficient for binding miner.</string>
     <string name="bind_miner">Bind miner</string>
+    <string name="unbind_miner">Unbind miner</string>
     <string name="bind_hint">Choose a miner to make matches</string>
     <string name="bind_success">Bind success</string>
     <string name="bind_running">Bind is in process</string>

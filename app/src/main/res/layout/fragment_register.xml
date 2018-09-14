@@ -16,8 +16,8 @@
             android:id="@+id/tv_step_indicate"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="@dimen/register_margin"
-            android:layout_marginRight="@dimen/register_margin"
+            android:layout_marginLeft="@dimen/plain_margin"
+            android:layout_marginRight="@dimen/plain_margin"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
             android:text="@string/register_author"
@@ -28,8 +28,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
-            android:layout_marginLeft="@dimen/register_margin"
-            android:layout_marginRight="@dimen/register_margin"
+            android:layout_marginLeft="@dimen/plain_margin"
+            android:layout_marginRight="@dimen/plain_margin"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
             android:text="@string/register_author_tip"
@@ -41,7 +41,7 @@
             android:layout_height="wrap_content"
             android:background="@android:color/white"
             android:orientation="horizontal"
-            android:padding="17dp">
+            android:padding="@dimen/plain_margin">
 
             <TextView
                 android:id="@+id/tv_amount_text"
@@ -70,14 +70,14 @@
 
             <View
                 style="@style/Divider"
-                android:layout_marginLeft="@dimen/register_margin"
-                android:layout_marginRight="@dimen/register_margin" />
+                android:layout_marginLeft="@dimen/plain_margin"
+                android:layout_marginRight="@dimen/plain_margin" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="@dimen/register_margin">
+                android:padding="@dimen/plain_margin">
 
                 <TextView
                     android:id="@+id/tv_cost_text"
@@ -111,7 +111,7 @@
             android:layout_marginTop="10dp"
             android:background="@android:color/white"
             android:orientation="vertical"
-            android:padding="@dimen/register_margin">
+            android:padding="@dimen/plain_margin">
 
             <TextView
                 android:layout_width="match_parent"
@@ -139,7 +139,7 @@
             android:id="@+id/btn_forward"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/register_margin"
+            android:layout_margin="@dimen/plain_margin"
             android:background="@color/colorPrimary"
             android:text="@string/register_next_step"
             android:textAllCaps="false"
@@ -165,7 +165,7 @@
             android:background="@color/progress_view_background"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="@dimen/register_margin">
+            android:padding="@dimen/plain_margin">
 
             <ProgressBar
                 android:id="@+id/progressbar"

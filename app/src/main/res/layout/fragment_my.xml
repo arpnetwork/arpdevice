@@ -22,7 +22,7 @@
                 android:text="@string/my_wallet" />
 
             <TextView
-                android:id="@+id/tv_wallet_name"
+                android:id="@+id/tv_wallet_address"
                 style="@style/MyItemText" />
 
             <ImageView style="@style/Arrow" />

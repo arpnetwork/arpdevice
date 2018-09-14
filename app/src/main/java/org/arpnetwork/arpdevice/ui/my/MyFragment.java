@@ -162,8 +162,8 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private void initViews() {
-        TextView walletName = (TextView) findViewById(R.id.tv_wallet_name);
-        walletName.setText(Wallet.get().getName());
+        TextView walletName = (TextView) findViewById(R.id.tv_wallet_address);
+        walletName.setText(Wallet.get().getAddress());
 
         mMinerName = (TextView) findViewById(R.id.tv_miner_name);
 

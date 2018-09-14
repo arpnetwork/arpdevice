@@ -7,43 +7,24 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_horizontal_margin">
 
-    <LinearLayout
-        android:id="@+id/layout_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/round_corner_bg"
-        android:orientation="vertical">
+    <LinearLayout style="@style/PlainLayout">
 
-        <LinearLayout
-            style="@style/ItemLayout">
-
+        <LinearLayout style="@style/PlainItemLayout">
             <TextView
                 style="@style/MyWalletTitleLabel"
-                android:text="@string/wallet_name" />
-
-            <TextView
-                android:id="@+id/tv_name"
-                style="@style/MyWalletInfoLabel" />
-        </LinearLayout>
-
-        <View style="@style/Divider" />
-
-        <LinearLayout
-            style="@style/ItemLayout">
-
-            <TextView
-                style="@style/MyWalletTitleLabel"
+                android:layout_width="match_parent"
+                android:layout_weight="1"
                 android:text="@string/wallet_addr" />
 
             <TextView
                 android:id="@+id/tv_addr"
-                style="@style/MyWalletInfoLabel"/>
+                style="@style/MyWalletAddressLabel"/>
         </LinearLayout>
 
         <View style="@style/Divider" />
 
         <LinearLayout
-            style="@style/ItemLayout">
+            style="@style/PlainItemLayout">
 
             <TextView
                 style="@style/MyWalletTitleLabel"
@@ -58,7 +39,7 @@
         <View style="@style/Divider" />
 
         <LinearLayout
-            style="@style/ItemLayout">
+            style="@style/PlainItemLayout">
 
             <TextView
                 style="@style/MyWalletTitleLabel"
@@ -69,43 +50,44 @@
                 style="@style/MyWalletInfoLabel"
                 android:text="@string/loading_balance" />
         </LinearLayout>
+
+        <View style="@style/Divider" />
+
+        <LinearLayout
+            android:id="@+id/ll_deposit"
+            style="@style/PlainItemLayout">
+
+            <TextView
+                style="@style/MyWalletTitleLabel"
+                android:text="@string/wallet_deposit"/>
+
+            <TextView
+                android:id="@+id/tv_deposit"
+                style="@style/MyWalletInfoLabel"
+                android:layout_weight="1"
+                android:text="@string/loading_balance"  />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="25dp"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
         android:orientation="horizontal">
 
         <Button
             android:id="@+id/btn_reset"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="40dp"
-            android:layout_marginLeft="23dp"
-            android:layout_marginRight="23dp"
-            android:layout_weight="1"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/btn_bg"
-            android:gravity="center"
+            android:layout_margin="@dimen/plain_margin"
+            android:background="@color/colorPrimaryRed"
             android:text="@string/reset_wallet"
+            android:textAllCaps="false"
             android:textColor="@android:color/white"
-            android:textSize="15dp" />
-
-
-        <Button
-            android:id="@+id/btn_withdraw"
-            android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginLeft="23dp"
-            android:layout_marginRight="23dp"
-            android:layout_weight="1"
-            android:layout_gravity="center_horizontal"
-            android:background="@drawable/btn_bg"
-            android:gravity="center"
-            android:text="@string/withdraw"
-            android:textColor="@android:color/white"
-            android:visibility="gone"
-            android:textSize="15dp" />
+            android:textSize="16sp" />
     </LinearLayout>
 
 </LinearLayout>

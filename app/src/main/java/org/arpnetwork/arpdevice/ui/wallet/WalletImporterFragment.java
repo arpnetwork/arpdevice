@@ -35,7 +35,6 @@ import org.web3j.crypto.WalletUtils;
 
 public class WalletImporterFragment extends BaseFragment {
     private EditText mEditPrivateKey;
-    private EditText mEditWalletName;
     private EditText mEditPassword;
     private EditText mEditConfirmedPassword;
     private Button mBtnImport;
@@ -72,7 +71,6 @@ public class WalletImporterFragment extends BaseFragment {
 
     private void initViews() {
         mEditPrivateKey = (EditText) findViewById(R.id.et_private_key);
-        mEditWalletName = (EditText) findViewById(R.id.et_wallet_name);
         mEditPassword = (EditText) findViewById(R.id.et_password);
         mEditConfirmedPassword = (EditText) findViewById(R.id.et_confirm_password);
 
@@ -92,9 +90,8 @@ public class WalletImporterFragment extends BaseFragment {
         mBtnImport.setOnClickListener(mOnClickImportListener);
     }
 
-    private boolean checkInputs(String privateKey, String walletName, String password, String confirmedPassword) {
-        if (TextUtils.isEmpty(privateKey) || TextUtils.isEmpty(walletName)
-                || TextUtils.isEmpty(password) || TextUtils.isEmpty(confirmedPassword)) {
+    private boolean checkInputs(String privateKey, String password, String confirmedPassword) {
+        if (TextUtils.isEmpty(privateKey) || TextUtils.isEmpty(password) || TextUtils.isEmpty(confirmedPassword)) {
             UIHelper.showToast(getContext(), R.string.complete_info);
             return false;
         }
@@ -119,13 +116,12 @@ public class WalletImporterFragment extends BaseFragment {
 
     private void importWallet() {
         String privateKey = mEditPrivateKey.getText().toString().trim();
-        String walletName = mEditWalletName.getText().toString().trim();
         String password = mEditPassword.getText().toString();
         String confirmedPassword = mEditConfirmedPassword.getText().toString();
 
-        if (checkInputs(privateKey, walletName, password, confirmedPassword)) {
+        if (checkInputs(privateKey, password, confirmedPassword)) {
             showProgressDialog(getString(R.string.importing), false);
-            Wallet.importWallet(getContext(), walletName, privateKey, password, new Wallet.Callback() {
+            Wallet.importWallet(getContext(), privateKey, password, new Wallet.Callback() {
                 @Override
                 public void onCompleted(final boolean success) {
                     getActivity().runOnUiThread(new Runnable() {

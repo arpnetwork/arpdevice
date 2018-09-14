@@ -143,18 +143,6 @@ public class MyEarningFragment extends BaseFragment {
         listView.setAdapter(mAdapter);
     }
 
-    private EarningRecord savePendingToDb(String key) {
-        final EarningRecord localRecord = new EarningRecord();
-        localRecord.state = EarningRecord.STATE_PENDING;
-        localRecord.time = System.currentTimeMillis();
-        localRecord.earning = mUnexchanged.toString();
-        localRecord.key = key;
-        localRecord.minerAddress = Promise.get().getFrom();
-        localRecord.saveRecord();
-
-        return localRecord;
-    }
-
     private void refreshData() {
         loadNextRemote();
         List<EarningRecord> oneTime = EarningRecord.findAll();
@@ -297,11 +285,7 @@ public class MyEarningFragment extends BaseFragment {
         public void onReceive(Context context, Intent intent) {
             switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS, StateHolder.STATE_BANK_CASH_RUNNING)) {
                 case StateHolder.STATE_BANK_CASH_RUNNING:
-                    Promise promise = Promise.get();
-                    EarningRecord localRecord = savePendingToDb(promise.getCid() + ":" + promise.getAmount());
-                    List<EarningRecord> local = new ArrayList<>(1);
-                    local.add(localRecord);
-                    mAdapter.addData(local);
+                    mAdapter.addExchanging(EarningRecord.findTop());
                     break;
 
                 case StateHolder.STATE_BANK_CASH_SUCCESS:

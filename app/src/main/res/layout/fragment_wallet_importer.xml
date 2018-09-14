@@ -3,38 +3,49 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_horizontal_margin">
+    android:background="@color/window_background_light_gray">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="@dimen/plain_margin"
+        android:layout_marginRight="@dimen/plain_margin"
+        android:gravity="center_horizontal"
+        android:text="@string/import_wallet_tip"
+        android:textColor="@color/register_step_text_color" />
 
     <LinearLayout
         android:id="@+id/layout_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/round_corner_bg"
+        android:paddingLeft="@dimen/plain_margin"
+        android:paddingRight="@dimen/plain_margin"
+        android:background="@android:color/white"
         android:orientation="vertical">
 
         <EditText
+            android:layout_marginTop="20dp"
             android:id="@+id/et_private_key"
-            style="@style/WalletEditText"
+            style="@style/WalletPrivateKeyText"
             android:layout_height="80dp"
+            android:text="8a314422f160f21e60cf683a405abc8a9d42a1e47a753f473acbbd692d040f9d"
             android:hint="@string/private_key" />
 
-        <View style="@style/Divider" />
-
-        <EditText
-            android:id="@+id/et_wallet_name"
-            style="@style/WalletEditText"
-            android:hint="@string/wallet_name"
-            android:singleLine="true" />
-
-        <View style="@style/Divider" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:textColor="#333333"
+            android:text="@string/password_setting"/>
 
         <EditText
             android:id="@+id/et_password"
             style="@style/WalletEditText"
-            android:hint="@string/password"
+            android:hint="@string/wallet_password"
             android:inputType="textPassword"
+            android:text="12345678"
             android:singleLine="true" />
 
         <View style="@style/Divider" />
@@ -44,12 +55,16 @@
             style="@style/WalletEditText"
             android:hint="@string/confirmed_password"
             android:inputType="textPassword"
+            android:text="12345678"
             android:singleLine="true" />
+        <View
+            style="@style/Divider"
+            android:layout_marginBottom="20dp"/>
     </LinearLayout>
 
     <Button
         android:id="@+id/btn_import"
-        style="@style/Button"
-        android:layout_marginTop="26dp"
+        style="@style/ButtonPlain"
+        android:layout_marginTop="40dp"
         android:text="@string/start_to_import" />
 </LinearLayout>

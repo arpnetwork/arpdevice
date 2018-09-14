@@ -250,6 +250,10 @@ public class Util {
         return showTime;
     }
 
+    public static float getHumanicAmount(BigInteger amount) {
+        return Convert.fromWei(new BigDecimal(amount), Convert.Unit.ETHER).floatValue();
+    }
+
     public static String getAppName(Context context) {
         String label = "";
         try {
