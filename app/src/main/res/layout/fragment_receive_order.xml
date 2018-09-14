@@ -2,13 +2,14 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:keepScreenOn="true"
-    android:padding="60dp">
+    android:keepScreenOn="true">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
+        android:layout_marginLeft="60dp"
+        android:layout_marginRight="60dp"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:paddingBottom="50dp">
@@ -17,24 +18,39 @@
             android:id="@+id/tv_order_state"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:text="Preparing"
+            android:textColor="#ff333333"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/tv_"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_above="@+id/tv_tips"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="30dp"
-            android:text="Preparing"
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
+            android:layout_marginTop="20dp"
+            android:text="@string/dont_touch_screen"
+            android:textColor="#ff14ad84"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/tv_tips"
             style="@style/MyItemLabel"
-            android:layout_above="@+id/btn_exit"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="30dp"
-            android:text="@string/receive_order_tips" />
+            android:layout_marginTop="40dp"
+            android:text="@string/receive_order_tips"
+            android:textColor="#ff999999" />
 
-        <Button
-            android:id="@id/btn_exit"
-            style="@style/Button"
-            android:text="@string/exit_order" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_exit"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="20dp"
+        android:background="@color/colorPrimaryRed"
+        android:text="@string/exit_order"
+        android:textAllCaps="false"
+        android:textColor="@android:color/white"
+        android:textSize="16sp" />
 </RelativeLayout>
