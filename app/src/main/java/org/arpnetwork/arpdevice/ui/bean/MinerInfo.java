@@ -22,5 +22,6 @@ public class MinerInfo implements Serializable {
     public String name;
     public String country;
     public int bandwidth;
-    public double load;
+    public int maxLoad;
+    public int load;
 }

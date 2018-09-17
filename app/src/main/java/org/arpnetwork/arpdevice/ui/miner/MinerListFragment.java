@@ -42,7 +42,11 @@ import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import okhttp3.Request;
 import okhttp3.Response;
@@ -53,6 +57,12 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 
 public class MinerListFragment extends BaseFragment {
+    private static final int PING_INTERVAL = 1000;
+    private static final int PING_COUNT = 3;
+    private static final int UNREACHABLE_TIME_MS = 60 * 1000;
+
+    private Map<Integer, List<Integer>> mPings = new HashMap<Integer, List<Integer>>();
+
     private Miner mBoundMiner;
 
     private ListView mMinerList;
@@ -174,12 +184,14 @@ public class MinerListFragment extends BaseFragment {
     }
 
     private void loadData() {
-        List<Miner> miners = BindMinerHelper.getMinerList();
+        final List<Miner> miners = BindMinerHelper.getMinerList();
         for (int i = 0; i < miners.size(); i++) {
             Miner miner = miners.get(i);
             String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
             loadMinerLoadInfo(i, url, miner.getAddress());
         }
+        loadMinerPingAsync(miners);
+
         mAdapter.setData(miners);
         if (mBoundMiner != null) {
             TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
@@ -215,8 +227,102 @@ public class MinerListFragment extends BaseFragment {
         });
     }
 
-    private class BindStateReceiver extends BroadcastReceiver {
+    private void loadMinerPingAsync(final List<Miner> miners) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                loadMinerPing(miners);
+            }
+        }).start();
+    }
 
+    private void loadMinerPing(List<Miner> miners) {
+        for (int i = 0; i < miners.size(); i++) {
+            Miner miner = miners.get(i);
+            String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
+            for (int j = 0; j < PING_COUNT; j++) {
+                try {
+                    Thread.sleep(PING_INTERVAL);
+                } catch (InterruptedException e) {
+                }
+                loadPingInternal(i, url, miner.getAddress());
+            }
+        }
+    }
+
+    private void loadPingInternal(final int index, final String url, String minerAddr) {
+        String nonce = AtomicNonce.getAndIncrement(minerAddr);
+
+        RPCRequest request = new RPCRequest();
+        request.setId(nonce);
+        request.setMethod(API_SERVER_INFO);
+
+        final long start = System.currentTimeMillis();
+
+        mOkHttpUtils.post(url, request.toJSON(), API_SERVER_INFO, new SimpleCallback<MinerInfo>() {
+            @Override
+            public void onFailure(Request request, Exception e) {
+                pingReachable(index, start, false);
+            }
+
+            @Override
+            public void onSuccess(Response response, MinerInfo result) {
+                pingReachable(index, start, true);
+            }
+
+            @Override
+            public void onError(Response response, int code, Exception e) {
+                pingReachable(index, start, true);
+            }
+        });
+    }
+
+    private void pingReachable(int index, long start, boolean reachable) {
+        if (mPings.containsKey(index)) {
+            List<Integer> list = mPings.get(index);
+            if (reachable) {
+                list.add((int) (System.currentTimeMillis() - start) / 2);
+            } else {
+                list.add(UNREACHABLE_TIME_MS);
+            }
+            if (list.size() == PING_COUNT) {
+                for (Iterator<Map.Entry<Integer, List<Integer>>> it = mPings.entrySet().iterator(); it.hasNext(); ) {
+                    Map.Entry<Integer, List<Integer>> item = it.next();
+                    if (item.getKey() == index) {
+                        int total = 0;
+                        int unreachableCount = 0;
+                        List<Integer> pings = item.getValue();
+                        for (Integer ping : pings) {
+                            if (ping == UNREACHABLE_TIME_MS) {
+                                unreachableCount += 1;
+                            }
+                            total += ping;
+                        }
+                        int avg;
+                        if (unreachableCount == pings.size()) {
+                            avg = -1;
+                        } else {
+                            avg = total / pings.size();
+                        }
+                        mAdapter.updatePing(index, avg);
+
+                        it.remove();
+                        break;
+                    }
+                }
+            }
+        } else {
+            List<Integer> list = new ArrayList<>();
+            if (reachable) {
+                list.add((int) (System.currentTimeMillis() - start) / 2);
+            } else {
+                list.add(UNREACHABLE_TIME_MS);
+            }
+            mPings.put(index, list);
+        }
+    }
+
+    private class BindStateReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS, StateHolder.STATE_APPROVE_RUNNING)) {

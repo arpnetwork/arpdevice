@@ -29,7 +29,6 @@ import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
 import org.arpnetwork.arpdevice.util.Util;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -38,6 +37,7 @@ import java.util.List;
 final class MinerAdapter extends BaseAdapter {
     private Context mContext;
     private List<Miner> mItems;
+    private List<Integer> mPings;
     private final LayoutInflater mInflater;
     private HashMap<String, Integer> mStateMap;
 
@@ -46,6 +46,7 @@ final class MinerAdapter extends BaseAdapter {
 
         mInflater = LayoutInflater.from(context);
         mItems = new ArrayList<Miner>();
+        mPings = new ArrayList<Integer>();
         mStateMap = new HashMap<String, Integer>();
     }
 
@@ -68,6 +69,19 @@ final class MinerAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         Miner item = mItems.get(position);
         String info = Util.join(mContext.getString(R.string.miner_comma), convertMinerInfo(item.getMinerInfo()));
+        if (mPings.size() > 0) {
+            Integer ping = null;
+            try {
+                ping = mPings.get(position);
+                if (ping < 0) {
+                    info = mContext.getString(R.string.miner_unreachable);
+                } else {
+                    info = info + mContext.getString(R.string.miner_comma) + "ping:" + ping + "ms";
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
         ViewHolder viewHolder;
         if (convertView == null) {
             convertView = mInflater.inflate(R.layout.item_bind_miner, null);
@@ -136,6 +150,12 @@ final class MinerAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public void updatePing(int index, int ping) {
+        mPings.add(index, ping);
+
+        notifyDataSetChanged();
+    }
+
     public boolean isBound(int index) {
         if (index < 0 || index >= mItems.size()) {
             return false;
@@ -175,10 +195,8 @@ final class MinerAdapter extends BaseAdapter {
         if (!TextUtils.isEmpty(minerInfo.country)) {
             items.add(minerInfo.country);
         }
-        BigDecimal bigLoad = new BigDecimal(minerInfo.load);
-        double doubleLoad = bigLoad.setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
 
-        items.add(String.format(mContext.getString(R.string.miner_load), doubleLoad));
+        items.add(String.format(mContext.getString(R.string.miner_load), minerInfo.load, minerInfo.maxLoad));
         items.add(String.format(mContext.getString(R.string.miner_bandwidth), minerInfo.bandwidth));
         return items.toArray(new String[items.size()]);
     }
