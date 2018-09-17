@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingTop="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/layout_wallet"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:text="@string/my_wallet" />
+
+            <TextView
+                android:id="@+id/tv_wallet_address"
+                style="@style/MyItemText" />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+
+        <View
+            style="@style/Divider"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp" />
+
+        <LinearLayout
+            android:id="@+id/layout_miner"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:text="@string/bind_miner" />
+
+            <TextView
+                android:id="@+id/tv_miner_name"
+                style="@style/MyItemText" />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+
+        <View
+            style="@style/Divider"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp" />
+
+        <LinearLayout
+            android:id="@+id/layout_order_price"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:text="@string/order_price" />
+
+            <TextView
+                android:id="@+id/tv_order_price"
+                style="@style/MyItemText"
+                android:textColor="#00966E"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:id="@+id/iv_arrow"
+                style="@style/Arrow" />
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/layout_order_price_popup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <View
+                android:id="@+id/divider"
+                style="@style/Divider"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp" />
+
+            <LinearLayout
+                android:id="@+id/layout_order_price_setting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#f5f5f5"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/low"
+                        android:textColor="#999999"
+                        android:textSize="13sp" />
+
+                    <SeekBar
+                        android:id="@+id/seekbar"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:max="100"
+                        android:maxHeight="2dp"
+                        android:minHeight="2dp"
+                        android:paddingLeft="7dp"
+                        android:paddingRight="7dp"
+                        android:progressDrawable="@drawable/progress_style"
+                        android:thumb="@drawable/seek_bar_thumb" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/high"
+                        android:textColor="#999999"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_order_price_message"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginLeft="16dp"
+                    android:layout_marginRight="16dp"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center_horizontal"
+                    android:text="@string/order_price_message"
+                    android:textColor="#999999"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_order_details"
+            style="@style/ItemLayout">
+
+            <TextView
+                style="@style/MyItemLabel"
+                android:layout_weight="1"
+                android:text="@string/my_earnings" />
+
+            <TextView
+                android:id="@+id/tv_unexchanged"
+                style="@style/MyItemText"
+                android:textColor="#00966E"
+                android:textSize="13sp" />
+
+            <ImageView style="@style/Arrow" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_order"
+        style="@style/Button"
+        android:layout_marginTop="20dp"
+        android:text="@string/start_ordering" />
+
+    <android.opengl.GLSurfaceView
+        android:id="@+id/gl_surface"
+        android:layout_width="1px"
+        android:layout_height="1px"
+        android:background="@color/window_background_light_gray" />
+
+</LinearLayout>

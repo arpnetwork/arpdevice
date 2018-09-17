@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.my;
+package org.arpnetwork.arpdevice.ui.home;
 
 import android.os.Bundle;
 
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 
-public class MyActivity extends BaseActivity {
+public class HomeActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentFragment(MyFragment.class);
+        setContentFragment(HomeFragment.class);
     }
 
     @Override

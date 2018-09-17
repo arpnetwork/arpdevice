@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.my;
+package org.arpnetwork.arpdevice.ui.home;
 
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -30,6 +30,8 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -40,6 +42,7 @@ import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.data.BankAllowance;
+import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.stream.Touch;
 
 import org.arpnetwork.arpdevice.ui.miner.MinerListActivity;
@@ -48,12 +51,11 @@ import org.arpnetwork.arpdevice.ui.miner.RegisterActivity;
 import org.arpnetwork.arpdevice.ui.CheckDeviceActivity;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
-import org.arpnetwork.arpdevice.dialog.SeekBarDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
-import org.arpnetwork.arpdevice.ui.my.mywallet.MyWalletActivity;
+import org.arpnetwork.arpdevice.ui.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
@@ -62,14 +64,21 @@ import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Convert;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-public class MyFragment extends BaseFragment implements View.OnClickListener {
-    private static final String TAG = "MyFragment";
+public class HomeFragment extends BaseFragment implements View.OnClickListener {
+    private static final String TAG = "HomeFragment";
 
     private TextView mOrderPriceView;
     private TextView mMinerName;
+    private TextView mUnexchanged;
+    private ImageView mArrow;
+    private View mDivider;
+    private LinearLayout mLayoutPriceSetting;
     private int mOrderPrice;
 
     private PasswordDialog mPasswordDialog;
@@ -87,13 +96,13 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setTitle(R.string.my);
+        setTitle(R.string.home);
         hideNavIcon();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_my, container, false);
+        return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
     @Override
@@ -107,6 +116,7 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
 
+        setUnexchangedText();
         regBatteryChangedReceiver();
         loadMinerAddr();
     }
@@ -144,7 +154,13 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.layout_order_price:
-                showOrderPriceDialog();
+                if (mLayoutPriceSetting.getVisibility() == View.GONE) {
+                    mLayoutPriceSetting.setVisibility(View.VISIBLE);
+                    mDivider.setVisibility(View.GONE);
+                } else {
+                    mLayoutPriceSetting.setVisibility(View.GONE);
+                    mDivider.setVisibility(View.VISIBLE);
+                }
                 break;
 
             case R.id.layout_order_details:
@@ -169,6 +185,17 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
 
         mOrderPriceView = (TextView) findViewById(R.id.tv_order_price);
         mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
+
+        mArrow = (ImageView) findViewById(R.id.iv_arrow);
+        mDivider = findViewById(R.id.divider);
+        mLayoutPriceSetting = (LinearLayout) findViewById(R.id.layout_order_price_setting);
+
+        int progress = (mOrderPrice - Config.ORDER_PRICE_LOW) * 100 / (Config.ORDER_PRICE_HIGH - Config.ORDER_PRICE_LOW);
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekbar);
+        seekBar.setProgress(progress);
+        seekBar.setOnSeekBarChangeListener(mOnSeekBarChangeListener);
+
+        mUnexchanged = (TextView) findViewById(R.id.tv_unexchanged);
 
         findViewById(R.id.layout_wallet).setOnClickListener(this);
         findViewById(R.id.layout_miner).setOnClickListener(this);
@@ -203,6 +230,24 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
         });
     }
 
+    private void setUnexchangedText() {
+        Promise promise = Promise.get();
+        if (promise != null) {
+            String walletAddr = Wallet.get().getAddress();
+            Miner miner = BindMinerHelper.getBound(walletAddr);
+            BankAllowance allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
+            if (allowance != null) {
+                BigInteger unexchanged = new BigInteger(promise.getAmount(), 16).subtract(allowance.paid);
+                float fUnexchanged = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
+                if (fUnexchanged > 0) {
+                    mUnexchanged.setText(String.format(getString(R.string.my_unexchanged), fUnexchanged));
+                } else {
+                    mUnexchanged.setText("");
+                }
+            }
+        }
+    }
+
     private void loadMinerAddr() {
         new Thread(new Runnable() {
             @Override
@@ -222,46 +267,6 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                 }
             }
         }).start();
-    }
-
-    private void showOrderPriceDialog() {
-        final int min = Config.ORDER_PRICE_LOW;
-        final int max = Config.ORDER_PRICE_HIGH;
-        int defaultValue = mOrderPrice;
-        int value = (defaultValue - min) * 100 / (max - min);
-
-        final SeekBarDialog.Builder builder = new SeekBarDialog.Builder(getContext());
-        builder.setTitle(getString(R.string.order_price))
-                .setMessage(getString(R.string.order_price_message))
-                .setSeekValue(value, String.format(getString(R.string.order_price_format), defaultValue))
-                .setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-                    @Override
-                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        if (fromUser) {
-                            int value = min + progress * (max - min) / 100;
-                            builder.setSeekValue(progress, String.format(getString(R.string.order_price_format), value));
-                        }
-                    }
-
-                    @Override
-                    public void onStartTrackingTouch(SeekBar seekBar) {
-                    }
-
-                    @Override
-                    public void onStopTrackingTouch(SeekBar seekBar) {
-                    }
-                })
-                .setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        int value = min + builder.getProgress() * (max - min) / 100;
-                        mOrderPrice = value;
-                        mOrderPriceView.setText(String.format(getString(R.string.order_price_format), mOrderPrice));
-                        DeviceInfo.get().setPrice(mOrderPrice);
-                    }
-                })
-                .create()
-                .show();
     }
 
     private void showNoBindingDialog() {
@@ -390,6 +395,26 @@ public class MyFragment extends BaseFragment implements View.OnClickListener {
                     dismissPasswordDialog();
                 }
             }
+        }
+    };
+
+    private SeekBar.OnSeekBarChangeListener mOnSeekBarChangeListener = new SeekBar.OnSeekBarChangeListener() {
+        @Override
+        public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            if (fromUser) {
+                int value = Config.ORDER_PRICE_LOW + progress * (Config.ORDER_PRICE_HIGH - Config.ORDER_PRICE_LOW) / 100;
+                mOrderPriceView.setText(String.format(getString(R.string.order_price_format), value));
+                mOrderPrice = value;
+            }
+        }
+
+        @Override
+        public void onStartTrackingTouch(SeekBar seekBar) {
+        }
+
+        @Override
+        public void onStopTrackingTouch(SeekBar seekBar) {
+            DeviceInfo.get().setPrice(mOrderPrice);
         }
     };
 }

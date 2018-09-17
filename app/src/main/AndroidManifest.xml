@@ -32,11 +32,11 @@
             android:name=".ui.wallet.WalletImporterActivity"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.my.MyActivity"
+            android:name=".ui.home.HomeActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait" />
         <activity
-            android:name=".ui.my.mywallet.MyWalletActivity"
+            android:name=".ui.mywallet.MyWalletActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".ui.miner.RegisterActivity"

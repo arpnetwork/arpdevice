@@ -29,7 +29,7 @@ import android.widget.EditText;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
-import org.arpnetwork.arpdevice.ui.my.MyActivity;
+import org.arpnetwork.arpdevice.ui.home.HomeActivity;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.crypto.WalletUtils;
 
@@ -131,7 +131,7 @@ public class WalletImporterFragment extends BaseFragment {
                             int resId = success ? R.string.import_success : R.string.import_failed;
                             UIHelper.showToast(getContext(), resId);
                             if (success) {
-                                startActivity(MyActivity.class);
+                                startActivity(HomeActivity.class);
                                 finish();
                             }
                         }

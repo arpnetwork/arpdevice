@@ -73,12 +73,13 @@
     <string name="import_failed">导入失败</string>
 
     <!-- 我的 -->
-    <string name="my">我的</string>
+    <string name="home">首页</string>
     <string name="my_wallet">我的钱包</string>
-    <string name="order_price">设置接单价格</string>
+    <string name="order_price">接单价格</string>
     <string name="my_earnings">我的收入</string>
+    <string name="my_unexchanged">%.2fARP未提现</string>
     <string name="start_ordering">开始接单</string>
-    <string name="order_price_message">接单价格越低越容易接到单，默认为之前一段时间的平均接单价</string>
+    <string name="order_price_message">接单价越低越容易接到单，实际收入以订单价为准</string>
     <string name="order_price_format">%dARP/小时</string>
     <string name="slow">慢</string>
     <string name="fast">快</string>

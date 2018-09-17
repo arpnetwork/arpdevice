@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.my.mywallet;
+package org.arpnetwork.arpdevice.ui.mywallet;
 
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;

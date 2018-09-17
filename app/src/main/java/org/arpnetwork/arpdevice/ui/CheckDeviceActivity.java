@@ -42,7 +42,7 @@ import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.my.MyActivity;
+import org.arpnetwork.arpdevice.ui.home.HomeActivity;
 import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
@@ -237,7 +237,7 @@ public class CheckDeviceActivity extends BaseActivity {
             intent.setClass(this, ReceiveOrderActivity.class);
             intent.putExtra(Constant.KEY_MINER, mMiner);
         } else {
-            intent.setClass(this, MyActivity.class);
+            intent.setClass(this, HomeActivity.class);
         }
 
         CustomApplication.sInstance.setPortArray(mDataPort, mHttpPort);
