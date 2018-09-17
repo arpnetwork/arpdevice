@@ -111,6 +111,8 @@
             android:layout_marginTop="10dp"
             android:background="@android:color/white"
             android:orientation="vertical"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
             android:padding="@dimen/plain_margin">
 
             <TextView
@@ -154,6 +156,7 @@
         android:layout_height="match_parent"
         android:layout_centerInParent="true"
         android:background="@color/window_background_layer"
+        android:clickable="true"
         android:gravity="center"
         android:orientation="vertical"
         android:visibility="gone">

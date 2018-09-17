@@ -168,13 +168,12 @@
     </style>
 
     <style name="MyWalletAddressLabel">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">140dp</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_weight">1</item>
         <item name="android:textAlignment">textEnd</item>
         <item name="android:gravity">center</item>
         <item name="android:textColor">#A9A9A9</item>
-        <item name="android:textSize">8sp</item>
+        <item name="android:textSize">11sp</item>
     </style>
     <style name="MyWalletInfoLabel">
         <item name="android:layout_width">match_parent</item>

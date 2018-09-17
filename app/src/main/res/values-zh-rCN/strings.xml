@@ -80,8 +80,8 @@
     <string name="start_ordering">开始接单</string>
     <string name="order_price_message">接单价格越低越容易接到单，默认为之前一段时间的平均接单价</string>
     <string name="order_price_format">%dARP/小时</string>
-    <string name="low">低</string>
-    <string name="high">高</string>
+    <string name="slow">慢</string>
+    <string name="fast">快</string>
     <string name="no_bind_miner">未绑定矿工</string>
     <string name="no_charging">请连接电源</string>
     <string name="no_port_forward">请在路由器开启upnp端口转发功能</string>

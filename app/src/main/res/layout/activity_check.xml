@@ -23,27 +23,26 @@
         android:id="@+id/ll_progress"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_centerInParent="true"
         android:layout_marginBottom="40dp"
         android:layout_marginLeft="40dp"
         android:layout_marginRight="40dp"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="87dp"
         android:orientation="vertical"
         android:visibility="gone">
 
         <TextView
             android:id="@+id/tv_tip_top"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center_vertical"
+            android:gravity="top"
             android:text="@string/check_authorization_tip"
             android:textColor="@android:color/black"
             android:textSize="@dimen/tips_text_size" />
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="vertical">
@@ -56,7 +55,7 @@
 
             <TextView
                 android:id="@+id/tv_tip_middle"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:gravity="center_vertical"
@@ -75,9 +74,9 @@
         <TextView
             android:id="@+id/tv_tip_bottom"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center_vertical"
+            android:gravity="bottom"
             android:text="@string/check_authorization_tip"
             android:textColor="@android:color/black"
             android:textSize="@dimen/tips_text_size" />
@@ -114,7 +113,7 @@
 
             <TextView
                 android:id="@+id/tv_progress_tip"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="@string/check_init"
@@ -130,7 +129,6 @@
             android:layout_marginTop="40dp"
             android:gravity="center_vertical"
             android:text="@string/check_failed_reason"
-            android:textAlignment="textStart"
             android:textColor="@android:color/black"
             android:textSize="@dimen/tips_text_size"
             android:visibility="gone" />

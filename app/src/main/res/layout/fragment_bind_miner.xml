@@ -5,168 +5,182 @@
     android:background="@color/window_background_light_gray"
     android:keepScreenOn="true">
 
-    <LinearLayout
-        android:id="@+id/ll_bind"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/tv_bind_tip"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:layout_marginLeft="@dimen/plain_margin"
-            android:layout_marginRight="@dimen/plain_margin"
-            android:layout_marginTop="20dp"
-            android:gravity="center_horizontal"
-            android:text="@string/bind_tip"
-            android:textColor="@color/register_step_text_color" />
+        android:layout_height="match_parent">
 
         <LinearLayout
-            android:id="@+id/ll_author"
+            android:id="@+id/ll_bind"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:orientation="horizontal"
-            android:padding="@dimen/plain_margin">
-
-            <TextView
-                android:id="@+id/tv_miner_text"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:text="@string/bind_miner_address"
-                android:textColor="@color/register_title_text_color" />
-
-            <TextView
-                android:id="@+id/tv_address"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:textAlignment="textEnd"
-                android:textColor="@color/register_step_text_color" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <View
-                style="@style/Divider"
-                android:layout_marginLeft="@dimen/plain_margin"
-                android:layout_marginRight="@dimen/plain_margin" />
-
-            <LinearLayout
+            <TextView
+                android:id="@+id/tv_bind_tip"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:layout_marginLeft="@dimen/plain_margin"
+                android:layout_marginRight="@dimen/plain_margin"
+                android:layout_marginTop="20dp"
+                android:gravity="center_horizontal"
+                android:text="@string/bind_tip"
+                android:textColor="@color/register_step_text_color"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:id="@+id/ll_author"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
                 android:orientation="horizontal"
                 android:padding="@dimen/plain_margin">
 
                 <TextView
+                    android:id="@+id/tv_miner_text"
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:text="@string/bind_author_time"
-                    android:textColor="@color/register_title_text_color" />
+                    android:gravity="center_vertical"
+                    android:text="@string/bind_miner_address"
+                    android:textColor="@color/register_title_text_color"
+                    android:textSize="13sp" />
 
                 <TextView
-                    android:id="@+id/tv_author_time"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/tv_address"
+                    android:layout_width="130dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:textAlignment="textEnd"
-                    android:textColor="@color/colorPrimary" />
+                    android:textColor="@color/register_step_text_color"
+                    android:textSize="10sp" />
             </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/white"
-            android:orientation="vertical">
-
-            <View
-                style="@style/Divider"
-                android:layout_marginLeft="@dimen/plain_margin"
-                android:layout_marginRight="@dimen/plain_margin" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:background="@android:color/white"
+                android:orientation="vertical">
+
+                <View
+                    style="@style/Divider"
+                    android:layout_marginLeft="@dimen/plain_margin"
+                    android:layout_marginRight="@dimen/plain_margin" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/plain_margin">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="@string/bind_author_time"
+                        android:textColor="@color/register_title_text_color"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tv_author_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:textAlignment="textEnd"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/white"
+                android:orientation="vertical">
+
+                <View
+                    style="@style/Divider"
+                    android:layout_marginLeft="@dimen/plain_margin"
+                    android:layout_marginRight="@dimen/plain_margin" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="@dimen/plain_margin">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="@string/bind_author_amount"
+                        android:textColor="@color/register_title_text_color"
+                        android:textSize="13sp" />
+
+                    <TextView
+                        android:id="@+id/tv_author_amount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:text="@string/register_token_amount"
+                        android:textAlignment="textEnd"
+                        android:textColor="@color/colorPrimary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <org.arpnetwork.arpdevice.ui.view.GasFeeView
+                android:id="@+id/ll_gas_fee"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@android:color/white" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="@android:color/white"
+                android:orientation="vertical"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:padding="@dimen/plain_margin">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="@string/bind_author_amount"
-                    android:textColor="@color/register_title_text_color" />
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/register_password"
+                    android:textColor="@color/register_title_text_color"
+                    android:textSize="13sp" />
 
-                <TextView
-                    android:id="@+id/tv_author_amount"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:text="@string/register_token_amount"
-                    android:textAlignment="textEnd"
-                    android:textColor="@color/colorPrimary" />
+                <EditText
+                    android:id="@+id/et_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@android:color/transparent"
+                    android:hint="@string/register_password_tip"
+                    android:inputType="textPassword"
+                    android:paddingBottom="5dp"
+                    android:paddingTop="20dp"
+                    android:textColor="@android:color/black"
+                    android:textColorHint="@color/gray"
+                    android:textSize="12sp" />
+
+                <View style="@style/Divider" />
             </LinearLayout>
-        </LinearLayout>
 
-        <org.arpnetwork.arpdevice.ui.view.GasFeeView
-            android:id="@+id/ll_gas_fee"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@android:color/white" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="@android:color/white"
-            android:orientation="vertical"
-            android:padding="@dimen/plain_margin">
-
-            <TextView
+            <Button
+                android:id="@+id/btn_task"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/register_password"
-                android:textColor="@color/register_title_text_color" />
+                android:layout_margin="@dimen/plain_margin"
+                android:background="@color/colorPrimary"
+                android:text="@string/bind_miner"
+                android:textAllCaps="false"
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
 
-            <EditText
-                android:id="@+id/et_password"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:hint="@string/register_password_tip"
-                android:inputType="textPassword"
-                android:paddingBottom="5dp"
-                android:paddingTop="20dp"
-                android:textColor="@android:color/black"
-                android:textColorHint="@color/gray"
-                android:textSize="15sp" />
-
-            <View style="@style/Divider" />
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btn_task"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/plain_margin"
-            android:background="@color/colorPrimary"
-            android:text="@string/bind_miner"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-    </LinearLayout>
+    </ScrollView>
 
     <LinearLayout
         android:id="@+id/ll_progress"
@@ -175,8 +189,8 @@
         android:layout_centerInParent="true"
         android:background="@color/window_background_layer"
         android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
+        android:clickable="true"
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="wrap_content"

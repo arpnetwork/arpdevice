@@ -80,8 +80,8 @@
     <string name="start_ordering">Start ordering</string>
     <string name="order_price_message">The lower the order price, the easier it is to receive the order. The default is the average price of the previous period.</string>
     <string name="order_price_format">%dARP/h</string>
-    <string name="low">Low</string>
-    <string name="high">High</string>
+    <string name="slow">Slow</string>
+    <string name="fast">Fast</string>
     <string name="no_bind_miner">No bind miner</string>
     <string name="no_charging">Please make sure your device is charging</string>
     <string name="no_port_forward">Please make sure open upnp function</string>

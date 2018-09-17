@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/window_background_light_gray"
+            android:background="@android:color/white"
             android:popupTheme="@style/Theme.AppCompat.Light.DarkActionBar"
             android:theme="@style/Toolbar"
             app:navigationIcon="@mipmap/nav_back">
