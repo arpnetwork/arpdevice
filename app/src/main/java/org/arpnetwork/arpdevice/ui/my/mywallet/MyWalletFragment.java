@@ -41,6 +41,7 @@ import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.dialog.MessageDialog;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.dialog.PromiseDialog;
@@ -160,7 +161,10 @@ public class MyWalletFragment extends BaseFragment {
     private void refreshDepositAmount() {
         String address = Wallet.get().getAddress();
         TextView depositBalance = (TextView) findViewById(R.id.tv_deposit);
-        BigInteger allowanceAmount = ARPBank.allowance(address, ARPRegistry.CONTRACT_ADDRESS).amount;
+
+        BankAllowance allowance = ARPBank.allowance(address, ARPRegistry.CONTRACT_ADDRESS);
+        if (allowance == null) return;
+        BigInteger allowanceAmount = allowance.amount;
         mDepositAmount = ARPBank.balanceOf(address);
         mTotalAmount = allowanceAmount.add(mDepositAmount);
         depositBalance.setText(String.format(getString(R.string.float_arp_token), Util.getHumanicAmount(mTotalAmount)));

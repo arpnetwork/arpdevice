@@ -25,8 +25,11 @@ import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
+import org.arpnetwork.arpdevice.contracts.api.CustomRawTransactionManager;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.data.Promise;
+import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.crypto.Credentials;
@@ -176,11 +179,22 @@ public class BindMinerIntentService extends IntentService {
 
             case OPERATION_CASH: {
                 mBroadcaster.broadcastWithState(STATE_BANK_CASH_RUNNING, type, null);
-                Promise promise = Promise.get();
+
+                final BigInteger amount = new BigInteger(intent.getExtras().getString(KEY_EXCHANGE_AMOUNT));
+                final Promise promise = Promise.get();
                 String address = Wallet.get().getAddress();
+                Credentials credentials = Wallet.loadCredentials(password);
+                CustomRawTransactionManager transactionManager = new CustomRawTransactionManager(EtherAPI.getWeb3J(),credentials);
+                ARPBank bankContract = ARPBank.load(transactionManager, gasPrice, gasLimit);
+                transactionManager.setListener(new CustomRawTransactionManager.OnHashBackListener() {
+                    @Override
+                    public void onHash(String transactionHash) {
+                        savePendingToDb(transactionHash, amount);
+                    }
+                });
                 boolean result = false;
                 try {
-                    result = cash(promise, address, Wallet.loadCredentials(password), gasPrice, gasLimit);
+                    result = cash(bankContract, promise, address);
                 } catch (Exception e) {
                     Log.e(TAG, "cash error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_BANK_CASH_FAILED, type, null);
@@ -214,6 +228,16 @@ public class BindMinerIntentService extends IntentService {
             default:
                 break;
         }
+    }
+
+    private void savePendingToDb(String transactionHash, BigInteger earning) {
+        final EarningRecord localRecord = new EarningRecord();
+        localRecord.state = EarningRecord.STATE_PENDING;
+        localRecord.time = System.currentTimeMillis();
+        localRecord.earning = earning.toString();
+        localRecord.setKey(transactionHash);
+        localRecord.minerAddress = Promise.get().getFrom();
+        localRecord.saveRecord();
     }
 
     private boolean unbindDevice(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
@@ -266,8 +290,7 @@ public class BindMinerIntentService extends IntentService {
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
-    private Boolean cash(Promise promise, String address, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
+    private Boolean cash(ARPBank bank, Promise promise, String address) throws Exception {
         TransactionReceipt receipt = bank.cash(promise, address).send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }

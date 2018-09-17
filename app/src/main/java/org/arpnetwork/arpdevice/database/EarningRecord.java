@@ -23,6 +23,7 @@ import com.activeandroid.annotation.Table;
 import com.activeandroid.query.Select;
 
 import org.web3j.utils.Convert;
+import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -67,12 +68,17 @@ public class EarningRecord extends BaseRecord {
         EarningRecord record = find(transactionHash);
         if (record == null) {
             record = new EarningRecord();
-            record.key = transactionHash;
+            record.setKey(transactionHash);
         }
         return record;
     }
 
+    public void setKey(String key) {
+        this.key = Numeric.cleanHexPrefix(key);
+    }
+
     public static EarningRecord find(String key) {
+        key = Numeric.cleanHexPrefix(key);
         return new Select().from(EarningRecord.class).where("key = ?", key).executeSingle();
     }
 

@@ -23,7 +23,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -38,16 +37,15 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
-import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
+import org.arpnetwork.arpdevice.util.Util;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.protocol.core.methods.response.Log;
-import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
@@ -147,7 +145,7 @@ public class MyEarningFragment extends BaseFragment {
         loadNextRemote();
         List<EarningRecord> oneTime = EarningRecord.findAll();
         mAdapter.setData(oneTime);
-        mHeaderView.setData(getFloatExchanged(), mAdapter.getCount() > 0);
+        mHeaderView.setData(Util.getHumanicAmount(exchanged), mAdapter.getCount() > 0);
         getUnexchange();
     }
 
@@ -178,7 +176,7 @@ public class MyEarningFragment extends BaseFragment {
         }
         mAdapter.setData(oneTime);
 
-        mHeaderView.setData(getFloatExchanged(), mAdapter.getCount() > 0);
+        mHeaderView.setData(Util.getHumanicAmount(exchanged), mAdapter.getCount() > 0);
         getUnexchange();
         mLoading = false;
     }
@@ -236,7 +234,7 @@ public class MyEarningFragment extends BaseFragment {
         exchanged = exchanged.add(amount);
         setTopAmount(cid, amount);
 
-        EarningRecord earning = EarningRecord.get(cid.toString(16) + ":" + mTopAmount.toString(16));
+        EarningRecord earning = EarningRecord.get(log.getTransactionHash());
         earning.time = logDate;
         earning.earning = amount.toString();
         earning.minerAddress = "0x" + Hex.toHexString(addressByte);
@@ -275,17 +273,13 @@ public class MyEarningFragment extends BaseFragment {
         }
     }
 
-    private float getFloatExchanged() {
-        return Convert.fromWei(exchanged.toString(), Convert.Unit.ETHER).floatValue();
-    }
-
     private class BindStateReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS, StateHolder.STATE_BANK_CASH_RUNNING)) {
                 case StateHolder.STATE_BANK_CASH_RUNNING:
-                    mAdapter.addExchanging(EarningRecord.findTop());
+                    refreshData();
                     break;
 
                 case StateHolder.STATE_BANK_CASH_SUCCESS:
@@ -296,7 +290,6 @@ public class MyEarningFragment extends BaseFragment {
                 case StateHolder.STATE_BANK_CASH_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.exchange_failed));
                     refreshData();
-
                     break;
 
                 default:

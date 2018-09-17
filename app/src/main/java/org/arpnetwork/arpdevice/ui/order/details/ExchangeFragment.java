@@ -36,7 +36,6 @@ import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.data.Promise;
-import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
@@ -159,10 +158,7 @@ public class ExchangeFragment extends BaseFragment {
                     @Override
                     public void onClick(View v) {
                         if (isCorrectPassword()) {
-                            Promise promise = Promise.get();
-                            savePendingToDb(promise.getCid() + ":" + promise.getAmount());
-                            Intent serviceIntent = getServiceIntent(OPERATION_CASH);
-                            getActivity().startService(serviceIntent);
+                            startServiceIntent(OPERATION_CASH);
                         } else {
                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                         }
@@ -182,9 +178,7 @@ public class ExchangeFragment extends BaseFragment {
                     @Override
                     public void onClick(View v) {
                         if (isCorrectPassword()) {
-                            Intent serviceIntent = getServiceIntent(OPERATION_WITHDRAW);
-                            serviceIntent.putExtra(KEY_EXCHANGE_AMOUNT, mAmount.toString());
-                            getActivity().startService(serviceIntent);
+                            startServiceIntent(OPERATION_WITHDRAW);
                         } else {
                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                         }
@@ -192,16 +186,6 @@ public class ExchangeFragment extends BaseFragment {
                 });
                 break;
         }
-    }
-
-    private void savePendingToDb(String key) {
-        final EarningRecord localRecord = new EarningRecord();
-        localRecord.state = EarningRecord.STATE_PENDING;
-        localRecord.time = System.currentTimeMillis();
-        localRecord.earning = mAmount.toString();
-        localRecord.key = key;
-        localRecord.minerAddress = Promise.get().getFrom();
-        localRecord.saveRecord();
     }
 
     private void setProgressing(boolean progressing) {
@@ -222,13 +206,14 @@ public class ExchangeFragment extends BaseFragment {
         return !TextUtils.isEmpty(password) && Wallet.loadCredentials(password) != null;
     }
 
-    private Intent getServiceIntent(int opType) {
+    private void startServiceIntent(int opType) {
         Intent serviceIntent = new Intent(getActivity(), BindMinerIntentService.class);
         serviceIntent.putExtra(KEY_OP, opType);
+        serviceIntent.putExtra(KEY_EXCHANGE_AMOUNT, mAmount.toString());
         serviceIntent.putExtra(KEY_PASSWD, mPasswordText.getText().toString());
         serviceIntent.putExtra(KEY_GASPRICE, mGasView.getGasPrice().toString());
         serviceIntent.putExtra(KEY_GASLIMIT, mGasLimit.toString());
-        return serviceIntent;
+        getActivity().startService(serviceIntent);
     }
 
     private class BindStateReceiver extends BroadcastReceiver {
