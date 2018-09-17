@@ -83,6 +83,8 @@
     <string name="order_price_format">%dARP/小时</string>
     <string name="slow">慢</string>
     <string name="fast">快</string>
+    <string name="less">少</string>
+    <string name="more">多</string>
     <string name="no_bind_miner">未绑定矿工</string>
     <string name="no_charging">请连接电源</string>
     <string name="no_port_forward">请在路由器开启upnp端口转发功能</string>

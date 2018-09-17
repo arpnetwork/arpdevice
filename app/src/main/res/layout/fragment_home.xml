@@ -102,7 +102,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/low"
+                        android:text="@string/less"
                         android:textColor="#999999"
                         android:textSize="13sp" />
 
@@ -122,7 +122,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/high"
+                        android:text="@string/more"
                         android:textColor="#999999"
                         android:textSize="13sp" />
                 </LinearLayout>

@@ -83,6 +83,8 @@
     <string name="order_price_format">%dARP/h</string>
     <string name="slow">Slow</string>
     <string name="fast">Fast</string>
+    <string name="less">Less</string>
+    <string name="more">More</string>
     <string name="no_bind_miner">No bind miner</string>
     <string name="no_charging">Please make sure your device is charging</string>
     <string name="no_port_forward">Please make sure open upnp function</string>
