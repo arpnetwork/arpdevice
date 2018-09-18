@@ -43,7 +43,6 @@ import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
-import org.arpnetwork.arpdevice.stream.Touch;
 
 import org.arpnetwork.arpdevice.ui.miner.MinerListActivity;
 import org.arpnetwork.arpdevice.ui.miner.RegisterActivity;
@@ -343,8 +342,6 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private void startCheckActivity(Miner miner) {
-        Touch.getInstance().close();
-
         Bundle bundle = new Bundle();
         bundle.putSerializable(Constant.KEY_MINER, miner);
         bundle.putBoolean(Constant.KEY_FROM_MY, true);

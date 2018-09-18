@@ -23,7 +23,6 @@ import android.content.Intent;
 import com.activeandroid.ActiveAndroid;
 
 import org.arpnetwork.arpdevice.data.DeviceInfo;
-import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.monitor.MonitorService;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
@@ -65,7 +64,6 @@ public class CustomApplication extends Application {
     public void onTerminate() {
         super.onTerminate();
 
-        Touch.getInstance().close();
         PreferenceManager.fini();
         NetworkHelper.fini();
 

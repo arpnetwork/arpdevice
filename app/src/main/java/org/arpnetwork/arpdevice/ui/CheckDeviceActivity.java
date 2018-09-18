@@ -395,6 +395,8 @@ public class CheckDeviceActivity extends BaseActivity {
                     break;
 
                 case Constant.CHECK_INSTALL_FAILED:
+                    context.mCheckThread.setShouldPing(true);
+
                     context.mTitleText.setText(R.string.check_installation);
                     highlightText = context.createHighlight(context.getString(R.string.check_fail_installation),
                             context.getString(R.string.check_highlight_install));
@@ -457,6 +459,8 @@ public class CheckDeviceActivity extends BaseActivity {
                         context.mTipButton.setText(R.string.check_again);
                         context.mImage.setImageResource(R.mipmap.check_failed);
                         context.mErrorText.setVisibility(View.GONE);
+
+                        context.mCheckCode = Constant.ACTION_CHECK_UPNP;
                     }
                     break;
 

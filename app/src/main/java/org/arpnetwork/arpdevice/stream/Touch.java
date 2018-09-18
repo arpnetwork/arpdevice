@@ -77,21 +77,11 @@ public class Touch {
         if (mConn == null) {
             mConn = new Connection(mAuth, "127.0.0.1", 5555);
         }
-
         mConn.setListener(new CheckConnectionListener(handler));
-        if (mDoAuth) {
-            close();
-            mConn.connect();
-        } else if (getState() != Touch.STATE_CONNECTED) {
-            mConn.connect();
-        }
-    }
-
-    public void close() {
-        mState = STATE_CLOSED;
-        if (mConn != null) {
+        if (getState() == Touch.STATE_CONNECTED || mDoAuth) {
             mConn.close();
         }
+        mConn.connect();
     }
 
     public Connection getConnection() {
@@ -169,10 +159,8 @@ public class Touch {
         @Override
         public void onConnected(Connection conn) {
             if (mDoAuth) {
-                mDoAuth = false;
-                conn.close();
-                mState = STATE_CLOSED;
                 connect(mCheckHandler);
+                mDoAuth = false;
             } else {
                 mState = STATE_CONNECTED;
                 openUSBSafeDebug();
@@ -203,7 +191,6 @@ public class Touch {
 
         @Override
         public void onException(Connection conn, Throwable cause) {
-            conn.close();
             mState = STATE_CLOSED;
         }
 
@@ -223,7 +210,6 @@ public class Touch {
                             checkTouch();
                         }
                     } else {
-                        close();
                         mCheckHandler.obtainMessage(Constant.CHECK_ADB_SAFE_FAILED).sendToTarget();
                     }
                 }
@@ -325,7 +311,6 @@ public class Touch {
         }
 
         private void handleCopyFailed() {
-            close();
             mCheckHandler.obtainMessage(Constant.CHECK_TOUCH_COPY_FAILED).sendToTarget();
         }
 
