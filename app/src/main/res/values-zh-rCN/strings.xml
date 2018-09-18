@@ -161,10 +161,12 @@
     <string name="bind_failed">绑定矿工失败，请重试</string>
     <string name="bind_message">绑定矿工需要账户余额至少500个ARP并支付以太坊油费</string>
     <string name="bind_eth_format">%s ether 约为%.2f元人民币</string>
+    <string name="load_miner_info">正在连接矿工...</string>
     <string name="miner_load">负载%d/%d</string>
     <string name="miner_bandwidth">带宽%dMbps</string>
     <string name="miner_comma">， </string>
-    <string name="miner_unreachable">矿工不在线</string>
+    <string name="miner_unreachable">无法连接矿工</string>
+    <string name="miner_ping">延迟:</string>
     <string name="load_gas_failed">加载gas价格失败，请重试</string>
     <string name="bind_handle">绑定矿工正在处理中，请稍后</string>
     <string name="bind_approving">正在预授权，请耐心等待</string>

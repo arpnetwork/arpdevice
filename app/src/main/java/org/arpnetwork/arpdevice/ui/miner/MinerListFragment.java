@@ -62,6 +62,7 @@ public class MinerListFragment extends BaseFragment {
     private static final int UNREACHABLE_TIME_MS = 60 * 1000;
 
     private Map<Integer, List<Integer>> mPings = new HashMap<Integer, List<Integer>>();
+    private Thread mPingThread;
 
     private Miner mBoundMiner;
 
@@ -99,6 +100,8 @@ public class MinerListFragment extends BaseFragment {
     public void onDestroy() {
         super.onDestroy();
 
+        mPingThread.interrupt();
+        mPingThread = null;
         mOkHttpUtils.cancelTag(API_SERVER_INFO);
 
         if (mBindStateReceiver != null) {
@@ -228,23 +231,24 @@ public class MinerListFragment extends BaseFragment {
     }
 
     private void loadMinerPingAsync(final List<Miner> miners) {
-        new Thread(new Runnable() {
+        mPingThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                loadMinerPing(miners);
+                try {
+                    loadMinerPing(miners);
+                } catch (InterruptedException ignored) {
+                }
             }
-        }).start();
+        });
+        mPingThread.start();
     }
 
-    private void loadMinerPing(List<Miner> miners) {
+    private void loadMinerPing(List<Miner> miners) throws InterruptedException {
         for (int i = 0; i < miners.size(); i++) {
             Miner miner = miners.get(i);
             String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
             for (int j = 0; j < PING_COUNT; j++) {
-                try {
-                    Thread.sleep(PING_INTERVAL);
-                } catch (InterruptedException e) {
-                }
+                Thread.sleep(PING_INTERVAL);
                 loadPingInternal(i, url, miner.getAddress());
             }
         }

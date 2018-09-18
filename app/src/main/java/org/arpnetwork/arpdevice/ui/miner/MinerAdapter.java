@@ -76,10 +76,13 @@ final class MinerAdapter extends BaseAdapter {
                 if (ping < 0) {
                     info = mContext.getString(R.string.miner_unreachable);
                 } else {
-                    info = info + mContext.getString(R.string.miner_comma) + "ping:" + ping + "ms";
+                    info = info + mContext.getString(R.string.miner_comma) + mContext.getString(R.string.miner_ping) + ping + "ms";
                 }
             } catch (Exception ignored) {
             }
+        }
+        if (TextUtils.isEmpty(info)) {
+            info = mContext.getString(R.string.load_miner_info);
         }
 
         ViewHolder viewHolder;
