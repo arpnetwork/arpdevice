@@ -175,7 +175,7 @@ public class BindMinerFragment extends BaseFragment {
                 String url = "http://" + mMiner.getIpString() + ":" + mMiner.getPortHttpInt();
                 loadPromiseForBind(url);
 
-                mTaskBtn.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                mTaskBtn.setBackgroundResource(R.drawable.btn_bg);
                 mTaskBtn.setText(R.string.bind_btn_bind);
                 mTaskBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -198,7 +198,7 @@ public class BindMinerFragment extends BaseFragment {
             case UNBIND:
                 setTitle(R.string.unbind_miner);
                 loadAllowance();
-                mTaskBtn.setBackgroundColor(getResources().getColor(R.color.colorPrimaryRed));
+                mTaskBtn.setBackgroundResource(R.drawable.btn_bg_orange);
                 mTaskBtn.setText(R.string.bind_btn_unbind);
                 mGasLimit = ARPRegistry.estimateUnbindGasLimit();
                 mGasFeeView.setGasLimit(mGasLimit);

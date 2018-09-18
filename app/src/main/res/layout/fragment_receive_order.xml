@@ -44,13 +44,8 @@
 
     <Button
         android:id="@+id/btn_exit"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
+        style="@style/ButtonOrange"
         android:layout_alignParentBottom="true"
-        android:layout_margin="20dp"
-        android:background="@color/colorPrimaryRed"
-        android:text="@string/exit_order"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        android:textSize="16sp" />
+        android:layout_marginBottom="@dimen/plain_margin"
+        android:text="@string/exit_order" />
 </RelativeLayout>

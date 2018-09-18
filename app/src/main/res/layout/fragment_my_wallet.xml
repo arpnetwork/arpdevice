@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingTop="@dimen/plain_margin">
+    android:layout_height="match_parent">
 
-    <LinearLayout style="@style/PlainLayout">
+    <LinearLayout
+        style="@style/PlainLayout"
+        android:layout_marginTop="@dimen/plain_margin">
 
         <LinearLayout style="@style/PlainItemLayout">
+
             <TextView
                 style="@style/MyWalletTitleLabel"
                 android:layout_width="match_parent"
@@ -16,13 +17,12 @@
 
             <TextView
                 android:id="@+id/tv_addr"
-                style="@style/MyWalletAddressLabel"/>
+                style="@style/MyWalletAddressLabel" />
         </LinearLayout>
 
         <View style="@style/Divider" />
 
-        <LinearLayout
-            style="@style/PlainItemLayout">
+        <LinearLayout style="@style/PlainItemLayout">
 
             <TextView
                 style="@style/MyWalletTitleLabel"
@@ -36,8 +36,7 @@
 
         <View style="@style/Divider" />
 
-        <LinearLayout
-            style="@style/PlainItemLayout">
+        <LinearLayout style="@style/PlainItemLayout">
 
             <TextView
                 style="@style/MyWalletTitleLabel"
@@ -57,35 +56,24 @@
 
             <TextView
                 style="@style/MyWalletTitleLabel"
-                android:text="@string/wallet_deposit"/>
+                android:text="@string/wallet_deposit" />
 
             <TextView
                 android:id="@+id/tv_deposit"
                 style="@style/MyWalletInfoLabel"
                 android:layout_weight="1"
-                android:text="@string/loading_balance"  />
+                android:text="@string/loading_balance" />
 
             <ImageView style="@style/Arrow" />
         </LinearLayout>
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="bottom"
-        android:orientation="horizontal">
+    <Button
+        android:id="@+id/btn_reset"
+        style="@style/ButtonOrange"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="@dimen/plain_margin"
+        android:text="@string/reset_wallet" />
 
-        <Button
-            android:id="@+id/btn_reset"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:layout_margin="@dimen/plain_margin"
-            android:background="@color/colorPrimaryRed"
-            android:text="@string/reset_wallet"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-    </LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>
