@@ -75,6 +75,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private int mQuality;
     private int mTotalTime;
     private boolean mStartService;
+    private boolean mPaused;
 
     private TouchLocalReceiver mTouchLocalReceiver;
     private ChargingReceiver mChargingReceiver;
@@ -121,7 +122,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onResume() {
         super.onResume();
 
-        startDeviceService();
+        if (!mPaused) {
+            startDeviceService();
+        } else {
+            finish();
+        }
     }
 
     @Override
@@ -130,6 +135,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         if (mAppManager.getState() != AppManager.State.INSTALLING && mAppManager.getState() != AppManager.State.LAUNCHING) {
             stopDeviceService();
+            mPaused = true;
         }
     }
 
@@ -204,8 +210,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private synchronized void stopDeviceService() {
         if (mStartService) {
-            silentOff();
-
             mAppManager.setHandler(null);
             mAppManager.setOnTopTaskListener(null);
 
@@ -313,14 +317,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         if (audioManager != null) {
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            audioManager.getStreamVolume(AudioManager.STREAM_RING);
-        }
-    }
-
-    private void silentOff() {
-        AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
-        if (audioManager != null) {
-            audioManager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
             audioManager.getStreamVolume(AudioManager.STREAM_RING);
         }
     }

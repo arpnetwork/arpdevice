@@ -54,6 +54,9 @@
             android:name=".ui.order.details.ExchangeActivity"
             android:screenOrientation="portrait" />
         <activity
+            android:name=".ui.unlock.UnlockActivity"
+            android:screenOrientation="portrait" />
+        <activity
             android:name=".ui.order.receive.ReceiveOrderActivity"
             android:screenOrientation="portrait" />
         <activity

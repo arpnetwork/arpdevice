@@ -246,7 +246,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private void loadAllowance() {
         BankAllowance allowance = ARPBank.allowance(mMiner.getAddress(), Wallet.get().getAddress());
-        mAmountTextView.setText(String.format("%.2f", allowance.getAmountHumanic().floatValue()));
+        mAmountTextView.setText(String.format("%.2f ARP", allowance.getAmountHumanic().floatValue()));
 
         mTimeTextView.setText(mMiner.getExpired().compareTo(BigInteger.ZERO) == 0
                 || allowance.expired.compareTo(mMiner.getExpired()) < 0 ?
@@ -289,7 +289,7 @@ public class BindMinerFragment extends BaseFragment {
                         result.getSignExpired(), result.getExpired(), result.getPromiseSign(),
                         Wallet.get().getAddress());
                 if (!VerifyAPI.verifySign(data, result.getSign(), mMiner.getAddress())) {
-                    mAmountTextView.setText(String.format("%.2f", result.getAmountHumanic().floatValue()));
+                    mAmountTextView.setText(String.format("%.2f ARP", result.getAmountHumanic().floatValue()));
                     mTimeTextView.setText(result.getExpiredHumanic(getContext()));
                     mBindPromise = result;
 

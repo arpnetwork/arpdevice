@@ -51,6 +51,7 @@ import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.order.details.ExchangeActivity;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
+import org.arpnetwork.arpdevice.ui.unlock.UnlockActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
 import org.arpnetwork.arpdevice.util.UIHelper;
@@ -219,13 +220,22 @@ public class MyWalletFragment extends BaseFragment {
     private void checkBind(BigInteger totalAmount) {
         Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
         if (miner != null || mDepositAmount.compareTo(BigInteger.ZERO) == 0) {
-            String message = getString(miner == null ? R.string.withdraw_tip_lock : R.string.withdraw_tip_unbind);
             final MessageDialog.Builder builder = new MessageDialog.Builder(getContext());
-            builder.setTitle(getString(R.string.withdraw_title))
-                    .setMessage(message)
-                    .setPositiveButton(getString(R.string.ok), null)
-                    .create()
-                    .show();
+            builder.setTitle(getString(R.string.withdraw_title));
+            if (miner == null) {
+                builder.setMessage(getString(R.string.withdraw_tip_lock))
+                        .setPositiveButton(getString(R.string.unlock), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                startActivity(UnlockActivity.class);
+                            }
+                        })
+                        .setNegativeButton(getString(R.string.cancel), null);
+            } else {
+                builder.setMessage(getString(R.string.withdraw_tip_unbind))
+                        .setPositiveButton(getString(R.string.ok), null);
+            }
+            builder.create().show();
         } else {
             showWithdraw(totalAmount);
         }
@@ -276,7 +286,6 @@ public class MyWalletFragment extends BaseFragment {
         try {
             unexchanged = ARPBank.getUnexchange();
         } catch (Exception e) {
-            Log.d(TAG, "getUnexchange: error:" + e.getMessage());
             new AlertDialog.Builder(getContext())
                     .setMessage(R.string.tip_changing_wallet)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
@@ -349,6 +358,11 @@ public class MyWalletFragment extends BaseFragment {
 
                 case StateHolder.STATE_BANK_WITHDRAW_SUCCESS:
                     UIHelper.showToast(getActivity(), getString(R.string.withdraw_success));
+                    refreshDepositAmount();
+                    getARPBalance(Wallet.get().getAddress());
+                    break;
+
+                case StateHolder.STATE_UNBIND_SUCCESS:
                     refreshDepositAmount();
                     break;
 

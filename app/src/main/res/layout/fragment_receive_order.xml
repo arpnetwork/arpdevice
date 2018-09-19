@@ -38,7 +38,8 @@
             style="@style/MyItemLabel"
             android:layout_marginTop="40dp"
             android:text="@string/receive_order_tips"
-            android:textColor="#ff999999" />
+            android:textColor="#ff999999"
+            android:gravity="center_horizontal"/>
 
     </LinearLayout>
 

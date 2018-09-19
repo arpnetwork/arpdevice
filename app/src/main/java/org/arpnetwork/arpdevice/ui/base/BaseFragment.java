@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.ui.base;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -24,6 +25,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 
 public abstract class BaseFragment extends Fragment {
     private ProgressDialog mProgressDialog;
@@ -138,6 +140,18 @@ public abstract class BaseFragment extends Fragment {
         startActivity(intent);
     }
 
+    protected void startActivityForResult(Class<?> cls, int requestCode) {
+        startActivityForResult(cls, requestCode, null);
+    }
+
+    protected void startActivityForResult(Class<?> cls, int requestCode, Bundle bundle) {
+        Intent intent = new Intent(getActivity(), cls);
+        if (bundle != null) {
+            intent.putExtras(bundle);
+        }
+        startActivityForResult(intent, requestCode);
+    }
+
     protected void finish() {
         if (getFragmentManager().getBackStackEntryCount() > 0) {
             getFragmentManager().popBackStack();
@@ -148,5 +162,10 @@ public abstract class BaseFragment extends Fragment {
 
     protected void runOnUiThread(Runnable action) {
         getActivity().runOnUiThread(action);
+    }
+
+    protected void hideSoftInput(View view) {
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 }

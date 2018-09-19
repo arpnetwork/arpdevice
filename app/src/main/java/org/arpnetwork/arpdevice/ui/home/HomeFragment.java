@@ -115,7 +115,6 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     public void onResume() {
         super.onResume();
 
-        setUnexchangedText();
         regBatteryChangedReceiver();
         loadMinerAddr();
     }
@@ -229,21 +228,24 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
         });
     }
 
-    private void setUnexchangedText() {
-        Promise promise = Promise.get();
-        if (promise != null) {
-            String walletAddr = Wallet.get().getAddress();
-            Miner miner = BindMinerHelper.getBound(walletAddr);
-            BankAllowance allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
-            if (allowance != null) {
-                BigInteger unexchanged = new BigInteger(promise.getAmount(), 16).subtract(allowance.paid);
-                float fUnexchanged = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
-                if (fUnexchanged > 0) {
-                    mUnexchanged.setText(String.format(getString(R.string.my_unexchanged), fUnexchanged));
-                } else {
-                    mUnexchanged.setText("");
+    private void setUnexchangedText(Miner miner) {
+        if (miner != null) {
+            Promise promise = Promise.get();
+            if (promise != null) {
+                String walletAddr = Wallet.get().getAddress();
+                BankAllowance allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
+                if (allowance != null) {
+                    BigInteger unexchanged = new BigInteger(promise.getAmount(), 16).subtract(allowance.paid);
+                    float fUnexchanged = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
+                    if (fUnexchanged > 0) {
+                        mUnexchanged.setText(String.format(getString(R.string.my_unexchanged), fUnexchanged));
+                    } else {
+                        mUnexchanged.setText("");
+                    }
                 }
             }
+        } else {
+            mUnexchanged.setText("");
         }
     }
 
@@ -261,6 +263,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                             } else {
                                 mMinerName.setText("");
                             }
+                            setUnexchangedText(miner);
                         }
                     });
                 }

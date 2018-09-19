@@ -61,9 +61,6 @@ import static org.arpnetwork.arpdevice.util.Util.getHumanicAmount;
 public class ExchangeFragment extends BaseFragment {
     private static BigInteger mGasLimit = BigInteger.ZERO;
 
-    private static final int CASH = OPERATION_CASH;
-    private static final int WITHDRAW = OPERATION_WITHDRAW;
-
     private LinearLayout mProgressView;
     private TextView mProgressTip;
     private TextView mTotalAmountText;
@@ -159,6 +156,7 @@ public class ExchangeFragment extends BaseFragment {
                     public void onClick(View v) {
                         if (isCorrectPassword()) {
                             startServiceIntent(OPERATION_CASH);
+                            finish();
                         } else {
                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                         }
@@ -188,17 +186,13 @@ public class ExchangeFragment extends BaseFragment {
         }
     }
 
-    private void setProgressing(boolean progressing) {
-        switch (mType) {
-            case CASH:
-                mProgressTip.setText(R.string.cashing);
-                break;
+    private void showProgress(int textId) {
+        mProgressTip.setText(textId);
+        mProgressView.setVisibility(View.VISIBLE);
+    }
 
-            case WITHDRAW:
-                mProgressTip.setText(R.string.withdrawing);
-                break;
-        }
-        mProgressView.setVisibility(progressing ? View.VISIBLE : View.GONE);
+    private void hideProgress() {
+        mProgressView.setVisibility(View.GONE);
     }
 
     private boolean isCorrectPassword() {
@@ -220,19 +214,14 @@ public class ExchangeFragment extends BaseFragment {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (mType != CASH) {
-                return;
-            }
             switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS, StateHolder.STATE_BANK_CASH_RUNNING)) {
                 case StateHolder.STATE_BANK_CASH_RUNNING:
-                    if (mType == CASH) {
-                        setProgressing(true);
-                    }
+                    showProgress(R.string.cashing);
                     break;
 
                 case StateHolder.STATE_BANK_CASH_SUCCESS:
                     UIHelper.showToast(getActivity(), getString(R.string.exchange_success));
-                    setProgressing(false);
+                    hideProgress();
                     if (mMiner != null) {
                         Bundle bundle = new Bundle();
                         bundle.putSerializable(Constant.KEY_MINER, mMiner);
@@ -243,8 +232,22 @@ public class ExchangeFragment extends BaseFragment {
 
                 case StateHolder.STATE_BANK_CASH_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.exchange_failed));
-                    setProgressing(false);
+                    hideProgress();
+                    break;
 
+                case StateHolder.STATE_BANK_WITHDRAW_RUNNING:
+                    showProgress(R.string.withdrawing);
+                    break;
+
+                case StateHolder.STATE_BANK_WITHDRAW_SUCCESS:
+                    UIHelper.showToast(getActivity(), getString(R.string.withdraw_success));
+                    hideProgress();
+                    finish();
+                    break;
+
+                case StateHolder.STATE_BANK_WITHDRAW_FAILED:
+                    UIHelper.showToast(getActivity(), getString(R.string.withdraw_failed));
+                    hideProgress();
                     break;
 
                 default:

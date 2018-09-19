@@ -26,10 +26,10 @@
 
             <TextView
                 style="@style/MyWalletTitleLabel"
-                android:text="@string/ARP_balance" />
+                android:text="@string/ETH_balance" />
 
             <TextView
-                android:id="@+id/tv_arp_balance"
+                android:id="@+id/tv_eth_balance"
                 style="@style/MyWalletInfoLabel"
                 android:text="@string/loading_balance" />
         </LinearLayout>
@@ -40,10 +40,10 @@
 
             <TextView
                 style="@style/MyWalletTitleLabel"
-                android:text="@string/ETH_balance" />
+                android:text="@string/ARP_balance" />
 
             <TextView
-                android:id="@+id/tv_eth_balance"
+                android:id="@+id/tv_arp_balance"
                 style="@style/MyWalletInfoLabel"
                 android:text="@string/loading_balance" />
         </LinearLayout>

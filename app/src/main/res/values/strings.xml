@@ -106,8 +106,13 @@
     <string name="tip_changing_wallet">You have accumulated some ARP. please make sure the promise have been exchanged, or it would be invalid after wallet changed.</string>
     <string name="exchange_change_wallet_ignore">Go on change wallet</string>
     <string name="withdraw_title">Withdraw all deposit?</string>
-    <string name="withdraw_tip_lock">Deposit has been lock. You need to bind and unbind a miner to get it back.</string>
+    <string name="withdraw_tip_lock">Need to unlock before you can get the deposit back.</string>
     <string name="withdraw_tip_unbind">Withdraw after unbinding miner.</string>
+    <string name="withdraw_tip_unlock">You can get back the deposit after unlocking.</string>
+    <string name="unlock">Unlock</string>
+    <string name="unlocking">Unlocking, pleas wait...</string>
+    <string name="unlock_success">Unlock success</string>
+    <string name="unlock_failed">Unlock failed</string>
     <string name="go_unbind">Go unbinding</string>
     <string name="go_bind">Go binding</string>
     <string name="no_deposit">Have not deposited</string>
