@@ -16,23 +16,20 @@
 
 package org.arpnetwork.arpdevice.contracts.tasks;
 
-import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.arpnetwork.arpdevice.contracts.ARPBank;
 
 import java.math.BigInteger;
 
-public class ETHBalanceTask extends AbsExceptionTask<String, String, BigInteger> {
+public class BankBalanceTask extends AbsExceptionTask<String, String, BigInteger> {
 
-    public ETHBalanceTask(OnValueResult<BigInteger> onValueResult) {
+    public BankBalanceTask(OnValueResult<BigInteger> onValueResult) {
         super(onValueResult);
     }
 
     @Override
     public BigInteger onInBackground(String... param) throws Exception {
-        String address = param[0];
-        EthGetBalance ethGetBalance = EtherAPI.getWeb3J().ethGetBalance(
-                address, DefaultBlockParameterName.LATEST).send();
-        return ethGetBalance.getBalance();
+        String owner = param[0];
+        return ARPBank.balanceOf(owner);
     }
+
 }

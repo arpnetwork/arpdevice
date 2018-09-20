@@ -40,7 +40,7 @@ import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
-import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.dialog.MessageDialog;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
@@ -58,6 +58,7 @@ import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Convert;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
@@ -65,6 +66,7 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_WITHDRAW;
+import static org.arpnetwork.arpdevice.util.Util.getHumanicAmount;
 
 public class MyWalletFragment extends BaseFragment {
     private static final String TAG = MyWalletFragment.class.getSimpleName();
@@ -123,14 +125,15 @@ public class MyWalletFragment extends BaseFragment {
         getARPBalance(address);
 
         final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);
-        EtherAPI.getEtherBalance(address, new OnValueResult<BigInteger>() {
+        EtherAPI.getEtherBalance(address, new SimpleOnValueResult<BigInteger>() {
             @Override
             public void onValueResult(BigInteger result) {
-                if (result != null) {
-                    ethBalanceText.setText(String.format("%.4f", Convert.fromWei(new BigDecimal(result), Convert.Unit.ETHER)));
-                } else {
-                    showErrorAlertDialog();
-                }
+                ethBalanceText.setText(String.format("%.4f", Convert.fromWei(new BigDecimal(result), Convert.Unit.ETHER)));
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                showErrorAlertDialog();
             }
         });
 
@@ -160,15 +163,35 @@ public class MyWalletFragment extends BaseFragment {
     }
 
     private void refreshDepositAmount() {
-        String address = Wallet.get().getAddress();
-        TextView depositBalance = (TextView) findViewById(R.id.tv_deposit);
+        final String address = Wallet.get().getAddress();
+        final TextView depositBalance = (TextView) findViewById(R.id.tv_deposit);
 
-        BankAllowance allowance = ARPBank.allowance(address, ARPRegistry.CONTRACT_ADDRESS);
-        if (allowance == null) return;
-        BigInteger allowanceAmount = allowance.amount;
-        mDepositAmount = ARPBank.balanceOf(address);
-        mTotalAmount = allowanceAmount.add(mDepositAmount);
-        depositBalance.setText(String.format(getString(R.string.float_arp_token), Util.getHumanicAmount(mTotalAmount)));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                BankAllowance allowance = null;
+                try {
+                    allowance = ARPBank.allowance(address, ARPRegistry.CONTRACT_ADDRESS);
+                    if (allowance == null) return;
+                    BigInteger allowanceAmount = allowance.amount;
+                    mDepositAmount = ARPBank.balanceOf(address);
+                    mTotalAmount = allowanceAmount.add(mDepositAmount);
+                    depositBalance.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            depositBalance.setText(String.format(getString(R.string.float_arp_token), Util.getHumanicAmount(mTotalAmount)));
+                        }
+                    });
+                } catch (IOException e) {
+                    depositBalance.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showErrorAlertDialog();
+                        }
+                    });
+                }
+            }
+        }).start();
     }
 
     private void checkPromise() {
@@ -217,28 +240,45 @@ public class MyWalletFragment extends BaseFragment {
         builder.create().show();
     }
 
-    private void checkBind(BigInteger totalAmount) {
-        Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-        if (miner != null || mDepositAmount.compareTo(BigInteger.ZERO) == 0) {
-            final MessageDialog.Builder builder = new MessageDialog.Builder(getContext());
-            builder.setTitle(getString(R.string.withdraw_title));
-            if (miner == null) {
-                builder.setMessage(getString(R.string.withdraw_tip_lock))
-                        .setPositiveButton(getString(R.string.unlock), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                startActivity(UnlockActivity.class);
-                            }
-                        })
-                        .setNegativeButton(getString(R.string.cancel), null);
-            } else {
-                builder.setMessage(getString(R.string.withdraw_tip_unbind))
-                        .setPositiveButton(getString(R.string.ok), null);
+    private void checkBind(final BigInteger totalAmount) {
+        BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
+            @Override
+            public void onPreExecute() {
+                showProgressDialog("", false);
             }
-            builder.create().show();
-        } else {
-            showWithdraw(totalAmount);
-        }
+
+            @Override
+            public void onValueResult(Miner result) {
+                hideProgressDialog();
+
+                if (result != null || mDepositAmount.compareTo(BigInteger.ZERO) == 0) {
+                    final MessageDialog.Builder builder = new MessageDialog.Builder(getContext());
+                    builder.setTitle(getString(R.string.withdraw_title));
+                    if (result == null) {
+                        builder.setMessage(getString(R.string.withdraw_tip_lock))
+                                .setPositiveButton(getString(R.string.unlock), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        startActivity(UnlockActivity.class);
+                                    }
+                                })
+                                .setNegativeButton(getString(R.string.cancel), null);
+                    } else {
+                        builder.setMessage(getString(R.string.withdraw_tip_unbind))
+                                .setPositiveButton(getString(R.string.ok), null);
+                    }
+                    builder.create().show();
+                } else {
+                    showWithdraw(totalAmount);
+                }
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                hideProgressDialog();
+                UIHelper.showToast(getContext(), R.string.network_error);
+            }
+        });
     }
 
     private boolean checkReady() {
@@ -327,13 +367,18 @@ public class MyWalletFragment extends BaseFragment {
     }
 
     private void getARPBalance(String address) {
-        TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
-        BigInteger balance = ARPContract.balanceOf(address);
-        if (balance == null) {
-            showErrorAlertDialog();
-        } else {
-            arpBalanceText.setText(String.format("%.4f", Convert.fromWei(balance.toString(), Convert.Unit.ETHER)));
-        }
+        final TextView arpBalanceText = (TextView) findViewById(R.id.tv_arp_balance);
+        ARPContract.balanceOfAsync(address, new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                arpBalanceText.setText(String.format("%.4f", Convert.fromWei(result.toString(), Convert.Unit.ETHER)));
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                showErrorAlertDialog();
+            }
+        });
     }
 
     private void resetWallet() {

@@ -36,7 +36,7 @@ import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
-import org.arpnetwork.arpdevice.ui.view.GasFeeView;
+import org.arpnetwork.arpdevice.ui.widget.GasFeeView;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
 

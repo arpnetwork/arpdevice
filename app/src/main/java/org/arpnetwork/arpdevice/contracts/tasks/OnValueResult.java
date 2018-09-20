@@ -16,6 +16,23 @@
 
 package org.arpnetwork.arpdevice.contracts.tasks;
 
+import android.support.annotation.Nullable;
+
 public interface OnValueResult<T> {
-    void onValueResult(T result);
+    /**
+     * AsyncTask onPreExecute.
+     */
+    void onPreExecute();
+
+    /**
+     * AsyncTask onPostExecute.
+     *
+     * @param result Nullable.
+     */
+    void onValueResult(@Nullable T result);
+
+    /**
+     * onFailed. invoked in Main Thread.
+     */
+    void onFail(Throwable throwable);
 }

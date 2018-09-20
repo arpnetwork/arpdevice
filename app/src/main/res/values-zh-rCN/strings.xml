@@ -1,4 +1,5 @@
 <resources>
+    <!--global str start-->
     <string name="app_name">ARPDevice</string>
     <string name="exit_app">再按一次退出程序</string>
     <string name="ok">确定</string>
@@ -8,6 +9,14 @@
     <string name="handling">正在处理中，请稍后</string>
     <string name="network_error">网络出错，请重试</string>
     <string name="load_data_error">获取数据失败，请重试</string>
+
+    <!--empty view str start-->
+    <string name="no_avaliable_network">网络不可用,点击设置网络</string>
+    <string name="load_data_fail">页面加载失败,点击刷新</string>
+    <string name="loading_data">正在努力获取数据中...</string>
+    <string name="load_data_empty">啥也没有</string>
+    <string name="refresh">刷新</string>
+    <!--empty view str end-->
 
     <!-- 对话框 -->
     <string name="input_passwd_tip">请输入钱包密码</string>
@@ -122,7 +131,7 @@
     <string name="register_authoring">正在预授权，请耐心等待</string>
     <string name="register_transferring">正在转账，请耐心等待</string>
     <string name="register_locking">正在锁仓，请耐心等待</string>
-    <string name="register_author">①合约预授权</string>
+    <string name="register_auth">①合约预授权</string>
     <string name="register_transfer"> → ②合约转账</string>
     <string name="register_lock"> → ③合约锁仓</string>
     <string name="register_author_tip">将进行合约预授权，预授权不扣ARP</string>
@@ -171,7 +180,7 @@
     <string name="miner_bandwidth">带宽%dMbps</string>
     <string name="miner_comma">， </string>
     <string name="miner_unreachable">无法连接矿工</string>
-    <string name="miner_ping">延迟:</string>
+    <string name="miner_ping">延迟</string>
     <string name="load_gas_failed">加载gas价格失败，请重试</string>
     <string name="bind_handle">绑定矿工正在处理中，请稍后</string>
     <string name="bind_approving">正在预授权，请耐心等待</string>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.ui.view;
+package org.arpnetwork.arpdevice.ui.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;

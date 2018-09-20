@@ -1,10 +1,13 @@
 package org.arpnetwork.arpdevice.contracts;
 
-import android.util.Log;
+import android.os.AsyncTask;
 
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 
+import org.arpnetwork.arpdevice.contracts.tasks.ARPAllowanceTask;
+import org.arpnetwork.arpdevice.contracts.tasks.ARPBalanceTask;
+import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -23,6 +26,7 @@ import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.utils.Convert;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -53,19 +57,18 @@ public class ARPContract extends Contract {
         return new ARPContract(transactionManager, gasPrice, gasLimit);
     }
 
-    public static BigInteger allowance(String owner, String spender) {
-        Function function = getAllowanceFunction(owner, spender);
-        EthCall response = null;
-        try {
-            response = EtherAPI.getWeb3J().ethCall(
-                    Transaction.createEthCallTransaction(owner, CONTRACT_ADDRESS, FunctionEncoder.encode(function)),
-                    DefaultBlockParameterName.LATEST)
-                    .sendAsync().get();
-        } catch (Exception e) {
-            Log.e(TAG, "allowance(" + owner + ", " + spender + "), error:" + e.getCause());
-            return BigInteger.ZERO;
-        }
+    public static void allowanceAsync(String owner, String spender, OnValueResult<BigInteger> onResult) {
+        ARPAllowanceTask task = new ARPAllowanceTask(onResult);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner, spender);
+    }
 
+    public static BigInteger allowance(String owner, String spender) throws IOException {
+        Function function = funcAllowance(owner, spender);
+        EthCall response = null;
+        response = EtherAPI.getWeb3J().ethCall(
+                Transaction.createEthCallTransaction(owner, CONTRACT_ADDRESS, FunctionEncoder.encode(function)),
+                DefaultBlockParameterName.LATEST)
+                .send();
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
         if (someTypes.size() == 0) return BigInteger.ZERO;
@@ -73,18 +76,18 @@ public class ARPContract extends Contract {
         return balance.getValue();
     }
 
-    public static BigInteger balanceOf(String owner) {
-        Function function = getBalanceOfFunction(owner);
+    public static void balanceOfAsync(String owner, OnValueResult<BigInteger> onResult) {
+        ARPBalanceTask task = new ARPBalanceTask(onResult);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, owner);
+    }
+
+    public static BigInteger balanceOf(String owner) throws IOException {
+        Function function = funcBalanceOf(owner);
         EthCall response = null;
-        try {
-            response = EtherAPI.getWeb3J().ethCall(
-                    Transaction.createEthCallTransaction(owner, CONTRACT_ADDRESS, FunctionEncoder.encode(function)),
-                    DefaultBlockParameterName.LATEST)
-                    .sendAsync().get();
-        } catch (Exception e) {
-            Log.e(TAG, "balanceOf(" + owner + "), error:" + e.getCause());
-            return null;
-        }
+        response = EtherAPI.getWeb3J().ethCall(
+                Transaction.createEthCallTransaction(owner, CONTRACT_ADDRESS, FunctionEncoder.encode(function)),
+                DefaultBlockParameterName.LATEST)
+                .send();
         List<Type> someTypes = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
         if (someTypes.size() == 0) return BigInteger.ZERO;
@@ -95,32 +98,32 @@ public class ARPContract extends Contract {
     public RemoteCall<TransactionReceipt> approve() {
         String spender = ARPBank.CONTRACT_ADDRESS;
         BigInteger amount = Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
-        Function function = getApproveFunction(spender, amount);
+        Function function = funcApprove(spender, amount);
         return executeRemoteCallTransaction(function);
     }
 
     public static BigInteger estimateApproveGasLimit() {
         String spender = ARPBank.CONTRACT_ADDRESS;
         BigInteger amount = Convert.toWei(APPROVE_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
-        String functionString = FunctionEncoder.encode(getApproveFunction(spender, amount));
+        String functionString = FunctionEncoder.encode(funcApprove(spender, amount));
         return TransactionAPI.estimateFunctionGasLimit(functionString, CONTRACT_ADDRESS);
     }
 
-    private static Function getBalanceOfFunction(String address) {
+    private static Function funcBalanceOf(String address) {
         return new Function(FUNC_BALANCE_OF,
                 Arrays.<Type>asList(new Address(address)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
                 }));
     }
 
-    private static Function getAllowanceFunction(String owner, String spender) {
+    private static Function funcAllowance(String owner, String spender) {
         return new Function(FUNC_ALLOWANCE,
                 Arrays.<Type>asList(new Address(owner), new Address(spender)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint>() {
                 }));
     }
 
-    private static Function getApproveFunction(String spenderAddress, BigInteger value) {
+    private static Function funcApprove(String spenderAddress, BigInteger value) {
         return new Function(FUNC_APPROVE,
                 Arrays.<Type>asList(new Address(spenderAddress), new Uint(value)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Bool>() {

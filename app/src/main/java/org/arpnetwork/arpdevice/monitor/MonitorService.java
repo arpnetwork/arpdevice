@@ -34,6 +34,7 @@ import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -79,9 +80,17 @@ public class MonitorService extends Service {
             @Override
             public void run() {
                 String walletAddr = Wallet.get().getAddress();
-                Miner miner = BindMinerHelper.getBound(walletAddr);
+                Miner miner = null;
+                try {
+                    miner = BindMinerHelper.getBound(walletAddr);
+                } catch (IOException ignored) {
+                }
                 if (miner != null) {
-                    BankAllowance allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
+                    BankAllowance allowance = null;
+                    try {
+                        allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
+                    } catch (IOException ignored) {
+                    }
                     if (allowance != null) {
                         allowance.save();
 

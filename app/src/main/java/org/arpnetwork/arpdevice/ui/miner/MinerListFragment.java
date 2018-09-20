@@ -20,6 +20,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
@@ -31,12 +32,16 @@ import android.widget.ListView;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AtomicNonce;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.contracts.tasks.AbsExceptionTask;
+import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.dialog.PromiseDialog;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;
 import org.arpnetwork.arpdevice.ui.order.details.ExchangeActivity;
+import org.arpnetwork.arpdevice.ui.widget.EmptyView;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
@@ -68,6 +73,7 @@ public class MinerListFragment extends BaseFragment {
 
     private ListView mMinerList;
     private MinerAdapter mAdapter;
+    private ListLoadTask mListLoader;
 
     private OKHttpUtils mOkHttpUtils;
     private BindStateReceiver mBindStateReceiver;
@@ -104,9 +110,71 @@ public class MinerListFragment extends BaseFragment {
         mPingThread = null;
         mOkHttpUtils.cancelTag(API_SERVER_INFO);
 
+        cancelPotentialTask();
+
         if (mBindStateReceiver != null) {
             LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mBindStateReceiver);
             mBindStateReceiver = null;
+        }
+    }
+
+    @Override
+    protected void loadData() {
+        cancelPotentialTask();
+
+        mListLoader = new ListLoadTask(new SimpleOnValueResult<List<Miner>>() {
+            @Override
+            public void onValueResult(List<Miner> result) {
+                if (result != null && result.size() > 0) {
+                    showContentView();
+
+                    for (int i = 0; i < result.size(); i++) {
+                        Miner miner = result.get(i);
+                        String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
+                        loadMinerLoadInfo(i, url, miner.getAddress());
+                    }
+                    loadMinerPingAsync(result);
+
+                    mAdapter.setData(result);
+                    if (mBoundMiner != null) {
+                        TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
+                        if (task != null) {
+                            mAdapter.updateBindState(mBoundMiner.getAddress(), StateHolder.STATE_UNBIND_RUNNING);
+                            mAdapter.updateBindState(task.address, StateHolder.STATE_BIND_RUNNING);
+                        } else {
+                            mAdapter.updateBindState(mBoundMiner.getAddress(), StateHolder.STATE_BIND_SUCCESS);
+                        }
+                    }
+
+                    if (StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING) != null) {
+                        TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
+                        mAdapter.updateBindState(task.address, StateHolder.STATE_BIND_RUNNING);
+                    } else if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+                        TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING);
+                        mAdapter.updateBindState(task.address, StateHolder.STATE_UNBIND_RUNNING);
+                    }
+                } else {
+                    showEmptyView(EmptyView.STATE_EMPTY);
+                }
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                showEmptyView(EmptyView.STATE_FAIL);
+            }
+        });
+        mListLoader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    @Override
+    protected View getContentView() {
+        return mMinerList;
+    }
+
+    private void cancelPotentialTask() {
+        if (mListLoader != null) {
+            mListLoader.cancel(true);
+            mListLoader = null;
         }
     }
 
@@ -177,34 +245,6 @@ public class MinerListFragment extends BaseFragment {
 
     private void startLoad() {
         loadData();
-        if (StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING) != null) {
-            TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
-            mAdapter.updateBindState(task.address, StateHolder.STATE_BIND_RUNNING);
-        } else if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
-            TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING);
-            mAdapter.updateBindState(task.address, StateHolder.STATE_UNBIND_RUNNING);
-        }
-    }
-
-    private void loadData() {
-        final List<Miner> miners = BindMinerHelper.getMinerList();
-        for (int i = 0; i < miners.size(); i++) {
-            Miner miner = miners.get(i);
-            String url = "http://" + miner.getIpString() + ":" + miner.getPortHttpInt();
-            loadMinerLoadInfo(i, url, miner.getAddress());
-        }
-        loadMinerPingAsync(miners);
-
-        mAdapter.setData(miners);
-        if (mBoundMiner != null) {
-            TaskInfo task = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
-            if (task != null) {
-                mAdapter.updateBindState(mBoundMiner.getAddress(), StateHolder.STATE_UNBIND_RUNNING);
-                mAdapter.updateBindState(task.address, StateHolder.STATE_BIND_RUNNING);
-            } else {
-                mAdapter.updateBindState(mBoundMiner.getAddress(), StateHolder.STATE_BIND_SUCCESS);
-            }
-        }
     }
 
     private void loadMinerLoadInfo(final int index, final String url, String minerAddr) {
@@ -379,6 +419,17 @@ public class MinerListFragment extends BaseFragment {
                 default:
                     break;
             }
+        }
+    }
+
+    private static class ListLoadTask extends AbsExceptionTask<Void, Void, List<Miner>> {
+        public ListLoadTask(OnValueResult<List<Miner>> onValueResult) {
+            super(onValueResult);
+        }
+
+        @Override
+        public List<Miner> onInBackground(Void... voids) throws Exception {
+            return BindMinerHelper.getMinerList();
         }
     }
 }

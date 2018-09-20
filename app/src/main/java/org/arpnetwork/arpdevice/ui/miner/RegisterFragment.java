@@ -16,9 +16,7 @@
 
 package org.arpnetwork.arpdevice.ui.miner;
 
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -44,11 +42,11 @@ import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
-import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.view.GasFeeView;
+import org.arpnetwork.arpdevice.ui.widget.GasFeeView;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.utils.Convert;
@@ -65,7 +63,6 @@ import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_BANK_DEPOSIT;
 
 public class RegisterFragment extends BaseFragment {
-
     private static final int APPROVE = OPERATION_ARP_APPROVE;
     private static final int DEPOSIT = OPERATION_BANK_DEPOSIT;
     private static final int LOCK_UP = OPERATION_BANK_APPROVE;
@@ -81,7 +78,6 @@ public class RegisterFragment extends BaseFragment {
     private GasFeeView mGasView;
     private EditText mPasswordText;
     private Button mForwardBtn;
-    private static ProgressDialog mProgressDialog;
 
     private static BigInteger mGasLimit = BigInteger.ZERO;
     private static int mStep;
@@ -145,36 +141,39 @@ public class RegisterFragment extends BaseFragment {
                 }
 
                 final String address = Wallet.get().getAddress();
-                EtherAPI.getEtherBalance(address, new OnValueResult<BigInteger>() {
+                EtherAPI.getEtherBalance(address, new SimpleOnValueResult<BigInteger>() {
                     @Override
                     public void onValueResult(BigInteger result) {
-                        if (result == null) {
-                            showErrorAlertDialog(getString(R.string.network_error));
-                        } else if (result.compareTo(mGasView.getGasCost()) < 0) {
+                        if (result.compareTo(mGasView.getGasCost()) < 0) {
                             UIHelper.showToast(getActivity(), R.string.register_underpaid);
                         } else {
                             startServiceIntent(mStep);
                         }
                     }
+
+                    @Override
+                    public void onFail(Throwable throwable) {
+                        showErrorAlertDialog(getString(R.string.network_error));
+                    }
                 });
             }
         });
-        showProgressBar(getActivity(), null, false);
+        showProgressDialog("", false);
         startLoad();
     }
 
     private void setStepState(int stepState) {
-        hideProgressBar();
+        hideProgressDialog();
         findViewById(R.id.ll_register).setVisibility(View.VISIBLE);
         mProgressView.setVisibility(View.GONE);
         mPasswordText.setText("");
 
         String deviceAddress = Wallet.get().getAddress();
-        String allSteps = getString(R.string.register_author) + getString(R.string.register_transfer) + getString(R.string.register_lock);
+        String allSteps = getString(R.string.register_auth) + getString(R.string.register_transfer) + getString(R.string.register_lock);
 
         switch (stepState) {
             case APPROVE:
-                mStepText.setText(highlight(allSteps, getString(R.string.register_author)));
+                mStepText.setText(highlight(allSteps, getString(R.string.register_auth)));
                 mStepTipText.setText(getString(R.string.register_author_tip));
                 mAmountView.setVisibility(View.GONE);
                 mValueView.setVisibility(View.GONE);
@@ -186,26 +185,44 @@ public class RegisterFragment extends BaseFragment {
                 break;
 
             case DEPOSIT:
-                mStepText.setText(highlight(allSteps, getString(R.string.register_author) + getString(R.string.register_transfer)));
+                mStepText.setText(highlight(allSteps, getString(R.string.register_auth) + getString(R.string.register_transfer)));
                 mStepTipText.setText(getString(R.string.register_transfer_tip));
                 mAmountView.setVisibility(View.VISIBLE);
                 mAmountText.setText(R.string.register_transfer_amount);
-                float totalAmount = Convert.fromWei(new BigDecimal(ARPContract.balanceOf(deviceAddress)), Convert.Unit.ETHER).floatValue();
-                mAmountValue.setText(String.format(getString(R.string.register_total_amount), totalAmount));
-                mValueView.setVisibility(View.VISIBLE);
 
                 mGasLimit = ARPBank.estimateDepositGasLimit();
                 mGasView.setGasLimit(mGasLimit);
 
+                mValueView.setVisibility(View.VISIBLE);
                 mForwardBtn.setText(R.string.register_next_step);
-                if (totalAmount < Float.parseFloat(ARPBank.DEPOSIT_ARP_NUMBER)) {
-                    mForwardBtn.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            UIHelper.showToast(getActivity(), R.string.register_insufficient_balance);
+
+                ARPContract.balanceOfAsync(Wallet.get().getAddress(), new SimpleOnValueResult<BigInteger>() {
+                    @Override
+                    public void onValueResult(BigInteger result) {
+                        float totalAmount = Convert.fromWei(new BigDecimal(result), Convert.Unit.ETHER).floatValue();
+                        mAmountValue.setText(String.format(getString(R.string.register_total_amount), totalAmount));
+
+                        if (totalAmount < Float.parseFloat(ARPBank.DEPOSIT_ARP_NUMBER)) {
+                            mForwardBtn.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    UIHelper.showToast(getActivity(), R.string.register_insufficient_balance);
+                                }
+                            });
                         }
-                    });
-                }
+                    }
+
+                    @Override
+                    public void onFail(Throwable throwable) {
+                        mAmountValue.setText("--");
+                        mForwardBtn.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                UIHelper.showToast(getActivity(), R.string.network_error);
+                            }
+                        });
+                    }
+                });
                 break;
 
             case LOCK_UP:
@@ -286,49 +303,83 @@ public class RegisterFragment extends BaseFragment {
 
     private void loadBindState() {
         String address = Wallet.get().getAddress();
-        Miner miner = BindMinerHelper.getBound(address);
-        if (miner != null) {
-            showMinerList();
-        } else {
-            loadBankAllowance();
-        }
+        BindMinerHelper.getBoundAsync(address, new SimpleOnValueResult<Miner>() {
+            @Override
+            public void onValueResult(Miner result) {
+                if (result != null) {
+                    showMinerList();
+                } else {
+                    loadBankAllowance();
+                }
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                showErrorAlertDialog(getString(R.string.network_error));
+            }
+        });
     }
 
     private void loadBankAllowance() {
         String owner = Wallet.get().getAddress();
         String spender = ARPRegistry.CONTRACT_ADDRESS;
-        BankAllowance allowance = ARPBank.allowance(owner, spender);
+        ARPBank.allowanceAsync(owner, spender, new SimpleOnValueResult<BankAllowance>() {
+            @Override
+            public void onValueResult(BankAllowance result) {
+                if (result != null && Convert.fromWei(result.amount.toString(),
+                        Convert.Unit.ETHER).doubleValue() >= Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
+                    showMinerList();
+                } else {
+                    loadBankBalanceOf();
+                }
+            }
 
-        if (allowance != null && Convert.fromWei(allowance.amount.toString(),
-                Convert.Unit.ETHER).doubleValue() >= Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
-            showMinerList();
-        } else {
-            loadBankBalanceOf();
-        }
+            @Override
+            public void onFail(Throwable throwable) {
+                showErrorAlertDialog(getString(R.string.network_error));
+            }
+        });
     }
 
     private void loadBankBalanceOf() {
         String owner = Wallet.get().getAddress();
-        BigInteger balance = ARPBank.balanceOf(owner);
-        int intValue = Convert.fromWei(balance.toString(), Convert.Unit.ETHER).intValue();
+        ARPBank.balanceOfAsync(owner, new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                int intValue = Convert.fromWei(result.toString(), Convert.Unit.ETHER).intValue();
 
-        if (balance != null && intValue >= Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
-            setStepState(LOCK_UP);
-        } else {
-            loadARPAllowance();
-        }
+                if (intValue >= Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
+                    setStepState(LOCK_UP);
+                } else {
+                    loadARPAllowance();
+                }
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                showErrorAlertDialog(getString(R.string.network_error));
+            }
+        });
     }
 
     private void loadARPAllowance() {
         String owner = Wallet.get().getAddress();
         String spender = ARPBank.CONTRACT_ADDRESS;
-        BigInteger allowance = ARPContract.allowance(owner, spender);
+        ARPContract.allowanceAsync(owner, spender, new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger allowance) {
+                if (allowance != null && Convert.fromWei(allowance.toString(), Convert.Unit.ETHER).doubleValue() >= Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
+                    setStepState(DEPOSIT);
+                } else {
+                    setStepState(APPROVE);
+                }
+            }
 
-        if (allowance != null && Convert.fromWei(allowance.toString(), Convert.Unit.ETHER).doubleValue() >= Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
-            setStepState(DEPOSIT);
-        } else {
-            setStepState(APPROVE);
-        }
+            @Override
+            public void onFail(Throwable throwable) {
+                showErrorAlertDialog(getString(R.string.network_error));
+            }
+        });
     }
 
     private void registerReceiver() {
@@ -393,19 +444,6 @@ public class RegisterFragment extends BaseFragment {
     private void showMinerList() {
         startActivity(MinerListActivity.class);
         finish();
-    }
-
-    private static void showProgressBar(final Activity context, String msg, boolean cancel) {
-        mProgressDialog = ProgressDialog.show(context, null, msg);
-        mProgressDialog.setCanceledOnTouchOutside(cancel);
-        mProgressDialog.setCancelable(cancel);
-    }
-
-    private static void hideProgressBar() {
-        if (mProgressDialog != null) {
-            mProgressDialog.dismiss();
-            mProgressDialog = null;
-        }
     }
 
     private void showErrorAlertDialog(String message) {

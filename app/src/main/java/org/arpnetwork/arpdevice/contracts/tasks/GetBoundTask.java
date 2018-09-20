@@ -16,23 +16,19 @@
 
 package org.arpnetwork.arpdevice.contracts.tasks;
 
-import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.response.EthGetBalance;
+import org.arpnetwork.arpdevice.ui.bean.Miner;
+import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 
-import java.math.BigInteger;
+public class GetBoundTask extends AbsExceptionTask<String, String, Miner> {
 
-public class ETHBalanceTask extends AbsExceptionTask<String, String, BigInteger> {
-
-    public ETHBalanceTask(OnValueResult<BigInteger> onValueResult) {
+    public GetBoundTask(OnValueResult<Miner> onValueResult) {
         super(onValueResult);
     }
 
     @Override
-    public BigInteger onInBackground(String... param) throws Exception {
+    public Miner onInBackground(String... param) throws Exception {
         String address = param[0];
-        EthGetBalance ethGetBalance = EtherAPI.getWeb3J().ethGetBalance(
-                address, DefaultBlockParameterName.LATEST).send();
-        return ethGetBalance.getBalance();
+        return BindMinerHelper.getBound(address);
     }
+
 }

@@ -149,7 +149,8 @@ public class MyEarningFragment extends BaseFragment {
         getUnexchange();
     }
 
-    private void loadData() {
+    @Override
+    protected void loadData() {
         if (mLoading) {
             return;
         }

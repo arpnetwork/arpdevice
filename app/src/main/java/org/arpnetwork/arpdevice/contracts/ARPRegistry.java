@@ -16,11 +16,11 @@
 
 package org.arpnetwork.arpdevice.contracts;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
@@ -35,7 +35,6 @@ import org.web3j.abi.datatypes.generated.Uint16;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.abi.datatypes.generated.Uint32;
 import org.web3j.crypto.Credentials;
-import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.RemoteCall;
 import org.web3j.protocol.core.methods.request.Transaction;
@@ -127,7 +126,7 @@ public class ARPRegistry extends Contract {
     }
 
     // Bind miner helper method.
-    public static BigInteger serverCount() throws ExecutionException, InterruptedException {
+    public static BigInteger serverCount() throws IOException {
         Function function = new Function(ARPRegistry.FUNC_SERVERCOUNT,
                 Collections.<Type>emptyList(),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {
@@ -136,7 +135,7 @@ public class ARPRegistry extends Contract {
         EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
-                .sendAsync().get();
+                .send();
 
         List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
@@ -146,7 +145,7 @@ public class ARPRegistry extends Contract {
         return (BigInteger) results.get(0).getValue();
     }
 
-    public static Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger> serverByIndex(BigInteger _index) throws ExecutionException, InterruptedException {
+    public static Tuple5<String, BigInteger, BigInteger, BigInteger, BigInteger> serverByIndex(BigInteger _index) throws IOException {
         final Function function = new Function(ARPRegistry.FUNC_SERVERBYINDEX,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(_index)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {
@@ -161,7 +160,7 @@ public class ARPRegistry extends Contract {
         EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
-                .sendAsync().get();
+                .send();
 
         List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
@@ -178,7 +177,7 @@ public class ARPRegistry extends Contract {
 
     // Check my address has bind miner.
 
-    public static Tuple2<String, BigInteger> bindings(byte[] address32) throws ExecutionException, InterruptedException {
+    public static Tuple2<String, BigInteger> bindings(byte[] address32) throws IOException {
         Function function = new Function(ARPRegistry.FUNC_BINDINGS,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Bytes32(address32)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Address>() {
@@ -189,7 +188,7 @@ public class ARPRegistry extends Contract {
         EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
-                .sendAsync().get();
+                .send();
 
         List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());
@@ -201,7 +200,7 @@ public class ARPRegistry extends Contract {
                 (BigInteger) results.get(1).getValue());
     }
 
-    public static Tuple4<BigInteger, BigInteger, BigInteger, BigInteger> servers(String address) throws ExecutionException, InterruptedException {
+    public static Tuple4<BigInteger, BigInteger, BigInteger, BigInteger> servers(String address) throws IOException {
         Function function = new Function(ARPRegistry.FUNC_SERVERS,
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.Address(address)),
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint32>() {
@@ -214,7 +213,7 @@ public class ARPRegistry extends Contract {
         EthCall response = EtherAPI.getWeb3J().ethCall(
                 Transaction.createEthCallTransaction(null, ARPRegistry.CONTRACT_ADDRESS, encodedFunction),
                 DefaultBlockParameterName.LATEST)
-                .sendAsync().get();
+                .send();
 
         List<Type> results = FunctionReturnDecoder.decode(
                 response.getValue(), function.getOutputParameters());

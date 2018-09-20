@@ -128,7 +128,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <org.arpnetwork.arpdevice.ui.view.GasFeeView
+            <org.arpnetwork.arpdevice.ui.widget.GasFeeView
                 android:id="@+id/ll_gas_fee"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

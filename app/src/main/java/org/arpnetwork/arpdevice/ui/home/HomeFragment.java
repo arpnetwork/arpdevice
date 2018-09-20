@@ -26,6 +26,7 @@ import android.net.ConnectivityManager;
 import android.opengl.GLSurfaceView;
 import android.os.BatteryManager;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,6 +42,7 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 
@@ -135,20 +137,46 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                 break;
 
             case R.id.layout_miner:
-                Miner bindMiner = BindMinerHelper.getBound(Wallet.get().getAddress());
-                if (bindMiner == null) {
-                    BankAllowance allowance = ARPBank.allowance(Wallet.get().getAddress(), ARPRegistry.CONTRACT_ADDRESS);
-                    if (allowance == null || Convert.fromWei(allowance.amount.toString(),
-                            Convert.Unit.ETHER).doubleValue() < Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
-                        startActivity(RegisterActivity.class);
-                    } else {
-                        startActivity(MinerListActivity.class);
+                BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
+                    @Override
+                    public void onPreExecute() {
+                        showProgressDialog("", false);
                     }
-                } else {
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable(Constant.KEY_MINER, bindMiner);
-                    startActivity(MinerListActivity.class, bundle);
-                }
+
+                    @Override
+                    public void onValueResult(@Nullable Miner result) {
+                        hideProgressDialog();
+
+                        if (result == null) {
+                            ARPBank.allowanceAsync(Wallet.get().getAddress(), ARPRegistry.CONTRACT_ADDRESS, new SimpleOnValueResult<BankAllowance>() {
+                                @Override
+                                public void onValueResult(BankAllowance result) {
+                                    if (result == null || Convert.fromWei(result.amount.toString(),
+                                            Convert.Unit.ETHER).doubleValue() < Double.valueOf(ARPBank.DEPOSIT_ARP_NUMBER)) {
+                                        startActivity(RegisterActivity.class);
+                                    } else {
+                                        startActivity(MinerListActivity.class);
+                                    }
+                                }
+
+                                @Override
+                                public void onFail(Throwable throwable) {
+                                    UIHelper.showToast(getActivity(), getString(R.string.network_error));
+                                }
+                            });
+                        } else {
+                            Bundle bundle = new Bundle();
+                            bundle.putSerializable(Constant.KEY_MINER, result);
+                            startActivity(MinerListActivity.class, bundle);
+                        }
+                    }
+
+                    @Override
+                    public void onFail(Throwable throwable) {
+                        hideProgressDialog();
+                        UIHelper.showToast(getActivity(), getString(R.string.network_error));
+                    }
+                });
                 break;
 
             case R.id.layout_order_price:
@@ -230,19 +258,28 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
     private void setUnexchangedText(Miner miner) {
         if (miner != null) {
-            Promise promise = Promise.get();
+            final Promise promise = Promise.get();
             if (promise != null) {
                 String walletAddr = Wallet.get().getAddress();
-                BankAllowance allowance = ARPBank.allowance(miner.getAddress(), walletAddr);
-                if (allowance != null) {
-                    BigInteger unexchanged = new BigInteger(promise.getAmount(), 16).subtract(allowance.paid);
-                    float fUnexchanged = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
-                    if (fUnexchanged > 0) {
-                        mUnexchanged.setText(String.format(getString(R.string.my_unexchanged), fUnexchanged));
-                    } else {
-                        mUnexchanged.setText("");
+
+                ARPBank.allowanceAsync(miner.getAddress(), walletAddr, new SimpleOnValueResult<BankAllowance>() {
+                    @Override
+                    public void onValueResult(BankAllowance result) {
+                        if (result != null) {
+                            BigInteger unexchanged = new BigInteger(promise.getAmount(), 16).subtract(result.paid);
+                            float fUnexchanged = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
+                            if (fUnexchanged > 0) {
+                                mUnexchanged.setText(String.format(getString(R.string.my_unexchanged), fUnexchanged));
+                            } else {
+                                mUnexchanged.setText("");
+                            }
+                        }
                     }
-                }
+
+                    @Override
+                    public void onFail(Throwable throwable) {
+                    }
+                });
             }
         } else {
             mUnexchanged.setText("");
@@ -250,25 +287,22 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private void loadMinerAddr() {
-        new Thread(new Runnable() {
+        BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
             @Override
-            public void run() {
-                final Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-                if (mMinerName != null) {
-                    mMinerName.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (miner != null) {
-                                mMinerName.setText(miner.getAddress());
-                            } else {
-                                mMinerName.setText("");
-                            }
-                            setUnexchangedText(miner);
-                        }
-                    });
+            public void onValueResult(Miner result) {
+                if (result != null) {
+                    mMinerName.setText(result.getAddress());
+                } else {
+                    mMinerName.setText("");
                 }
+                setUnexchangedText(result);
             }
-        }).start();
+
+            @Override
+            public void onFail(Throwable throwable) {
+                setUnexchangedText(null);
+            }
+        });
     }
 
     private void showNoBindingDialog() {
@@ -360,27 +394,43 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
         if (!Util.isCharging(getActivity())) {
             UIHelper.showToast(getActivity(), getString(R.string.no_charging));
         } else {
-            Miner miner = BindMinerHelper.getBound(Wallet.get().getAddress());
-            if (miner != null) {
-                BankAllowance bankAllowance = BankAllowance.get();
-                if (bankAllowance == null) {
-                    CustomApplication.sInstance.startMonitorService();
-                    showAlertDialog(R.string.load_data_error);
-                    return;
+            BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
+                @Override
+                public void onPreExecute() {
+                    showProgressDialog("", false);
                 }
 
-                if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
-                    showAlertDialog(R.string.unbinding_miner);
-                } else if (!miner.expiredValid() || !bankAllowance.valid()) {
-                    showAlertDialog(R.string.invalid_miner);
-                } else if (!SignUtil.signerExists()) {
-                    showPasswordDialog(miner);
-                } else {
-                    startCheckActivity(miner);
+                @Override
+                public void onValueResult(Miner result) {
+                    hideProgressDialog();
+
+                    if (result != null) {
+                        BankAllowance bankAllowance = BankAllowance.get();
+                        if (bankAllowance == null) {
+                            CustomApplication.sInstance.startMonitorService();
+                            showAlertDialog(R.string.load_data_error);
+                            return;
+                        }
+
+                        if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+                            showAlertDialog(R.string.unbinding_miner);
+                        } else if (!result.expiredValid() || !bankAllowance.valid()) {
+                            showAlertDialog(R.string.invalid_miner);
+                        } else if (!SignUtil.signerExists()) {
+                            showPasswordDialog(result);
+                        } else {
+                            startCheckActivity(result);
+                        }
+                    } else {
+                        showNoBindingDialog();
+                    }
                 }
-            } else {
-                showNoBindingDialog();
-            }
+
+                @Override
+                public void onFail(Throwable throwable) {
+                    hideProgressDialog();
+                }
+            });
         }
     }
 

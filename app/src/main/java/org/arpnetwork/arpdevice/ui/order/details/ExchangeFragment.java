@@ -35,13 +35,14 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerActivity;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
-import org.arpnetwork.arpdevice.ui.view.GasFeeView;
+import org.arpnetwork.arpdevice.ui.widget.GasFeeView;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.utils.Convert;
@@ -100,6 +101,7 @@ public class ExchangeFragment extends BaseFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         initViews();
+        loadData();
     }
 
     @Override
@@ -134,11 +136,25 @@ public class ExchangeFragment extends BaseFragment {
         mPasswordText = (EditText) findViewById(R.id.et_password);
         mExchangeBtn = (Button) findViewById(R.id.btn_exchange);
 
-        mTotalAmountValue.setText(String.format(getString(R.string.exchange_total_amount),
-                getHumanicAmount(ARPContract.balanceOf(Wallet.get().getAddress()))));
         mExchangeValue.setText(String.format(getString(R.string.exchange_arp_amount), getHumanicAmount(mAmount)));
 
         setState();
+    }
+
+    @Override
+    protected void loadData() {
+        ARPContract.balanceOfAsync(Wallet.get().getAddress(), new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                mTotalAmountValue.setText(String.format(getString(R.string.exchange_total_amount),
+                        getHumanicAmount(result)));
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                mTotalAmountValue.setText("load failed");
+            }
+        });
     }
 
     private void setState() {

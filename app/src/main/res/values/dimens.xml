@@ -10,6 +10,12 @@
 
     <dimen name="plain_margin">17dp</dimen>
 
+    <!--empty_view-->
+    <dimen name="empty_view_img_margin_top">120dp</dimen>
+    <dimen name="empty_view_tips_margin_top">52dp</dimen>
+    <dimen name="empty_view_action_margin_top">27dp</dimen>
+    <dimen name="empty_page_tip_font_size">18dp</dimen>
+
     <!-- font -->
     <dimen name="maintitle_text_size">16sp</dimen>
     <dimen name="subtitle_text_size">12sp</dimen>

@@ -20,7 +20,7 @@
             android:layout_marginRight="@dimen/plain_margin"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
-            android:text="@string/register_author"
+            android:text="@string/register_auth"
             android:textColor="@color/register_step_text_color" />
 
         <TextView
@@ -98,7 +98,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <org.arpnetwork.arpdevice.ui.view.GasFeeView
+        <org.arpnetwork.arpdevice.ui.widget.GasFeeView
             android:id="@+id/ll_gas_fee"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

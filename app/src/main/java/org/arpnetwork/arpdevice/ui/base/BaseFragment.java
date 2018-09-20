@@ -27,7 +27,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 
+import org.arpnetwork.arpdevice.ui.widget.EmptyView;
+
 public abstract class BaseFragment extends Fragment {
+    private EmptyView mEmptyView;
+
     private ProgressDialog mProgressDialog;
 
     @Override
@@ -51,6 +55,8 @@ public abstract class BaseFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        addEmptyView();
     }
 
     @Override
@@ -168,4 +174,65 @@ public abstract class BaseFragment extends Fragment {
         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
+
+    private void addEmptyView() {
+        if (getContentView() != null) {
+            if (mEmptyView == null) {
+                mEmptyView = new EmptyView(getActivity());
+                mEmptyView.setOnRefreshListener(mOnRefreshListener);
+
+                ((ViewGroup) getContentView().getParent()).addView(mEmptyView);
+            } else {
+                if (mEmptyView.getState() != EmptyView.STATE_INIT) {
+                    mEmptyView = null;
+                    addEmptyView();
+                }
+            }
+        }
+    }
+
+    protected EmptyView getEmptyView() {
+        return mEmptyView;
+    }
+
+    protected View getContentView() {
+        return null;
+    }
+
+    protected void showContentView() {
+        if (getContentView() != null) {
+            getContentView().setVisibility(View.VISIBLE);
+        }
+        if (getEmptyView() != null) {
+            getEmptyView().setVisibility(View.GONE);
+        }
+    }
+
+    protected void showEmptyView(int state) {
+        showEmptyView(state, 0);
+    }
+
+    protected void showEmptyView(int state, int tips) {
+        if (getContentView() != null) {
+            getContentView().setVisibility(View.GONE);
+        }
+        if (getEmptyView() != null) {
+            getEmptyView().setVisibility(View.VISIBLE);
+            getEmptyView().setEmptyTips(tips);
+            getEmptyView().updateViews(state);
+        }
+    }
+
+    protected void loadData() {
+    }
+
+    private EmptyView.OnRefreshListener mOnRefreshListener = new EmptyView.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            if (getEmptyView() != null) {
+                getEmptyView().updateViews(EmptyView.STATE_INIT);
+                loadData();
+            }
+        }
+    };
 }

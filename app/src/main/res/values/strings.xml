@@ -119,10 +119,10 @@
 
     <!-- register -->
     <string name="register_device">Register device</string>
-    <string name="register_authoring">Authoring...</string>
+    <string name="register_authoring">Authorizing...</string>
     <string name="register_transferring">Transferring...</string>
     <string name="register_locking">Locking up...</string>
-    <string name="register_author">①Author</string>
+    <string name="register_auth">①Authorize</string>
     <string name="register_transfer"> → ②Transfer</string>
     <string name="register_lock"> → ③Lock up</string>
     <string name="register_author_tip">Author ARP to contract, cost no ARP</string>
@@ -171,7 +171,7 @@
     <string name="miner_bandwidth">bandwidth%dMbps</string>
     <string name="miner_comma">, </string>
     <string name="miner_unreachable">Unreachable</string>
-    <string name="miner_ping">Delay:</string>
+    <string name="miner_ping">Delay</string>
     <string name="load_gas_failed">Load gas failed,please try again.</string>
     <string name="bind_handle">Binding is in process,please wait</string>
     <string name="bind_approving">Approve is in process,please wait</string>

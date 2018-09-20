@@ -40,6 +40,7 @@ import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.dialog.PromiseDialog;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
@@ -47,7 +48,7 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.order.details.ExchangeActivity;
-import org.arpnetwork.arpdevice.ui.view.GasFeeView;
+import org.arpnetwork.arpdevice.ui.widget.GasFeeView;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
@@ -91,6 +92,7 @@ public class BindMinerFragment extends BaseFragment {
     private Button mTaskBtn;
 
     private BindStateReceiver mBindStateReceiver;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,26 +137,35 @@ public class BindMinerFragment extends BaseFragment {
         mTaskBtn = (Button) findViewById(R.id.btn_task);
 
         mAddressTextView.setText(mMiner.getAddress());
-        Miner boundMiner = BindMinerHelper.getBound(Wallet.get().getAddress());
 
-        TaskInfo bindingTask = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
-        if (boundMiner != null && boundMiner.getAddress().equals(mMiner.getAddress())) {
-            TaskInfo unbindingTask = StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING);
-            if (bindingTask != null || (unbindingTask != null && unbindingTask.address.equals(mMiner.getAddress()))) {
-                setState(UNBIND);
-                setProgressState(UNBIND);
-            } else {
-                mMiner = boundMiner;
-                setState(UNBIND);
+        BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
+            @Override
+            public void onValueResult(Miner result) {
+                TaskInfo bindingTask = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
+                if (result != null && result.getAddress().equals(mMiner.getAddress())) {
+                    TaskInfo unbindingTask = StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING);
+                    if (bindingTask != null || (unbindingTask != null && unbindingTask.address.equals(mMiner.getAddress()))) {
+                        setState(UNBIND);
+                        setProgressState(UNBIND);
+                    } else {
+                        mMiner = result;
+                        setState(UNBIND);
+                    }
+                } else {
+                    if (bindingTask != null && bindingTask.address.equals(mMiner.getAddress())) {
+                        setState(BIND);
+                        setProgressState(BIND);
+                    } else {
+                        setState(BIND);
+                    }
+                }
             }
-        } else {
-            if (bindingTask != null && bindingTask.address.equals(mMiner.getAddress())) {
-                setState(BIND);
-                setProgressState(BIND);
-            } else {
-                setState(BIND);
+
+            @Override
+            public void onFail(Throwable throwable) {
+
             }
-        }
+        });
     }
 
     private void registerReceiver() {
@@ -245,12 +256,22 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void loadAllowance() {
-        BankAllowance allowance = ARPBank.allowance(mMiner.getAddress(), Wallet.get().getAddress());
-        mAmountTextView.setText(String.format("%.2f ARP", allowance.getAmountHumanic().floatValue()));
+        ARPBank.allowanceAsync(mMiner.getAddress(), Wallet.get().getAddress(), new SimpleOnValueResult<BankAllowance>() {
+            @Override
+            public void onValueResult(BankAllowance result) {
+                if (result != null) {
+                    mAmountTextView.setText(String.format("%.2f", result.getAmountHumanic().floatValue()));
 
-        mTimeTextView.setText(mMiner.getExpired().compareTo(BigInteger.ZERO) == 0
-                || allowance.expired.compareTo(mMiner.getExpired()) < 0 ?
-                allowance.getExpiredHumanic(getContext()): mMiner.getExpiredHumanic(getContext()));
+                    mTimeTextView.setText(mMiner.getExpired().compareTo(BigInteger.ZERO) == 0
+                            || result.expired.compareTo(mMiner.getExpired()) < 0 ?
+                            result.getExpiredHumanic(getContext()) : mMiner.getExpiredHumanic(getContext()));
+                }
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+            }
+        });
     }
 
     private void startBindService(String password) {
@@ -264,12 +285,12 @@ public class BindMinerFragment extends BaseFragment {
         getActivity().startService(serviceIntent);
     }
 
-    private Intent getServiceIntent(String password, int op, BigInteger gasGWei) {
+    private Intent getServiceIntent(String password, int op, BigInteger gasWei) {
         Intent serviceIntent = new Intent(getActivity(), BindMinerIntentService.class);
         serviceIntent.putExtra(KEY_OP, op);
         serviceIntent.putExtra(KEY_PASSWD, password);
         serviceIntent.putExtra(KEY_ADDRESS, mMiner.getAddress());
-        serviceIntent.putExtra(KEY_GASPRICE, gasGWei.toString());
+        serviceIntent.putExtra(KEY_GASPRICE, gasWei.toString());
         serviceIntent.putExtra(KEY_GASLIMIT, mGasLimit.toString());
         return serviceIntent;
     }
