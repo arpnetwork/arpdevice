@@ -404,6 +404,7 @@ public class RegisterFragment extends BaseFragment {
 
                 case StateHolder.STATE_APPROVE_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.bind_approve_failed));
+                    startLoad();
                     break;
 
                 case StateHolder.STATE_DEPOSIT_RUNNING:
@@ -417,6 +418,7 @@ public class RegisterFragment extends BaseFragment {
 
                 case StateHolder.STATE_DEPOSIT_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.bind_deposit_failed));
+                    startLoad();
                     break;
 
                 case StateHolder.STATE_BANK_APPROVE_RUNNING:
@@ -429,6 +431,7 @@ public class RegisterFragment extends BaseFragment {
 
                 case StateHolder.STATE_BANK_APPROVE_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.bind_lock_failed));
+                    startLoad();
                     break;
 
                 default:

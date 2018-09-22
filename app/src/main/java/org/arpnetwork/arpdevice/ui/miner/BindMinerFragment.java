@@ -41,6 +41,7 @@ import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
+import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.dialog.PromiseDialog;
 import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
@@ -86,6 +87,8 @@ public class BindMinerFragment extends BaseFragment {
     private TextView mAddressTextView;
     private TextView mTimeTextView;
     private TextView mAmountTextView;
+    private LinearLayout mRemainingAmountLayout;
+    private TextView mRemainingAmountTextView;
     private GasFeeView mGasFeeView;
     private EditText mPasswordText;
     private Button mTaskBtn;
@@ -130,6 +133,8 @@ public class BindMinerFragment extends BaseFragment {
         mProgressTip = (TextView) findViewById(R.id.tv_progress_tip);
         mAddressTextView = (TextView) findViewById(R.id.tv_address);
         mAmountTextView = (TextView) findViewById(R.id.tv_author_amount);
+        mRemainingAmountLayout = (LinearLayout) findViewById(R.id.layout_remaining_amount);
+        mRemainingAmountTextView = (TextView) findViewById(R.id.tv_remaining_amount);
         mTimeTextView = (TextView) findViewById(R.id.tv_author_time);
         mGasFeeView = (GasFeeView) findViewById(R.id.ll_gas_fee);
         mPasswordText = (EditText) findViewById(R.id.et_password);
@@ -191,6 +196,7 @@ public class BindMinerFragment extends BaseFragment {
         switch (state) {
             case BIND:
                 setTitle(R.string.bind_miner);
+                mRemainingAmountLayout.setVisibility(View.GONE);
                 mTaskBtn.setBackgroundResource(R.drawable.btn_bg);
                 mTaskBtn.setText(R.string.bind_btn_bind);
 
@@ -200,6 +206,7 @@ public class BindMinerFragment extends BaseFragment {
 
             case UNBIND:
                 setTitle(R.string.unbind_miner);
+                mRemainingAmountLayout.setVisibility(View.VISIBLE);
                 mTaskBtn.setBackgroundResource(R.drawable.btn_bg_orange);
                 mTaskBtn.setText(R.string.bind_btn_unbind);
                 mGasLimit = ARPRegistry.estimateUnbindGasLimit();
@@ -231,7 +238,15 @@ public class BindMinerFragment extends BaseFragment {
 
                 mProgressView.setVisibility(View.GONE);
                 if (result != null) {
-                    mAmountTextView.setText(String.format("%.2f", result.getAmountHumanic().floatValue()));
+                    float amount = result.getAmountHumanic().floatValue();
+                    mAmountTextView.setText(String.format("%.2f ARP", amount));
+
+                    float remainingAmount = amount;
+                    Promise promise = Promise.get();
+                    if (promise != null) {
+                        remainingAmount = amount - promise.getFloatAmount();
+                    }
+                    mRemainingAmountTextView.setText(String.format("%.2f ARP", remainingAmount));
 
                     mTimeTextView.setText(mMiner.getExpired().compareTo(BigInteger.ZERO) == 0
                             || result.expired.compareTo(mMiner.getExpired()) < 0 ?

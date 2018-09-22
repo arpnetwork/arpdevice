@@ -126,6 +126,45 @@
                         android:textColor="@color/colorPrimary"
                         android:textSize="13sp" />
                 </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/layout_remaining_amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <View
+                        style="@style/Divider"
+                        android:layout_marginLeft="@dimen/plain_margin"
+                        android:layout_marginRight="@dimen/plain_margin" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="@dimen/plain_margin">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="@string/remaining_amount"
+                            android:textColor="@color/register_title_text_color"
+                            android:textSize="13sp" />
+
+                        <TextView
+                            android:id="@+id/tv_remaining_amount"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="@string/register_token_amount"
+                            android:textAlignment="textEnd"
+                            android:textColor="@color/colorPrimary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
             </LinearLayout>
 
             <org.arpnetwork.arpdevice.ui.widget.GasFeeView

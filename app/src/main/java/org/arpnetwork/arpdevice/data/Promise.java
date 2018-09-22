@@ -22,6 +22,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
@@ -65,6 +66,10 @@ public class Promise {
 
     public String getAmount() {
         return getValueString(amount, 16);
+    }
+
+    public float getFloatAmount() {
+        return Convert.fromWei(getValueString(amount, 10), Convert.Unit.ETHER).floatValue();
     }
 
     public int compareAmount(Promise promise) {

@@ -64,7 +64,6 @@
 
     <!-- 导入钱包 -->
     <string name="import_wallet">导入钱包</string>
-
     <string name="import_wallet_tip">输入私钥文件内容至输入框，请留意字符大小写</string>
     <string name="import_wallet_tip2">每个钱包地址只能绑定一台设备</string>
     <string name="private_key">请输入明文私钥</string>
@@ -99,6 +98,7 @@
     <string name="no_wifi">请在WIFI网络使用</string>
     <string name="invalid_miner">您绑定的矿工已停止服务，请绑定新的矿工</string>
     <string name="unbinding_miner">解绑矿工中，暂不能开始接单</string>
+    <string name="amount_insufficient">授权剩余额度不足，无法接单，请更换矿工后再试</string>
 
     <!-- 我的钱包 -->
     <string name="wallet_addr">钱包地址</string>
@@ -136,8 +136,8 @@
     <string name="register_transfer"> → ②合约转账</string>
     <string name="register_lock"> → ③合约锁仓</string>
     <string name="register_author_tip">将进行合约预授权，预授权不扣ARP</string>
-    <string name="register_transfer_tip">将会转账500个ARP,用于锁仓绑定</string>
-    <string name="register_lock_tip">将把上一步转账的500个ARP锁仓,完成设备登记</string>
+    <string name="register_transfer_tip">将会转账500个ARP，用于登记锁仓</string>
+    <string name="register_lock_tip">将把上一步转账的500个ARP锁仓，完成设备登记</string>
     <string name="register_transfer_amount">合约转账</string>
     <string name="register_lock_amount">ARP锁仓（不扣ARP）</string>
     <string name="register_total_amount">钱包余额 %.2f ARP</string>
@@ -162,6 +162,7 @@
     <string name="bind_miner_address">矿工地址</string>
     <string name="bind_author_time">授权时间</string>
     <string name="bind_author_amount">授权额度</string>
+    <string name="remaining_amount">剩余额度</string>
     <string name="binding_other">正在绑定其他矿工</string>
     <string name="unbinding_other">正在解绑其他矿工</string>
     <string name="binding">正在绑定，请耐心等待</string>

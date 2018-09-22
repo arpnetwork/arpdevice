@@ -81,6 +81,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     private View mDivider;
     private LinearLayout mLayoutPriceSetting;
     private int mOrderPrice;
+    private BigInteger mRemainingAmount = BigInteger.ZERO;
 
     private PasswordDialog mPasswordDialog;
 
@@ -258,29 +259,35 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
     private void setUnexchangedText(Miner miner) {
         if (miner != null) {
-            final Promise promise = Promise.get();
-            if (promise != null) {
-                String walletAddr = Wallet.get().getAddress();
+            String walletAddr = Wallet.get().getAddress();
+            ARPBank.allowanceAsync(miner.getAddress(), walletAddr, new SimpleOnValueResult<BankAllowance>() {
+                @Override
+                public void onValueResult(BankAllowance allowance) {
+                    if (allowance != null) {
+                        BigInteger promiseAmount = BigInteger.ZERO;
+                        final Promise promise = Promise.get();
+                        if (promise != null) {
+                            promiseAmount = new BigInteger(promise.getAmount(), 16);
 
-                ARPBank.allowanceAsync(miner.getAddress(), walletAddr, new SimpleOnValueResult<BankAllowance>() {
-                    @Override
-                    public void onValueResult(BankAllowance result) {
-                        if (result != null) {
-                            BigInteger unexchanged = new BigInteger(promise.getAmount(), 16).subtract(result.paid);
+                            BigInteger unexchanged = promiseAmount.subtract(allowance.paid);
                             float fUnexchanged = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();
                             if (fUnexchanged > 0) {
                                 mUnexchanged.setText(String.format(getString(R.string.my_unexchanged), fUnexchanged));
                             } else {
                                 mUnexchanged.setText("");
                             }
+                        } else {
+                            mUnexchanged.setText("");
                         }
-                    }
 
-                    @Override
-                    public void onFail(Throwable throwable) {
+                        mRemainingAmount = allowance.amount.subtract(promiseAmount);
                     }
-                });
-            }
+                }
+
+                @Override
+                public void onFail(Throwable throwable) {
+                }
+            });
         } else {
             mUnexchanged.setText("");
         }
@@ -416,6 +423,8 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                             showAlertDialog(R.string.unbinding_miner);
                         } else if (!result.expiredValid() || !bankAllowance.valid()) {
                             showAlertDialog(R.string.invalid_miner);
+                        } else if (mRemainingAmount.compareTo(BigInteger.ZERO) == 0) {
+                            showAlertDialog(R.string.amount_insufficient);
                         } else if (!SignUtil.signerExists()) {
                             showPasswordDialog(result);
                         } else {

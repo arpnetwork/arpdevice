@@ -55,7 +55,6 @@
 
     <!-- wallet -->
     <string name="import_wallet">Import wallet</string>
-
     <string name="import_wallet_tip">Enter private key, mind the capitals</string>
     <string name="import_wallet_tip2">Every wallet can bind only one device</string>
     <string name="private_key">Enter private key</string>
@@ -90,6 +89,7 @@
     <string name="no_wifi">Please use in WIFI</string>
     <string name="invalid_miner">The miner you have bound has stopped service, please bind the new miner</string>
     <string name="unbinding_miner">During unbinding miner, can not start receiving order</string>
+    <string name="amount_insufficient">The authorized remaining amount is insufficient and cannot receive the order. Please replace the miner and try again.</string>
 
     <!-- my wallet -->
     <string name="wallet_addr">Address</string>
@@ -153,6 +153,7 @@
     <string name="bind_miner_address">Miner address</string>
     <string name="bind_author_time">Time</string>
     <string name="bind_author_amount">Amount</string>
+    <string name="remaining_amount">Remaining amount</string>
     <string name="binding_other">Binding other miner</string>
     <string name="unbinding_other">Unbinding other miner</string>
     <string name="binding">Binding, please wait</string>
