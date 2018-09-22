@@ -16,10 +16,8 @@
 
 package org.arpnetwork.arpdevice.ui.miner;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -141,6 +139,8 @@ public class BindMinerFragment extends BaseFragment {
         BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
             @Override
             public void onValueResult(Miner result) {
+                if (getActivity() == null) return;
+
                 TaskInfo bindingTask = StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING);
                 if (result != null && result.getAddress().equals(mMiner.getAddress())) {
                     TaskInfo unbindingTask = StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING);
@@ -163,7 +163,10 @@ public class BindMinerFragment extends BaseFragment {
 
             @Override
             public void onFail(Throwable throwable) {
+                if (getActivity() == null) return;
 
+                mProgressView.setVisibility(View.GONE);
+                showErrorAlertDialog(R.string.network_error);
             }
         });
     }
@@ -179,67 +182,26 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void setState(int state) {
-        mProgressView.setVisibility(View.GONE);
         switch (state) {
             case BIND:
                 setTitle(R.string.bind_miner);
-                String url = "http://" + mMiner.getIpString() + ":" + mMiner.getPortHttpInt();
-                loadPromiseForBind(url);
-
                 mTaskBtn.setBackgroundResource(R.drawable.btn_bg);
                 mTaskBtn.setText(R.string.bind_btn_bind);
-                mTaskBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) {
-                            String password = mPasswordText.getText().toString();
-                            if (Wallet.loadCredentials(password) != null) {
-                                startBindService(password);
-                                finish();
-                            } else {
-                                UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                            }
-                        } else {
-                            showErrorAlertDialog(null, getString(R.string.bind_apply_expired));
-                        }
-                    }
-                });
+
+                String url = "http://" + mMiner.getIpString() + ":" + mMiner.getPortHttpInt();
+                loadPromiseForBind(url);
                 break;
 
             case UNBIND:
                 setTitle(R.string.unbind_miner);
-                loadAllowance();
                 mTaskBtn.setBackgroundResource(R.drawable.btn_bg_orange);
                 mTaskBtn.setText(R.string.bind_btn_unbind);
                 mGasLimit = ARPRegistry.estimateUnbindGasLimit();
                 mGasFeeView.setGasLimit(mGasLimit);
-                mTaskBtn.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        String password = mPasswordText.getText().toString();
-                        if (TextUtils.isEmpty(password) || Wallet.loadCredentials(password) == null) {
-                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                        } else {
-                            checkPromise();
-                        }
-                    }
-                });
+
+                loadAllowance();
                 break;
         }
-    }
-
-    private void showErrorAlertDialog(String title, String message) {
-        new AlertDialog.Builder(getContext())
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
-                .setCancelable(false)
-                .show();
     }
 
     private void setProgressState(int state) {
@@ -259,17 +221,36 @@ public class BindMinerFragment extends BaseFragment {
         ARPBank.allowanceAsync(mMiner.getAddress(), Wallet.get().getAddress(), new SimpleOnValueResult<BankAllowance>() {
             @Override
             public void onValueResult(BankAllowance result) {
+                if (getActivity() == null) return;
+
+                mProgressView.setVisibility(View.GONE);
                 if (result != null) {
                     mAmountTextView.setText(String.format("%.2f", result.getAmountHumanic().floatValue()));
 
                     mTimeTextView.setText(mMiner.getExpired().compareTo(BigInteger.ZERO) == 0
                             || result.expired.compareTo(mMiner.getExpired()) < 0 ?
                             result.getExpiredHumanic(getContext()) : mMiner.getExpiredHumanic(getContext()));
+
+                    mTaskBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            String password = mPasswordText.getText().toString();
+                            if (TextUtils.isEmpty(password) || Wallet.loadCredentials(password) == null) {
+                                UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                            } else {
+                                checkPromise();
+                            }
+                        }
+                    });
                 }
             }
 
             @Override
             public void onFail(Throwable throwable) {
+                if (getActivity() == null) return;
+
+                mProgressView.setVisibility(View.GONE);
+                showErrorAlertDialog(R.string.network_error);
             }
         });
     }
@@ -306,6 +287,10 @@ public class BindMinerFragment extends BaseFragment {
         new OKHttpUtils().post(url, request.toJSON(), Config.API_SERVER_BIND_PROMISE, new SimpleCallback<BindPromise>() {
             @Override
             public void onSuccess(Response response, BindPromise result) {
+                if (getActivity() == null) return;
+
+                mProgressView.setVisibility(View.GONE);
+
                 String data = String.format(Locale.US, "%s:%d:%d:%s:%s", result.getAmount(),
                         result.getSignExpired(), result.getExpired(), result.getPromiseSign(),
                         Wallet.get().getAddress());
@@ -316,19 +301,42 @@ public class BindMinerFragment extends BaseFragment {
 
                     mGasLimit = ARPRegistry.estimateBindDeviceGasLimit(mMiner.getAddress(), mBindPromise);
                     mGasFeeView.setGasLimit(mGasLimit);
+
+                    mTaskBtn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) {
+                                String password = mPasswordText.getText().toString();
+                                if (Wallet.loadCredentials(password) != null) {
+                                    startBindService(password);
+                                    finish();
+                                } else {
+                                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                }
+                            } else {
+                                showErrorAlertDialog(R.string.bind_apply_expired);
+                            }
+                        }
+                    });
                 } else {
-                    showErrorAlertDialog(null, getString(R.string.load_promise_failed));
+                    showErrorAlertDialog(R.string.load_promise_failed);
                 }
             }
 
             @Override
             public void onFailure(Request request, Exception e) {
-                showErrorAlertDialog(null, getString(R.string.load_promise_failed));
+                if (getActivity() == null) return;
+
+                mProgressView.setVisibility(View.GONE);
+                showErrorAlertDialog(R.string.load_promise_failed);
             }
 
             @Override
             public void onError(Response response, int code, Exception e) {
-                showErrorAlertDialog(null, getString(R.string.load_promise_failed));
+                if (getActivity() == null) return;
+
+                mProgressView.setVisibility(View.GONE);
+                showErrorAlertDialog(R.string.load_promise_failed);
             }
         });
     }

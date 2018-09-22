@@ -71,8 +71,6 @@ import static org.arpnetwork.arpdevice.util.Util.getHumanicAmount;
 public class MyWalletFragment extends BaseFragment {
     private static final String TAG = MyWalletFragment.class.getSimpleName();
 
-    private boolean alertShown = false;
-
     private BigInteger mTotalAmount;
     private BigInteger mDepositAmount;
 
@@ -128,12 +126,14 @@ public class MyWalletFragment extends BaseFragment {
         EtherAPI.getEtherBalance(address, new SimpleOnValueResult<BigInteger>() {
             @Override
             public void onValueResult(BigInteger result) {
+                if (getActivity() == null) return;
+
                 ethBalanceText.setText(String.format("%.4f", Convert.fromWei(new BigDecimal(result), Convert.Unit.ETHER)));
             }
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog();
+                showErrorAlertDialog(R.string.get_balance_error_msg);
             }
         });
 
@@ -186,7 +186,7 @@ public class MyWalletFragment extends BaseFragment {
                     depositBalance.post(new Runnable() {
                         @Override
                         public void run() {
-                            showErrorAlertDialog();
+                            showErrorAlertDialog(R.string.get_balance_error_msg);
                         }
                     });
                 }
@@ -304,23 +304,6 @@ public class MyWalletFragment extends BaseFragment {
         startActivity(ExchangeActivity.class, bundle);
     }
 
-    private void showErrorAlertDialog() {
-        if (!alertShown && getContext() != null) {
-            alertShown = true;
-            new AlertDialog.Builder(getContext())
-                    .setMessage(R.string.get_balance_error_msg)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            alertShown = false;
-                            finish();
-                        }
-                    })
-                    .setCancelable(false)
-                    .show();
-        }
-    }
-
     private void getUnexchange() {
         BigInteger unexchanged = BigInteger.ZERO;
         try {
@@ -371,12 +354,14 @@ public class MyWalletFragment extends BaseFragment {
         ARPContract.balanceOfAsync(address, new SimpleOnValueResult<BigInteger>() {
             @Override
             public void onValueResult(BigInteger result) {
+                if (getActivity() == null) return;
+
                 arpBalanceText.setText(String.format("%.4f", Convert.fromWei(result.toString(), Convert.Unit.ETHER)));
             }
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog();
+                showErrorAlertDialog(R.string.get_balance_error_msg);
             }
         });
     }

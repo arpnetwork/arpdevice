@@ -16,8 +16,10 @@
 
 package org.arpnetwork.arpdevice.ui.base;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -27,12 +29,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 
+import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.ui.widget.EmptyView;
 
 public abstract class BaseFragment extends Fragment {
     private EmptyView mEmptyView;
 
     private ProgressDialog mProgressDialog;
+    private boolean alertShown = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -131,6 +135,29 @@ public abstract class BaseFragment extends Fragment {
         if (mProgressDialog != null) {
             mProgressDialog.dismiss();
             mProgressDialog = null;
+        }
+    }
+
+    protected void showErrorAlertDialog(int messageId) {
+        if (getContext() != null) {
+            String message = getContext().getString(messageId);
+            showErrorAlertDialog(null, message);
+        }
+    }
+
+    protected void showErrorAlertDialog(String title, String message) {
+        if (!alertShown && getContext() != null) {
+            alertShown = true;
+            new AlertDialog.Builder(getContext())
+                    .setMessage(message)
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            alertShown = false;
+                        }
+                    })
+                    .setCancelable(false)
+                    .show();
         }
     }
 

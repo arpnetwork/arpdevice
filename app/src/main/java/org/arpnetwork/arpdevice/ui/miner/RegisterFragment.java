@@ -16,10 +16,8 @@
 
 package org.arpnetwork.arpdevice.ui.miner;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -81,8 +79,6 @@ public class RegisterFragment extends BaseFragment {
 
     private static BigInteger mGasLimit = BigInteger.ZERO;
     private static int mStep;
-
-    private boolean alertShown = false;
 
     private BindStateReceiver mBindStateReceiver;
 
@@ -153,7 +149,7 @@ public class RegisterFragment extends BaseFragment {
 
                     @Override
                     public void onFail(Throwable throwable) {
-                        showErrorAlertDialog(getString(R.string.network_error));
+                        showErrorAlertDialog(R.string.network_error);
                     }
                 });
             }
@@ -315,7 +311,7 @@ public class RegisterFragment extends BaseFragment {
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog(getString(R.string.network_error));
+                showErrorAlertDialog(R.string.network_error);
             }
         });
     }
@@ -336,7 +332,7 @@ public class RegisterFragment extends BaseFragment {
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog(getString(R.string.network_error));
+                showErrorAlertDialog(R.string.network_error);
             }
         });
     }
@@ -357,7 +353,7 @@ public class RegisterFragment extends BaseFragment {
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog(getString(R.string.network_error));
+                showErrorAlertDialog(R.string.network_error);
             }
         });
     }
@@ -377,7 +373,7 @@ public class RegisterFragment extends BaseFragment {
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog(getString(R.string.network_error));
+                showErrorAlertDialog(R.string.network_error);
             }
         });
     }
@@ -444,21 +440,5 @@ public class RegisterFragment extends BaseFragment {
     private void showMinerList() {
         startActivity(MinerListActivity.class);
         finish();
-    }
-
-    private void showErrorAlertDialog(String message) {
-        if (!alertShown && getContext() != null) {
-            alertShown = true;
-            new AlertDialog.Builder(getContext())
-                    .setMessage(message)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            alertShown = false;
-                        }
-                    })
-                    .setCancelable(false)
-                    .show();
-        }
     }
 }
