@@ -33,11 +33,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 final class MinerAdapter extends BaseAdapter {
     private Context mContext;
     private List<Miner> mItems;
-    private List<Integer> mPings;
+    private Map<Integer, Integer> mPingMaps;
     private final LayoutInflater mInflater;
     private HashMap<String, Integer> mStateMap;
 
@@ -46,7 +47,7 @@ final class MinerAdapter extends BaseAdapter {
 
         mInflater = LayoutInflater.from(context);
         mItems = new ArrayList<Miner>();
-        mPings = new ArrayList<Integer>();
+        mPingMaps = new HashMap<>();
         mStateMap = new HashMap<String, Integer>();
     }
 
@@ -68,22 +69,23 @@ final class MinerAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Miner item = mItems.get(position);
+        String pingInfo = item.getMinerInfo() == null ? mContext.getString(R.string.load_miner_info) : mContext.getString(R.string.miner_comma) + mContext.getString(R.string.load_miner_info);
         String info = Util.join(mContext.getString(R.string.miner_comma), convertMinerInfo(item.getMinerInfo()));
-        if (mPings.size() > 0) {
+
+        if (mPingMaps.size() > 0) {
             Integer ping = null;
             try {
-                ping = mPings.get(position);
+                ping = mPingMaps.get(position);
                 if (ping < 0) {
-                    info = mContext.getString(R.string.miner_unreachable);
+                    pingInfo = mContext.getString(R.string.miner_unreachable);
                 } else {
-                    info = info + mContext.getString(R.string.miner_comma) + mContext.getString(R.string.miner_ping) + ping + "ms";
+                    pingInfo = mContext.getString(R.string.miner_comma) + mContext.getString(R.string.miner_ping) + ping + "ms";
                 }
             } catch (Exception ignored) {
             }
         }
-        if (TextUtils.isEmpty(info)) {
-            info = mContext.getString(R.string.load_miner_info);
-        }
+
+        info = info + pingInfo;
 
         ViewHolder viewHolder;
         if (convertView == null) {
@@ -154,7 +156,7 @@ final class MinerAdapter extends BaseAdapter {
     }
 
     public void updatePing(int index, int ping) {
-        mPings.add(index, ping);
+        mPingMaps.put(index, ping);
 
         notifyDataSetChanged();
     }

@@ -62,7 +62,7 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 
 public class MinerListFragment extends BaseFragment {
-    private static final int PING_INTERVAL = 1000;
+    private static final int PING_INTERVAL = 500;
     private static final int PING_COUNT = 3;
     private static final int UNREACHABLE_TIME_MS = 60 * 1000;
 
@@ -106,8 +106,11 @@ public class MinerListFragment extends BaseFragment {
     public void onDestroy() {
         super.onDestroy();
 
-        mPingThread.interrupt();
-        mPingThread = null;
+        if (mPingThread != null){
+            mPingThread.interrupt();
+            mPingThread = null;
+        }
+
         mOkHttpUtils.cancelTag(API_SERVER_INFO);
 
         cancelPotentialTask();
