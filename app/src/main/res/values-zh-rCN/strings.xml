@@ -203,7 +203,7 @@
     <string name="bind_btn_bank_approve">Bank预授权</string>
     <string name="bind_btn_deposit">存钱</string>
     <string name="bind_btn_bind">绑定</string>
-    <string name="bind_btn_unbind">解绑</string>
+    <string name="bind_btn_unbind">解除绑定</string>
     <string name="bind_btn_cancel_approve">取消授权</string>
     <string name="bind_btn_quit">退出</string>
     <!-- 绑定矿工 step -->

@@ -137,6 +137,9 @@ public class CheckDeviceActivity extends BaseActivity {
 
     @Override
     protected boolean onExitApp() {
+        if (mFromMy) {
+            return false;
+        }
         return true;
     }
 
@@ -320,6 +323,8 @@ public class CheckDeviceActivity extends BaseActivity {
                     break;
 
                 case Constant.CHECK_ADB_FAILED:
+                    context.mCheckThread.setShouldPing(true);
+
                     context.mTitleText.setText(R.string.check_USB);
                     highlightText = context.createHighlight(context.getString(R.string.check_fail_usb),
                             context.getString(R.string.check_highlight_developer_options), context.getString(R.string.check_highlight_USB_debug));

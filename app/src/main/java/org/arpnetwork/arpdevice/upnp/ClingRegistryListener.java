@@ -122,20 +122,23 @@ public class ClingRegistryListener extends DefaultRegistryListener {
                 portMappings = desiredMapping;
 
                 final List<PortMapping> activeForService = new ArrayList<>();
+                final int finalDefaultDataPort = defaultDataPort;
+                final int finalDefaultHttpPort = defaultHttpPort;
                 for (final PortMapping pm : portMappings) {
-                    final int finalDefaultDataPort = defaultDataPort;
-                    final int finalDefaultHttpPort = defaultHttpPort;
                     new PortMappingAdd(connectionService, registry.getUpnpService().getControlPoint(), pm) {
                         @Override
                         public void success(ActionInvocation invocation) {
                             Log.d(TAG, "Port mapping added: " + pm);
                             activeForService.add(pm);
 
-                            Message message = new Message();
-                            message.what = Constant.CHECK_UPNP_COMPLETE;
-                            message.arg1 = finalDefaultDataPort;
-                            message.arg2 = finalDefaultHttpPort;
-                            mHandler.sendMessage(message);
+                            if (activeForService.size() == portMappings.length) {
+                                Message message = new Message();
+                                message.what = Constant.CHECK_UPNP_COMPLETE;
+                                message.arg1 = finalDefaultDataPort;
+                                message.arg2 = finalDefaultHttpPort;
+                                message.obj = true;
+                                mHandler.sendMessage(message);
+                            }
                         }
 
                         @Override

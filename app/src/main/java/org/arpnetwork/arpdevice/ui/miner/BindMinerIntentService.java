@@ -102,7 +102,7 @@ public class BindMinerIntentService extends IntentService {
                     result = unbindDevice(Wallet.loadCredentials(password), gasPrice, gasLimit);
                 } catch (Exception e) {
                     Log.e(TAG, "unbind device error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_UNBIND_FAILED, type, null);
+                    mBroadcaster.broadcastWithState(STATE_UNBIND_FAILED, type, address);
                     break;
                 }
 
@@ -121,7 +121,7 @@ public class BindMinerIntentService extends IntentService {
                             gasPrice, gasLimit);
                 } catch (Exception e) {
                     Log.e(TAG, "bind device error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_BIND_FAILED, type, null);
+                    mBroadcaster.broadcastWithState(STATE_BIND_FAILED, type, address);
                     break;
                 }
 
@@ -184,7 +184,7 @@ public class BindMinerIntentService extends IntentService {
                 final Promise promise = Promise.get();
                 String address = Wallet.get().getAddress();
                 Credentials credentials = Wallet.loadCredentials(password);
-                CustomRawTransactionManager transactionManager = new CustomRawTransactionManager(EtherAPI.getWeb3J(),credentials);
+                CustomRawTransactionManager transactionManager = new CustomRawTransactionManager(EtherAPI.getWeb3J(), credentials);
                 ARPBank bankContract = ARPBank.load(transactionManager, gasPrice, gasLimit);
                 transactionManager.setListener(new CustomRawTransactionManager.OnHashBackListener() {
                     @Override
@@ -241,8 +241,7 @@ public class BindMinerIntentService extends IntentService {
     }
 
     private boolean unbindDevice(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS,
-                credentials, gasPrice, gasLimit);
+        ARPRegistry registry = ARPRegistry.load(credentials, gasPrice, gasLimit);
 
         TransactionReceipt unbindDeviceReceipt = registry.unbindDevice().send();
 
@@ -257,8 +256,7 @@ public class BindMinerIntentService extends IntentService {
     }
 
     private boolean bindDevice(String address, BindPromise bindPromise, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPRegistry registry = ARPRegistry.load(ARPRegistry.CONTRACT_ADDRESS,
-                credentials, gasPrice, gasLimit);
+        ARPRegistry registry = ARPRegistry.load(credentials, gasPrice, gasLimit);
 
         TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(),
                 bindPromise.getExpired(), bindPromise.getSignExpired(),
