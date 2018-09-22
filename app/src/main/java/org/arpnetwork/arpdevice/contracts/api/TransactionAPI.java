@@ -24,11 +24,18 @@ import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthEstimateGas;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.protocol.core.methods.response.EthTransaction;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.protocol.exceptions.TransactionException;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
 import org.web3j.utils.Numeric;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
+
+import static org.web3j.tx.TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH;
+import static org.web3j.tx.TransactionManager.DEFAULT_POLLING_FREQUENCY;
 
 public class TransactionAPI {
     private static final String DEFAULT_GAS_LIMIT = "400000";
@@ -70,6 +77,17 @@ public class TransactionAPI {
         String ownerAddress = Wallet.get().getAddress();
         Transaction transaction = Transaction.createEthCallTransaction(ownerAddress, contractAddress, functionString);
         return TransactionAPI.getAsyncTransactionGasLimit(transaction);
+    }
+
+    public static boolean isTransactionPending(String transactionHash) throws IOException {
+        EthTransaction transaction = EtherAPI.getWeb3J().ethGetTransactionByHash(transactionHash).send();
+        return  (transaction.getTransaction().getBlockNumberRaw() == null);
+    }
+
+    public static TransactionReceipt traceTransaction(final String transactionHash) throws IOException, TransactionException {
+        PollingTransactionReceiptProcessor processor = new PollingTransactionReceiptProcessor(
+                EtherAPI.getWeb3J(), DEFAULT_POLLING_FREQUENCY, DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+        return processor.waitForTransactionReceipt(transactionHash);
     }
 
     public static boolean isStatusOK(String status) {
