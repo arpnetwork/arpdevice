@@ -28,6 +28,7 @@ import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.device.Adb;
+import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.stream.AssetCopyHelper;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
@@ -44,6 +45,7 @@ public class CheckThread {
     private static final String TAG = "CheckThread";
     private static final int PING_INTERVAL = 800;
     private static final long DISK_REQUEST = 1024 * 1024 * 1024;
+    private static final int DELAY_START_TIMER = 2000;
     private static final String sCheckerPkgName = "org.arpnetwork.arpchecker";
     private static final String sMd5 = "2e4e4cdd8edfa310228b08b89e256847";
 
@@ -185,15 +187,20 @@ public class CheckThread {
     }
 
     private void appInstall(File file, final String packageName) {
+        final TaskHelper mTaskHelper = new TaskHelper(mContext.getApplicationContext());
+        mTaskHelper.startCheckTopTimer(DELAY_START_TIMER, DELAY_START_TIMER);
+
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
+                mTaskHelper.stopCheckTopTimer();
                 startCheckPackageTimer();
             }
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
+                mTaskHelper.stopCheckTopTimer();
                 stopCheckPackageTimer();
                 mUIHandler.obtainMessage(Constant.CHECK_INSTALL_FAILED).sendToTarget();
             }
