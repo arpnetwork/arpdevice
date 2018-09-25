@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.app.ActivityManager;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 public class BaseActivity extends AppCompatActivity {
@@ -109,6 +110,7 @@ public class BaseActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        ActivityManager.getInstance().add(this);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
         setContentView();
         initViews();
@@ -127,6 +129,8 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        ActivityManager.getInstance().remove(this);
     }
 
     @Override

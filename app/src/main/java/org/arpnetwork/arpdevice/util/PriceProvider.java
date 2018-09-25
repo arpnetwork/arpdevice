@@ -91,7 +91,7 @@ public class PriceProvider {
 
             @Override
             public void onSuccess(Response response, String result) {
-                Pattern pattern = Pattern.compile("Gas Price SafeLow \\(Gwei\\)</span>$\\s*?<div class=\"count green\">(.*?)<\\/div>", Pattern.MULTILINE);
+                Pattern pattern = Pattern.compile("Gas Price SafeLow \\(Gwei\\)</span>$\\s*?<div .*?>(.*?)<\\/div>", Pattern.MULTILINE);
                 Matcher matcher = pattern.matcher(result);
                 if (matcher.find()) {
                     priceInfo.gasPriceGwei = matcher.group(1);

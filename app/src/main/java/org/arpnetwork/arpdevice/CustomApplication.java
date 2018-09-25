@@ -22,6 +22,7 @@ import android.content.Intent;
 
 import com.activeandroid.ActiveAndroid;
 
+import org.arpnetwork.arpdevice.app.ActivityManager;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.monitor.MonitorService;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
@@ -68,7 +69,10 @@ public class CustomApplication extends Application {
 
         PreferenceManager.fini();
         NetworkHelper.fini();
+        ActivityManager.getInstance().finishActivities();
+        ActiveAndroid.dispose();
 
+        android.os.Process.killProcess(android.os.Process.myPid());
         System.exit(0);
     }
 
