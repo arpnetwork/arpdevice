@@ -24,25 +24,15 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.ui.bean.GasInfo;
-import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
-import org.arpnetwork.arpdevice.util.OKHttpUtils;
-import org.arpnetwork.arpdevice.util.SimpleCallback;
-import org.arpnetwork.arpdevice.util.UIHelper;
+import org.arpnetwork.arpdevice.util.PriceProvider;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import okhttp3.Request;
-import okhttp3.Response;
-
 public class GasFeeView extends LinearLayout {
     private static final String TAG = "GasFeeView";
-    private static final String mGasTag = "gas_price";
-    private static final BigDecimal DEFAULT_GAS_GWEI = new BigDecimal("20");
 
     private static BigDecimal mGasPriceGWei = BigDecimal.ZERO;
     private static BigDecimal mEthToYuanRate = BigDecimal.ZERO;
@@ -52,24 +42,22 @@ public class GasFeeView extends LinearLayout {
     private TextView mGasValue;
     private SeekBar mGasPriceBar;
 
-    private OKHttpUtils mOkHttpUtils;
-
     public GasFeeView(Context context) {
         super(context);
-        inflate(context, R.layout.view_gas_fee, this);
-        initView();
-        loadGasPrice();
+        init(context);
     }
 
     public GasFeeView(Context context, AttributeSet attr) {
         super(context, attr);
-        inflate(context, R.layout.view_gas_fee, this);
-        initView();
-        loadGasPrice();
+        init(context);
     }
 
     public GasFeeView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        init(context);
+    }
+
+    private void init(Context context) {
         inflate(context, R.layout.view_gas_fee, this);
         initView();
         loadGasPrice();
@@ -77,13 +65,12 @@ public class GasFeeView extends LinearLayout {
 
     public void setGasLimit(BigInteger gasLimit) {
         mGasLimit = gasLimit;
-        if (mGasPriceGWei != BigDecimal.ZERO) {
+        if (mGasPriceGWei.compareTo(BigDecimal.ZERO) > 0) {
             setGasValueText();
         }
     }
 
     public void cancelHttp() {
-        mOkHttpUtils.cancelTag(mGasTag);
     }
 
     public BigInteger getGasCost() {
@@ -95,7 +82,6 @@ public class GasFeeView extends LinearLayout {
     }
 
     private void initView() {
-        mOkHttpUtils = new OKHttpUtils();
         mGasValue = findViewById(R.id.tv_gas_value);
         mGasPriceBar = findViewById(R.id.sb_gas_price);
 
@@ -119,23 +105,10 @@ public class GasFeeView extends LinearLayout {
     }
 
     private void loadGasPrice() {
-        new OKHttpUtils().get(Config.API_URL, mGasTag, new SimpleCallback<GasInfoResponse>() {
+        PriceProvider.initOrLoadPrice(new PriceProvider.Callback() {
             @Override
-            public void onFailure(Request request, Exception e) {
-                UIHelper.showToast(getContext(), getContext().getString(R.string.load_gas_failed));
-                setGasInfo(DEFAULT_GAS_GWEI, BigDecimal.ZERO);
-            }
-
-            @Override
-            public void onSuccess(Response response, GasInfoResponse result) {
-                final GasInfo gasInfo = result.data;
-                setGasInfo(gasInfo.getGasPriceGwei(), gasInfo.getEthToYuanRate());
-            }
-
-            @Override
-            public void onError(Response response, int code, Exception e) {
-                UIHelper.showToast(getContext(), getContext().getString(R.string.load_gas_failed));
-                setGasInfo(DEFAULT_GAS_GWEI, BigDecimal.ZERO);
+            public void onPriceInfo(PriceProvider.PriceInfo priceInfo) {
+                setGasInfo(new BigDecimal(priceInfo.getGasPriceGwei()), new BigDecimal(priceInfo.getEthToYuanRate()));
             }
         });
     }
@@ -143,7 +116,7 @@ public class GasFeeView extends LinearLayout {
     private void setGasInfo(BigDecimal gasGWei, BigDecimal ethToYuanRate) {
         mGasPriceGWei = gasGWei;
         mEthToYuanRate = ethToYuanRate;
-        if (mGasLimit != BigInteger.ZERO) {
+        if (mGasLimit.compareTo(BigInteger.ZERO) > 0) {
             setGasValueText();
         }
     }

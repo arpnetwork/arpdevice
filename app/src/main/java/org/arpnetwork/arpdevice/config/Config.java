@@ -22,7 +22,8 @@ public class Config {
     public static final String PROTOCOL_VERSION = "1.0";
     public static final String DEFAULT_BLOCKNUMBER = "0";
 
-    public static final String API_URL = "https://easy-mock.com/mock/5afea0ae6ba6060f61c231d1/example";
+    public static final String API_ETH_PRICE = "https://api.etherscan.io/api?module=stats&action=ethprice";
+    public static final String API_GAS_PRICE = "https://ethgasstation.info/index.php";
     public static final String API_SERVER_INFO = "server_info";
     public static final String API_SERVER_BIND_PROMISE = "server_bindPromise";
 

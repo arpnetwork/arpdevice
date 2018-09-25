@@ -24,12 +24,9 @@ import android.text.TextUtils;
 import android.widget.SeekBar;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.ui.bean.GasInfo;
-import org.arpnetwork.arpdevice.ui.bean.GasInfoResponse;
+
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
-import org.arpnetwork.arpdevice.util.OKHttpUtils;
-import org.arpnetwork.arpdevice.util.SimpleCallback;
+import org.arpnetwork.arpdevice.util.PriceProvider;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.crypto.Credentials;
@@ -37,9 +34,6 @@ import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-
-import okhttp3.Request;
-import okhttp3.Response;
 
 public class PayEthDialog {
     private static BigDecimal mGasPriceGWei;
@@ -65,27 +59,22 @@ public class PayEthDialog {
 
         mCancelListener = negativeListener;
         showProgressBar(context, "", false);
-        new OKHttpUtils().get(Config.API_URL, new SimpleCallback<GasInfoResponse>() {
+        PriceProvider.initOrLoadPrice(new PriceProvider.Callback() {
             @Override
-            public void onFailure(Request request, Exception e) {
+            public void onPriceInfo(PriceProvider.PriceInfo priceInfo) {
                 hideProgressBar();
-                if (context == null || !context.isDestroyed()) {
-                    UIHelper.showToast(context, context.getString(R.string.load_gas_failed));
-                }
-            }
 
-            @Override
-            public void onSuccess(Response response, GasInfoResponse result) {
-                hideProgressBar();
                 if (context == null || context.isDestroyed()) return;
-                final GasInfo gasInfo = result.data;
-                final BigDecimal min = gasInfo.getGasPriceGwei();
-                final BigDecimal max = (gasInfo.getGasPriceGwei().multiply(new BigDecimal("100")));
-                BigDecimal defaultValue = gasInfo.getGasPriceGwei();
-                mGasPriceGWei = gasInfo.getGasPriceGwei();
+                BigDecimal gasPriceGwei = new BigDecimal(priceInfo.getGasPriceGwei());
+                final BigDecimal ethToYuanRateBig = new BigDecimal(priceInfo.getEthToYuanRate());
 
-                final BigDecimal mEthSpend = Util.getEthCost(gasInfo.getGasPriceGwei(), gasLimit);
-                double yuan = Util.getYuanCost(defaultValue, gasLimit, gasInfo.getEthToYuanRate());
+                final BigDecimal min = gasPriceGwei;
+                final BigDecimal max = (gasPriceGwei.multiply(new BigDecimal("100")));
+                BigDecimal defaultValue = gasPriceGwei;
+                mGasPriceGWei = gasPriceGwei;
+
+                final BigDecimal mEthSpend = Util.getEthCost(gasPriceGwei, gasLimit);
+                double yuan = Util.getYuanCost(defaultValue, gasLimit, ethToYuanRateBig);
 
                 final SeekBarDialog.Builder builder = new SeekBarDialog.Builder(context);
                 builder.setTitle(title)
@@ -100,7 +89,7 @@ public class PayEthDialog {
                                     BigDecimal divide = multiply.divide(new BigDecimal("100"));
                                     mGasPriceGWei = min.add(divide);
                                     BigDecimal mEthSpend = Util.getEthCost(mGasPriceGWei, gasLimit);
-                                    double yuan = Util.getYuanCost(mGasPriceGWei, gasLimit, gasInfo.getEthToYuanRate());
+                                    double yuan = Util.getYuanCost(mGasPriceGWei, gasLimit, ethToYuanRateBig);
                                     builder.setSeekValue(progress, String.format(context.getString(R.string.bind_eth_format), mEthSpend, yuan));
                                 }
                             }
@@ -122,13 +111,6 @@ public class PayEthDialog {
                         .setNegativeButton(context.getString(R.string.cancel), negativeListener);
                 mShowPriceDialog = builder.create();
                 mShowPriceDialog.show();
-            }
-
-            @Override
-            public void onError(Response response, int code, Exception e) {
-                if (context != null) {
-                    UIHelper.showToast(context, context.getString(R.string.load_gas_failed));
-                }
             }
         });
     }

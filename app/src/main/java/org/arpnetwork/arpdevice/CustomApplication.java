@@ -26,6 +26,7 @@ import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.monitor.MonitorService;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
+import org.arpnetwork.arpdevice.util.PriceProvider;
 
 public class CustomApplication extends Application {
     public static CustomApplication sInstance;
@@ -41,6 +42,7 @@ public class CustomApplication extends Application {
         PreferenceManager.init(this);
         NetworkHelper.init(getApplicationContext());
         ActiveAndroid.initialize(this);
+        PriceProvider.initOrLoadPrice(null);
 
         DeviceInfo.init(this);
     }

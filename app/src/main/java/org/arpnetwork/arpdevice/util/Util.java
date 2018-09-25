@@ -25,6 +25,9 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.R;
 
@@ -92,6 +95,24 @@ public class Util {
                 }
             }
         }
+    }
+
+    public static final String ObjToJson(Object obj) {
+        Gson gson = new Gson();
+
+        return gson.toJson(obj);
+    }
+
+    // Cmd cmd = Util.loadObject(msg, Cmd.class);
+    public static <T> T loadObject(String json, Class<T> klass) {
+        T resp = null;
+        Gson mGson = new Gson();
+        try {
+            resp = mGson.fromJson(json, klass);
+        } catch (JsonSyntaxException e) {
+        }
+
+        return resp;
     }
 
     public static String md5(byte[] data) {
