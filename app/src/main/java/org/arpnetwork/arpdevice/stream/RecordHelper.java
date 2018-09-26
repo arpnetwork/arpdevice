@@ -35,13 +35,14 @@ public class RecordHelper {
     private static final String TAG = "RecordHelper";
     private static final boolean DEBUG = Config.DEBUG;
 
+    private static final int VIDEO_WIDTH = 720;
+
     private RawChannel mVideoShell;
     private final ByteBuf mBuffer = Unpooled.buffer(1024 * 2);
 
     public void startRecord(int quality, Connection connection) {
-        int width = 720;
         int height = getVideoHeight();
-        DataServer.getInstance().onVideoChanged(width, height, quality);
+        DataServer.getInstance().onVideoChanged(VIDEO_WIDTH, height, quality);
 
         mVideoShell = connection.openExec(getRecordCmd());
         mVideoShell.setListener(new RawChannel.RawListener() {
@@ -66,7 +67,6 @@ public class RecordHelper {
 
                     DataServer.getInstance().enqueueAVPacket(byteBuf);
                     mBuffer.discardReadBytes();
-
                 } while (mBuffer.readableBytes() > 4);
             }
         });
@@ -84,16 +84,16 @@ public class RecordHelper {
     }
 
     private String getRecordCmd() {
-        String cmd = "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/arpcap -s 720x%d --crop-top %d " +
-                "--crop-bottom %d -p pipe://1";
+        String cmd = "LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/arpcap -s %dx%d " +
+                "--crop-top %d --crop-bottom %d --preset=ultrafast --bitrate=2048 -p pipe://1";
         Context context = CustomApplication.sInstance;
-        return String.format(Locale.US, cmd, getVideoHeight(), UIHelper.getStatusbarHeight(context), UIHelper.getVirtualBarHeight(context));
+        return String.format(Locale.US, cmd, VIDEO_WIDTH, getVideoHeight(), UIHelper.getStatusbarHeight(context), UIHelper.getVirtualBarHeight(context));
     }
 
     private int getVideoHeight() {
         Context context = CustomApplication.sInstance;
         int videoHeight = (int) ((UIHelper.getHeightNoVirtualBar(context) - UIHelper.getStatusbarHeight(context))
-                / (double) UIHelper.getWidthNoVirtualBar(context) * 720);
+                / (double) UIHelper.getWidthNoVirtualBar(context) * VIDEO_WIDTH);
         return videoHeight;
     }
 }
