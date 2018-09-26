@@ -112,19 +112,22 @@ public class TaskHelper {
     }
 
     public void getInstalledApps(final OnGetInstalledAppsListener listener) {
+        final List<String> list = new ArrayList<>();
         mAdb.getInstalledApps(new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 if (data != null) {
                     String apps = new String(data);
                     String[] lines = apps.split("\n");
-                    List<String> list = new ArrayList<>();
+
                     for (int i = 0; i < lines.length; i++) {
-                        String line = lines[i];
-                        if (line.startsWith("package:")) {
-                            list.add(line.substring(8));
-                        } else {
-                            break;
+                        String app = lines[i];
+                        if (app.startsWith("package:")) {
+                            app = app.substring(8);
+                        }
+
+                        if (!TextUtils.isEmpty(app)) {
+                            list.add(app);
                         }
                     }
 
