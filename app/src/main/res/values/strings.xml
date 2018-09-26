@@ -57,6 +57,7 @@
     <string name="import_wallet">Import wallet</string>
 
     <string name="import_wallet_tip">Enter private key, mind the capitals</string>
+    <string name="import_wallet_tip2">Every wallet can bind only one device</string>
     <string name="private_key">Enter private key</string>
     <string name="password_setting">Set password (at least 8 character)</string>
     <string name="wallet_password">Password</string>

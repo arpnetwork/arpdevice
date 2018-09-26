@@ -141,19 +141,30 @@ public abstract class BaseFragment extends Fragment {
     protected void showErrorAlertDialog(int messageId) {
         if (getContext() != null) {
             String message = getContext().getString(messageId);
-            showErrorAlertDialog(null, message);
+            showErrorAlertDialog(null, message, null);
         }
     }
 
-    protected void showErrorAlertDialog(String title, String message) {
+    protected void showErrorAlertDialog(int messageId, final DialogInterface.OnClickListener positiveButtonListener) {
+        if (getContext() != null) {
+            String message = getContext().getString(messageId);
+            showErrorAlertDialog(null, message, positiveButtonListener);
+        }
+    }
+
+    protected void showErrorAlertDialog(String title, String message, final DialogInterface.OnClickListener positiveButtonListener) {
         if (!alertShown && getContext() != null) {
             alertShown = true;
             new AlertDialog.Builder(getContext())
+                    .setTitle(title)
                     .setMessage(message)
                     .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             alertShown = false;
+                            if (positiveButtonListener != null) {
+                                positiveButtonListener.onClick(dialog, which);
+                            }
                         }
                     })
                     .setCancelable(false)

@@ -172,16 +172,24 @@ public class MyWalletFragment extends BaseFragment {
                 BankAllowance allowance = null;
                 try {
                     allowance = ARPBank.allowance(address, ARPRegistry.CONTRACT_ADDRESS);
-                    if (allowance == null) return;
-                    BigInteger allowanceAmount = allowance.amount;
-                    mDepositAmount = ARPBank.balanceOf(address);
-                    mTotalAmount = allowanceAmount.add(mDepositAmount);
-                    depositBalance.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            depositBalance.setText(String.format(getString(R.string.float_arp_token), Util.getHumanicAmount(mTotalAmount)));
-                        }
-                    });
+                    if (allowance == null) {
+                        depositBalance.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                depositBalance.setText(String.format(getString(R.string.float_arp_token), 0.0f));
+                            }
+                        });
+                    } else {
+                        BigInteger allowanceAmount = allowance.amount;
+                        mDepositAmount = ARPBank.balanceOf(address);
+                        mTotalAmount = allowanceAmount.add(mDepositAmount);
+                        depositBalance.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                depositBalance.setText(String.format(getString(R.string.float_arp_token), Util.getHumanicAmount(mTotalAmount)));
+                            }
+                        });
+                    }
                 } catch (IOException e) {
                     depositBalance.post(new Runnable() {
                         @Override
@@ -204,6 +212,8 @@ public class MyWalletFragment extends BaseFragment {
 
                     @Override
                     public void onExchange(BigInteger unexchanged) {
+                        if (getActivity() == null) return;
+
                         Bundle bundle = new Bundle();
                         bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
                         bundle.putString(KEY_EXCHANGE_AMOUNT, unexchanged.toString());
@@ -212,6 +222,8 @@ public class MyWalletFragment extends BaseFragment {
 
                     @Override
                     public void onIgnore() {
+                        if (getActivity() == null) return;
+
                         checkAuthor();
                     }
                 });
@@ -305,48 +317,52 @@ public class MyWalletFragment extends BaseFragment {
     }
 
     private void getUnexchange() {
-        BigInteger unexchanged = BigInteger.ZERO;
-        try {
-            unexchanged = ARPBank.getUnexchange();
-        } catch (Exception e) {
-            new AlertDialog.Builder(getContext())
-                    .setMessage(R.string.tip_changing_wallet)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            resetWallet();
-                        }
-                    })
-                    .setCancelable(true)
-                    .show();
-            return;
-        }
+        ARPBank.getUnexchangeAsync(new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                if (getActivity() == null) return;
 
-        if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
-            String message = String.format(getString(R.string.unexchange_tip_changing_wallet),
-                    Convert.fromWei(unexchanged.toString(), Convert.Unit.ETHER).floatValue());
-            MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
-            builder.setTitle(getString(R.string.exchange_unchanged_promise_found))
-                    .setMessage(message)
-                    .setPositiveButton(getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent();
-                            intent.setClass(getActivity(), MyEarningActivity.class);
-                            startActivity(intent);
-                        }
-                    })
-                    .setNegativeButton(getString(R.string.exchange_change_wallet_ignore), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            resetWallet();
-                        }
-                    })
-                    .create()
-                    .show();
-        } else {
-            resetWallet();
-        }
+                if (result != null && result.compareTo(BigInteger.ZERO) > 0) {
+                    String message = String.format(getString(R.string.unexchange_tip_changing_wallet),
+                            Convert.fromWei(result.toString(), Convert.Unit.ETHER).floatValue());
+                    MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
+                    builder.setTitle(getString(R.string.exchange_unchanged_promise_found))
+                            .setMessage(message)
+                            .setPositiveButton(getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Intent intent = new Intent();
+                                    intent.setClass(getActivity(), MyEarningActivity.class);
+                                    startActivity(intent);
+                                }
+                            })
+                            .setNegativeButton(getString(R.string.exchange_change_wallet_ignore), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    resetWallet();
+                                }
+                            })
+                            .create()
+                            .show();
+                } else {
+                    resetWallet();
+                }
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                new AlertDialog.Builder(getContext())
+                        .setMessage(R.string.tip_changing_wallet)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                resetWallet();
+                            }
+                        })
+                        .setCancelable(true)
+                        .show();
+            }
+        });
     }
 
     private void getARPBalance(String address) {

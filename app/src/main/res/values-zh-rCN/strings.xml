@@ -66,6 +66,7 @@
     <string name="import_wallet">导入钱包</string>
 
     <string name="import_wallet_tip">输入私钥文件内容至输入框，请留意字符大小写</string>
+    <string name="import_wallet_tip2">每个钱包地址只能绑定一台设备</string>
     <string name="private_key">请输入明文私钥</string>
     <string name="password_setting">设置密码（至少8位字符）</string>
     <string name="wallet_password">钱包密码</string>

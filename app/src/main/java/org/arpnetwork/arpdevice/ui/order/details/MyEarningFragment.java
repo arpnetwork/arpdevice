@@ -37,6 +37,7 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
@@ -248,21 +249,27 @@ public class MyEarningFragment extends BaseFragment {
 
     private void getUnexchange() {
         mUnexchanged = BigInteger.ZERO;
-        try {
-            mUnexchanged = ARPBank.getUnexchange();
-        } catch (Exception e) {
-            new AlertDialog.Builder(getContext())
-                    .setMessage(R.string.network_error)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            finish();
-                        }
-                    })
-                    .setCancelable(true)
-                    .show();
-        }
-        mHeaderView.setUnexchanged(Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue());
+        ARPBank.getUnexchangeAsync(new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                mUnexchanged = result;
+                mHeaderView.setUnexchanged(Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue());
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+                new AlertDialog.Builder(getContext())
+                        .setMessage(R.string.network_error)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .setCancelable(true)
+                        .show();
+            }
+        });
     }
 
     private void setTopAmount(BigInteger cid, BigInteger amount) {

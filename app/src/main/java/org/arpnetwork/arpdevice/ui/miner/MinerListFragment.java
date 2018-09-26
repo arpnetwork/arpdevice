@@ -221,11 +221,15 @@ public class MinerListFragment extends BaseFragment {
                 new PromiseDialog.PromiseListener() {
                     @Override
                     public void onError() {
+                        if (getActivity() == null) return;
+
                         finish();
                     }
 
                     @Override
                     public void onExchange(BigInteger unexchanged) {
+                        if (getActivity() == null) return;
+
                         Bundle bundle = new Bundle();
                         bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
                         bundle.putString(KEY_EXCHANGE_AMOUNT, unexchanged.toString());
@@ -235,6 +239,8 @@ public class MinerListFragment extends BaseFragment {
 
                     @Override
                     public void onIgnore() {
+                        if (getActivity() == null) return;
+
                         showMinerPage(miner);
                     }
                 });

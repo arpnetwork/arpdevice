@@ -8,13 +8,22 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"
         android:layout_marginLeft="@dimen/plain_margin"
         android:layout_marginRight="@dimen/plain_margin"
         android:layout_marginTop="20dp"
         android:gravity="center_horizontal"
         android:text="@string/import_wallet_tip"
         android:textColor="@color/register_step_text_color" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="@dimen/plain_margin"
+        android:layout_marginRight="@dimen/plain_margin"
+        android:gravity="center_horizontal"
+        android:text="@string/import_wallet_tip2"
+        android:textColor="@color/colorPrimary" />
 
     <LinearLayout
         android:id="@+id/layout_container"

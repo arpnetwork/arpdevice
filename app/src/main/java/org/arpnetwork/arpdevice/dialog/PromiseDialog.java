@@ -22,6 +22,7 @@ import android.content.DialogInterface;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
@@ -29,51 +30,55 @@ import java.math.BigInteger;
 public class PromiseDialog {
     public interface PromiseListener {
         void onError();
+
         void onExchange(BigInteger unexchanged);
+
         void onIgnore();
     }
 
-    public static void show(Context context, int messageId, String ignoreText, final PromiseListener listener) {
-        BigInteger unexchanged = null;
-        try {
-            unexchanged = ARPBank.getUnexchange();
-        } catch (Exception e) {
-            new AlertDialog.Builder(context)
-                    .setMessage(R.string.network_error)
-                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            listener.onError();
-                        }
-                    })
-                    .setCancelable(false)
-                    .show();
-            return;
-        }
-        if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
+    public static void show(final Context context, final int messageId, final String ignoreText, final PromiseListener listener) {
+        ARPBank.getUnexchangeAsync(new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                if (result.compareTo(BigInteger.ZERO) > 0) {
+                    String message = String.format(context.getString(messageId),
+                            Convert.fromWei(result.toString(), Convert.Unit.ETHER).floatValue());
+                    final MessageDialog.Builder builder = new MessageDialog.Builder(context);
+                    final BigInteger finalUnexchanged = result;
+                    builder.setTitle(context.getString(R.string.exchange_unchanged_promise_found))
+                            .setMessage(message)
+                            .setPositiveButton(context.getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    listener.onExchange(finalUnexchanged);
+                                }
+                            })
+                            .setNegativeButton(ignoreText, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    listener.onIgnore();
+                                }
+                            })
+                            .create()
+                            .show();
+                } else {
+                    listener.onIgnore();
+                }
+            }
 
-            String message = String.format(context.getString(messageId),
-                    Convert.fromWei(unexchanged.toString(), Convert.Unit.ETHER).floatValue());
-            final MessageDialog.Builder builder = new MessageDialog.Builder(context);
-            final BigInteger finalUnexchanged = unexchanged;
-            builder.setTitle(context.getString(R.string.exchange_unchanged_promise_found))
-                    .setMessage(message)
-                    .setPositiveButton(context.getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            listener.onExchange(finalUnexchanged);
-                        }
-                    })
-                    .setNegativeButton(ignoreText, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            listener.onIgnore();
-                        }
-                    })
-                    .create()
-                    .show();
-        } else {
-            listener.onIgnore();
-        }
+            @Override
+            public void onFail(Throwable throwable) {
+                new AlertDialog.Builder(context)
+                        .setMessage(R.string.network_error)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                listener.onError();
+                            }
+                        })
+                        .setCancelable(false)
+                        .show();
+            }
+        });
     }
 }

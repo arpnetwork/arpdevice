@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.ui.miner;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -166,7 +167,12 @@ public class BindMinerFragment extends BaseFragment {
                 if (getActivity() == null) return;
 
                 mProgressView.setVisibility(View.GONE);
-                showErrorAlertDialog(R.string.network_error);
+                showErrorAlertDialog(R.string.network_error, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
             }
         });
     }
@@ -250,7 +256,12 @@ public class BindMinerFragment extends BaseFragment {
                 if (getActivity() == null) return;
 
                 mProgressView.setVisibility(View.GONE);
-                showErrorAlertDialog(R.string.network_error);
+                showErrorAlertDialog(R.string.network_error, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
             }
         });
     }
@@ -314,12 +325,22 @@ public class BindMinerFragment extends BaseFragment {
                                     UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                 }
                             } else {
-                                showErrorAlertDialog(R.string.bind_apply_expired);
+                                showErrorAlertDialog(R.string.bind_apply_expired, new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        finish();
+                                    }
+                                });
                             }
                         }
                     });
                 } else {
-                    showErrorAlertDialog(R.string.load_promise_failed);
+                    showErrorAlertDialog(R.string.load_promise_failed, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
                 }
             }
 
@@ -328,7 +349,12 @@ public class BindMinerFragment extends BaseFragment {
                 if (getActivity() == null) return;
 
                 mProgressView.setVisibility(View.GONE);
-                showErrorAlertDialog(R.string.load_promise_failed);
+                showErrorAlertDialog(R.string.load_promise_failed, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
             }
 
             @Override
@@ -336,7 +362,12 @@ public class BindMinerFragment extends BaseFragment {
                 if (getActivity() == null) return;
 
                 mProgressView.setVisibility(View.GONE);
-                showErrorAlertDialog(R.string.load_promise_failed);
+                showErrorAlertDialog(R.string.load_promise_failed, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
             }
         });
     }
@@ -346,11 +377,15 @@ public class BindMinerFragment extends BaseFragment {
                 getString(R.string.exchange_unbind_miner_ignore), new PromiseDialog.PromiseListener() {
                     @Override
                     public void onError() {
+                        if (getActivity() == null) return;
+
                         finish();
                     }
 
                     @Override
                     public void onExchange(BigInteger unexchanged) {
+                        if (getActivity() == null) return;
+
                         Bundle bundle = new Bundle();
                         bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
                         bundle.putString(KEY_EXCHANGE_AMOUNT, unexchanged.toString());
@@ -359,6 +394,8 @@ public class BindMinerFragment extends BaseFragment {
 
                     @Override
                     public void onIgnore() {
+                        if (getActivity() == null) return;
+
                         startUnbindService(mPasswordText.getText().toString());
                         finish();
                     }
