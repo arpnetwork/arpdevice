@@ -30,6 +30,7 @@ import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.BankAllowanceTask;
 import org.arpnetwork.arpdevice.contracts.tasks.BankBalanceTask;
+import org.arpnetwork.arpdevice.contracts.tasks.GetUnexchangeTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
@@ -217,6 +218,11 @@ public class ARPBank extends Contract {
 
         EthLog ethLog = EtherAPI.getWeb3J().ethGetLogs(ethFilter).sendAsync().get();
         return ethLog.getLogs();
+    }
+
+    public static void getUnexchangeAsync(final OnValueResult<BigInteger> onResult) {
+        GetUnexchangeTask task = new GetUnexchangeTask(onResult);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     public static BigInteger getUnexchange() throws Exception {
