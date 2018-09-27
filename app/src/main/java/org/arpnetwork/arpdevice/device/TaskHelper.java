@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class TaskHelper {
     private static final String TAG = "TaskHelper";
@@ -109,6 +111,15 @@ public class TaskHelper {
             mAdb.clearApplicationUserData(mPackageName);
             mPackageName = null;
         }
+
+        getTopTask(new OnGetTopTaskListener() {
+            @Override
+            public void onGetTopTask(String pkgName) {
+                if (!pkgName.equals(mContext.getPackageName())) {
+                    mAdb.killApp(pkgName);
+                }
+            }
+        });
     }
 
     public void getInstalledApps(final OnGetInstalledAppsListener listener) {
@@ -181,7 +192,7 @@ public class TaskHelper {
                         int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
                         int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
                         sendTouch(x, y);
-                    } else {
+                    } else if (!TextUtils.isEmpty(topPackage)) {
                         stopCheckTopTimer();
                         onTopTaskIllegal();
                     }
@@ -195,13 +206,21 @@ public class TaskHelper {
     }
 
     private String getTopPackage(String topTaskPackages) {
+        String pkgName = "";
         String[] lines = topTaskPackages.split("\n");
         String lastLine = lines[lines.length - 1];
         try {
-            return lastLine.split(" ")[1];
+            String line = lastLine.split(" ")[1];
+            if (!TextUtils.isEmpty(line)) {
+                Pattern p = Pattern.compile("^.+\\..+$");
+                Matcher m = p.matcher(line);
+                if (m.matches()) {
+                    pkgName = line;
+                }
+            }
         } catch (ArrayIndexOutOfBoundsException e) {
-            return "";
         }
+        return pkgName;
     }
 
     private void sendTouch(int x, int y) {
