@@ -17,15 +17,43 @@
 package org.arpnetwork.arpdevice.ui.order.receive;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.WindowManager;
 
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
+import org.arpnetwork.arpdevice.util.UIHelper;
 
 public class ReceiveOrderActivity extends BaseActivity {
+    private float mEventY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
 
         setContentFragment(ReceiveOrderFragment.class);
+    }
+
+    @Override
+    protected void onDestroy() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        super.onDestroy();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                mEventY = ev.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                if (mEventY <= UIHelper.getStatusbarHeight(getApplicationContext()) && ev.getY() > mEventY + 10) {
+                    finish();
+                    return true;
+                }
+                mEventY = 0;
+                break;
+        }
+        return super.dispatchTouchEvent(ev);
     }
 }
