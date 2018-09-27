@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.contracts.api;
 
+import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
@@ -33,9 +34,6 @@ import org.web3j.utils.Numeric;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.concurrent.ExecutionException;
-
-import static org.web3j.tx.TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH;
-import static org.web3j.tx.TransactionManager.DEFAULT_POLLING_FREQUENCY;
 
 public class TransactionAPI {
     private static final String DEFAULT_GAS_LIMIT = "400000";
@@ -81,12 +79,12 @@ public class TransactionAPI {
 
     public static boolean isTransactionPending(String transactionHash) throws IOException {
         EthTransaction transaction = EtherAPI.getWeb3J().ethGetTransactionByHash(transactionHash).send();
-        return  (transaction.getTransaction().getBlockNumberRaw() == null);
+        return transaction.getTransaction().getBlockNumberRaw() == null;
     }
 
-    public static TransactionReceipt traceTransaction(final String transactionHash) throws IOException, TransactionException {
+    public static TransactionReceipt pollingTransaction(final String transactionHash) throws IOException, TransactionException {
         PollingTransactionReceiptProcessor processor = new PollingTransactionReceiptProcessor(
-                EtherAPI.getWeb3J(), DEFAULT_POLLING_FREQUENCY, DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+                EtherAPI.getWeb3J(), Config.DEFAULT_POLLING_FREQUENCY, Config.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
         return processor.waitForTransactionReceipt(transactionHash);
     }
 

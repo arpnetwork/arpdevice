@@ -19,6 +19,7 @@ package org.arpnetwork.arpdevice.ui.miner;
 import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.arpnetwork.arpdevice.CustomApplication;
@@ -30,6 +31,7 @@ import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.database.EarningRecord;
+import org.arpnetwork.arpdevice.database.TransactionRecord;
 import org.arpnetwork.arpdevice.ui.bean.BindPromise;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.web3j.crypto.Credentials;
@@ -38,6 +40,8 @@ import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
 
+import static org.arpnetwork.arpdevice.config.Config.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH;
+import static org.arpnetwork.arpdevice.config.Config.DEFAULT_POLLING_FREQUENCY;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_ADDRESS;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_BINDPROMISE;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
@@ -45,6 +49,7 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_GASLIMIT;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_GASPRICE;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_TX_HASH;
 import static org.arpnetwork.arpdevice.contracts.ARPBank.DEPOSIT_ARP_NUMBER;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_FAILED;
 import static org.arpnetwork.arpdevice.ui.miner.StateHolder.STATE_APPROVE_SUCCESS;
@@ -79,7 +84,7 @@ public class BindMinerIntentService extends IntentService {
     public static final int OPERATION_CASH = 6;
     public static final int OPERATION_WITHDRAW = 7;
 
-    private BroadcastNotifier mBroadcaster = new BroadcastNotifier(this);
+    private BroadcastNotifier mBroadcaster = new BroadcastNotifier();
 
     public BindMinerIntentService() {
         super("BindMinerIntentService");
@@ -87,10 +92,23 @@ public class BindMinerIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        final int type = intent.getExtras().getInt(KEY_OP);
-        String password = intent.getExtras().getString(KEY_PASSWD);
-        BigInteger gasPrice = new BigInteger(intent.getExtras().getString(KEY_GASPRICE));
-        BigInteger gasLimit = new BigInteger(intent.getExtras().getString(KEY_GASLIMIT));
+        String dbTxHash = intent.getExtras().getString(KEY_TX_HASH);
+        int type = intent.getExtras().getInt(KEY_OP);
+
+        String password = null;
+        BigInteger gasPrice = null;
+        BigInteger gasLimit = null;
+        CustomRawTransactionManager transactionManager = null;
+
+        if (TextUtils.isEmpty(dbTxHash)) {
+            password = intent.getExtras().getString(KEY_PASSWD);
+            gasPrice = new BigInteger(intent.getExtras().getString(KEY_GASPRICE));
+            gasLimit = new BigInteger(intent.getExtras().getString(KEY_GASLIMIT));
+
+            Credentials credentials = Wallet.loadCredentials(password);
+            transactionManager = new CustomRawTransactionManager(EtherAPI.getWeb3J(), credentials,
+                    DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH, DEFAULT_POLLING_FREQUENCY); // 1 hour waiting.
+        }
 
         switch (type) {
             case OPERATION_UNBIND: {
@@ -99,7 +117,19 @@ public class BindMinerIntentService extends IntentService {
 
                 boolean result = false;
                 try {
-                    result = unbindDevice(Wallet.loadCredentials(password), gasPrice, gasLimit);
+                    if (!TextUtils.isEmpty(dbTxHash)) {
+                        TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
+                        result = TransactionAPI.isStatusOK(receipt.getStatus());
+
+                        deleteHash(dbTxHash, OPERATION_UNBIND);
+                    } else {
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_UNBIND, address);
+                        transactionManager.setListener(hashBackListener);
+                        result = unbindDevice(transactionManager, gasPrice, gasLimit);
+
+                        String hash = hashBackListener.getTxHash();
+                        deleteHash(hash, OPERATION_UNBIND);
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "unbind device error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_UNBIND_FAILED, type, address);
@@ -115,10 +145,22 @@ public class BindMinerIntentService extends IntentService {
                 mBroadcaster.broadcastWithState(STATE_BIND_RUNNING, type, address);
 
                 boolean result = false;
-                BindPromise bindPromise = (BindPromise) intent.getSerializableExtra(KEY_BINDPROMISE);
                 try {
-                    result = bindDevice(address, bindPromise, Wallet.loadCredentials(password),
-                            gasPrice, gasLimit);
+                    if (!TextUtils.isEmpty(dbTxHash)) {
+                        TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
+                        result = TransactionAPI.isStatusOK(receipt.getStatus());
+
+                        deleteHash(dbTxHash, OPERATION_BIND);
+                    } else {
+                        BindPromise bindPromise = (BindPromise) intent.getSerializableExtra(KEY_BINDPROMISE);
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_BIND, address);
+                        transactionManager.setListener(hashBackListener);
+                        result = bindDevice(address, bindPromise, transactionManager,
+                                gasPrice, gasLimit);
+
+                        String hash = hashBackListener.getTxHash();
+                        deleteHash(hash, OPERATION_BIND);
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "bind device error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_BIND_FAILED, type, address);
@@ -134,7 +176,19 @@ public class BindMinerIntentService extends IntentService {
 
                 boolean result = false;
                 try {
-                    result = arpApprove(Wallet.loadCredentials(password), gasPrice, gasLimit);
+                    if (!TextUtils.isEmpty(dbTxHash)) {
+                        TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
+                        result = TransactionAPI.isStatusOK(receipt.getStatus());
+
+                        deleteHash(dbTxHash, OPERATION_ARP_APPROVE);
+                    } else {
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_ARP_APPROVE);
+                        transactionManager.setListener(hashBackListener);
+                        result = arpApprove(transactionManager, gasPrice, gasLimit);
+
+                        String hash = hashBackListener.getTxHash();
+                        deleteHash(hash, OPERATION_ARP_APPROVE);
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "arpApprove, error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_APPROVE_FAILED, type, null);
@@ -150,7 +204,19 @@ public class BindMinerIntentService extends IntentService {
 
                 boolean result = false;
                 try {
-                    result = bankApprove(Wallet.loadCredentials(password), gasPrice, gasLimit);
+                    if (!TextUtils.isEmpty(dbTxHash)) {
+                        TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
+                        result = TransactionAPI.isStatusOK(receipt.getStatus());
+
+                        deleteHash(dbTxHash, OPERATION_BANK_APPROVE);
+                    } else {
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_BANK_APPROVE);
+                        transactionManager.setListener(hashBackListener);
+                        result = bankApprove(transactionManager, gasPrice, gasLimit);
+
+                        String hash = hashBackListener.getTxHash();
+                        deleteHash(hash, OPERATION_BANK_APPROVE);
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "bank approve error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_FAILED, type, null);
@@ -166,7 +232,19 @@ public class BindMinerIntentService extends IntentService {
 
                 boolean result = false;
                 try {
-                    result = deposit(Wallet.loadCredentials(password), gasPrice, gasLimit);
+                    if (!TextUtils.isEmpty(dbTxHash)) {
+                        TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
+                        result = TransactionAPI.isStatusOK(receipt.getStatus());
+
+                        deleteHash(dbTxHash, OPERATION_BANK_DEPOSIT);
+                    } else {
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_BANK_DEPOSIT);
+                        transactionManager.setListener(hashBackListener);
+                        result = deposit(transactionManager, gasPrice, gasLimit);
+
+                        String hash = hashBackListener.getTxHash();
+                        deleteHash(hash, OPERATION_BANK_DEPOSIT);
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "deposit error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_DEPOSIT_FAILED, type, null);
@@ -183,29 +261,35 @@ public class BindMinerIntentService extends IntentService {
                 final BigInteger amount = new BigInteger(intent.getExtras().getString(KEY_EXCHANGE_AMOUNT));
                 final Promise promise = Promise.get();
                 String address = Wallet.get().getAddress();
-                Credentials credentials = Wallet.loadCredentials(password);
-                CustomRawTransactionManager transactionManager = new CustomRawTransactionManager(EtherAPI.getWeb3J(), credentials);
-                ARPBank bankContract = ARPBank.load(transactionManager, gasPrice, gasLimit);
-                transactionManager.setListener(new CustomRawTransactionManager.OnHashBackListener() {
-                    @Override
-                    public void onHash(String transactionHash) {
-                        savePendingToDb(transactionHash, amount);
-                    }
-                });
+
                 boolean result = false;
                 try {
-                    result = cash(bankContract, promise, address);
+                    if (!TextUtils.isEmpty(dbTxHash)) {
+                        TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
+                        result = TransactionAPI.isStatusOK(receipt.getStatus());
+
+                        deleteHash(dbTxHash, OPERATION_CASH);
+                    } else {
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_CASH, amount);
+                        transactionManager.setListener(hashBackListener);
+                        result = cash(promise, address, transactionManager, gasPrice, gasLimit);
+
+                        String hash = hashBackListener.getTxHash();
+                        deleteHash(hash, OPERATION_CASH);
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "cash error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_BANK_CASH_FAILED, type, null);
                     break;
                 }
+
                 mBroadcaster.broadcastWithState(result ? STATE_BANK_CASH_SUCCESS : STATE_BANK_CASH_FAILED, type, null);
                 break;
             }
 
             case OPERATION_WITHDRAW: {
                 mBroadcaster.broadcastWithState(STATE_BANK_WITHDRAW_RUNNING, type, null);
+
                 BigInteger amount;
                 String amountString = intent.getExtras().getString(KEY_EXCHANGE_AMOUNT);
                 if (amountString != null) {
@@ -213,14 +297,28 @@ public class BindMinerIntentService extends IntentService {
                 } else {
                     amount = Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
                 }
+
                 boolean result = false;
                 try {
-                    result = withdraw(amount, Wallet.loadCredentials(password), gasPrice, gasLimit);
+                    if (!TextUtils.isEmpty(dbTxHash)) {
+                        TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
+                        result = TransactionAPI.isStatusOK(receipt.getStatus());
+
+                        deleteHash(dbTxHash, OPERATION_WITHDRAW);
+                    } else {
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_WITHDRAW);
+                        transactionManager.setListener(hashBackListener);
+                        result = withdraw(amount, transactionManager, gasPrice, gasLimit);
+
+                        String hash = hashBackListener.getTxHash();
+                        deleteHash(hash, OPERATION_WITHDRAW);
+                    }
                 } catch (Exception e) {
                     Log.e(TAG, "withdraw error:" + e.getCause());
                     mBroadcaster.broadcastWithState(STATE_BANK_WITHDRAW_FAILED, type, null);
                     break;
                 }
+
                 mBroadcaster.broadcastWithState(result ? STATE_BANK_WITHDRAW_SUCCESS : STATE_BANK_WITHDRAW_FAILED, type, null);
                 break;
             }
@@ -240,8 +338,21 @@ public class BindMinerIntentService extends IntentService {
         localRecord.saveRecord();
     }
 
-    private boolean unbindDevice(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPRegistry registry = ARPRegistry.load(credentials, gasPrice, gasLimit);
+    private void saveHashToDb(String transactionHash, int opType, String args) {
+        TransactionRecord record = TransactionRecord.get(transactionHash);
+        if (record != null) {
+            record.opType = opType;
+            record.args = args;
+            record.saveRecord();
+        }
+    }
+
+    private void deleteHash(String transactionHash, int opType) {
+        TransactionRecord.delete(transactionHash, opType);
+    }
+
+    private boolean unbindDevice(CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPRegistry registry = ARPRegistry.load(manager, gasPrice, gasLimit);
 
         TransactionReceipt unbindDeviceReceipt = registry.unbindDevice().send();
 
@@ -255,8 +366,8 @@ public class BindMinerIntentService extends IntentService {
         return result;
     }
 
-    private boolean bindDevice(String address, BindPromise bindPromise, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPRegistry registry = ARPRegistry.load(credentials, gasPrice, gasLimit);
+    private boolean bindDevice(String address, BindPromise bindPromise, CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPRegistry registry = ARPRegistry.load(manager, gasPrice, gasLimit);
 
         TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(),
                 bindPromise.getExpired(), bindPromise.getSignExpired(),
@@ -270,32 +381,69 @@ public class BindMinerIntentService extends IntentService {
         return result;
     }
 
-    private boolean arpApprove(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPContract contract = ARPContract.load(credentials, gasPrice, gasLimit);
+    private boolean arpApprove(CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPContract contract = ARPContract.load(manager, gasPrice, gasLimit);
         TransactionReceipt receipt = contract.approve().send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
-    private boolean bankApprove(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
+    private boolean bankApprove(CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPBank bank = ARPBank.load(manager, gasPrice, gasLimit);
         TransactionReceipt receipt = bank.approve(ARPRegistry.CONTRACT_ADDRESS, BigInteger.ZERO, "0").send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
-    private boolean deposit(Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
+    private boolean deposit(CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPBank bank = ARPBank.load(manager, gasPrice, gasLimit);
         TransactionReceipt receipt = bank.deposit(new BigInteger(Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toString())).send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
-    private Boolean cash(ARPBank bank, Promise promise, String address) throws Exception {
+    private Boolean cash(Promise promise, String address, CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPBank bank = ARPBank.load(manager, gasPrice, gasLimit);
         TransactionReceipt receipt = bank.cash(promise, address).send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
-    private Boolean withdraw(BigInteger amount, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
-        ARPBank bank = ARPBank.load(credentials, gasPrice, gasLimit);
+    private Boolean withdraw(BigInteger amount, CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
+        ARPBank bank = ARPBank.load(manager, gasPrice, gasLimit);
         TransactionReceipt receipt = bank.withdraw(amount).send();
         return TransactionAPI.isStatusOK(receipt.getStatus());
+    }
+
+    private class HashBackListener implements CustomRawTransactionManager.OnHashBackListener {
+        private String txHash;
+        private int opType;
+
+        private BigInteger amount;
+        private String args;
+
+        public HashBackListener(int opType) {
+            this(opType, "");
+        }
+
+        public HashBackListener(int opType, String args) {
+            this.opType = opType;
+            this.args = args;
+        }
+
+        public HashBackListener(int opType, BigInteger amount) {
+            this.opType = opType;
+            this.amount = amount;
+        }
+
+        @Override
+        public void onHash(String transactionHash) {
+            Log.d(TAG, "HashBackListener onHash = " + transactionHash);
+            txHash = transactionHash;
+            saveHashToDb(transactionHash, opType, args);
+            if (opType == OPERATION_CASH) {
+                savePendingToDb(transactionHash, amount);
+            }
+        }
+
+        private String getTxHash() {
+            return txHash;
+        }
     }
 }

@@ -16,7 +16,19 @@
 
 package org.arpnetwork.arpdevice.ui.miner;
 
+import android.content.Context;
+import android.content.Intent;
+
+import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
+import org.arpnetwork.arpdevice.database.TransactionRecord;
+
+import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.arpnetwork.arpdevice.config.Constant.KEY_ADDRESS;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
+import static org.arpnetwork.arpdevice.config.Constant.KEY_TX_HASH;
 
 public class StateHolder {
     public static final int STATE_APPROVE_RUNNING = 1;
@@ -72,5 +84,38 @@ public class StateHolder {
 
     public static void clearAllState() {
         sTaskStateMap.clear();
+    }
+
+    public static void syncLocalState(final Context context) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<TransactionRecord> transactionRecords = TransactionRecord.findAll();
+                for (final TransactionRecord record : transactionRecords) {
+                    String txHash = record.hash;
+                    try {
+                        boolean pending = TransactionAPI.isTransactionPending(txHash);
+                        if (pending) {
+                            startService(context, txHash, record.opType, record.args);
+                        } else {
+                            deleteHash(txHash, record.opType);
+                        }
+                    } catch (IOException e) {
+                    }
+                }
+            }
+        }).start();
+    }
+
+    private static void startService(final Context context, String transactionHash, int opType, String args) {
+        Intent serviceIntent = new Intent(context, BindMinerIntentService.class);
+        serviceIntent.putExtra(KEY_OP, opType);
+        serviceIntent.putExtra(KEY_ADDRESS, args);
+        serviceIntent.putExtra(KEY_TX_HASH, transactionHash);
+        context.startService(serviceIntent);
+    }
+
+    private static void deleteHash(String transactionHash, int opType) {
+        TransactionRecord.delete(transactionHash, opType);
     }
 }

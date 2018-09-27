@@ -86,7 +86,7 @@
             android:value="1" />
         <meta-data
             android:name="AA_MODELS"
-            android:value="org.arpnetwork.arpdevice.database.EarningRecord, org.arpnetwork.arpdevice.database.InstalledApp" />
+            android:value="org.arpnetwork.arpdevice.database.EarningRecord, org.arpnetwork.arpdevice.database.InstalledApp, org.arpnetwork.arpdevice.database.TransactionRecord" />
     </application>
 
 </manifest>

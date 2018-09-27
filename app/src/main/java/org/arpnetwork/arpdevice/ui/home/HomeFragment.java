@@ -100,6 +100,8 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
         setTitle(R.string.home);
         hideNavIcon();
+
+        StateHolder.syncLocalState(getActivity());
     }
 
     @Override

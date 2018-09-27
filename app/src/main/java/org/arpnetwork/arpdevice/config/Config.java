@@ -39,4 +39,6 @@ public class Config {
 
     public static final int MONITOR_MINER_INTERVAL = 1 * 60 * 60 * 1000;
 
+    public static final int DEFAULT_POLLING_FREQUENCY = 15 * 1000; // 15s
+    public static final int DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH = 240;
 }

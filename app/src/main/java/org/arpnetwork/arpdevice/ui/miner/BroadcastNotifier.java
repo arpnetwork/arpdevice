@@ -16,17 +16,17 @@
 
 package org.arpnetwork.arpdevice.ui.miner;
 
-import android.content.Context;
 import android.content.Intent;
 import android.support.v4.content.LocalBroadcastManager;
 
+import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Constant;
 
 public class BroadcastNotifier {
     private LocalBroadcastManager mBroadcaster;
 
-    public BroadcastNotifier(Context context) {
-        mBroadcaster = LocalBroadcastManager.getInstance(context);
+    public BroadcastNotifier() {
+        mBroadcaster = LocalBroadcastManager.getInstance(CustomApplication.sInstance);
     }
 
     public void broadcastWithState(int status, int opType, String address) {
