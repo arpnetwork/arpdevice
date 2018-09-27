@@ -78,7 +78,8 @@ public class GasFeeView extends LinearLayout {
     }
 
     public BigInteger getGasPrice() {
-        return Convert.toWei(mGasPriceGWei, Convert.Unit.GWEI).toBigInteger();
+        BigDecimal gasWei = mGasPriceGWei.multiply(new BigDecimal(100 + mGasPriceBar.getProgress() * 9)).divide(new BigDecimal(100));
+        return Convert.toWei(gasWei, Convert.Unit.GWEI).toBigInteger();
     }
 
     private void initView() {
@@ -122,7 +123,7 @@ public class GasFeeView extends LinearLayout {
     }
 
     private void setGasValueText() {
-        BigDecimal price = mGasPriceGWei.multiply(new BigDecimal(1 + mGasPriceBar.getProgress() * 9 / 100));
+        BigDecimal price = mGasPriceGWei.multiply(new BigDecimal(100 + mGasPriceBar.getProgress() * 9)).divide(new BigDecimal(100));
         BigDecimal ethSpend = Util.getEthCost(price, mGasLimit);
         mGasCost = Convert.toWei(ethSpend, Convert.Unit.ETHER).toBigInteger();
         if (mEthToYuanRate.compareTo(BigDecimal.ZERO) == 0) {
