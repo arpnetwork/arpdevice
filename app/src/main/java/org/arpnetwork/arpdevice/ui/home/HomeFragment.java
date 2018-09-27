@@ -81,7 +81,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     private View mDivider;
     private LinearLayout mLayoutPriceSetting;
     private int mOrderPrice;
-    private BigInteger mRemainingAmount = BigInteger.ZERO;
+    private float mRemainingAmount;
 
     private PasswordDialog mPasswordDialog;
 
@@ -280,7 +280,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                             mUnexchanged.setText("");
                         }
 
-                        mRemainingAmount = allowance.amount.subtract(promiseAmount);
+                        mRemainingAmount = Convert.fromWei(new BigDecimal(allowance.amount.subtract(promiseAmount)), Convert.Unit.ETHER).floatValue();
                     }
                 }
 
@@ -423,7 +423,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                             showAlertDialog(R.string.unbinding_miner);
                         } else if (!result.expiredValid() || !bankAllowance.valid()) {
                             showAlertDialog(R.string.invalid_miner);
-                        } else if (mRemainingAmount.compareTo(BigInteger.ZERO) == 0) {
+                        } else if (mRemainingAmount < Config.MIN_REMAINING_AMOUNT) {
                             showAlertDialog(R.string.amount_insufficient);
                         } else if (!SignUtil.signerExists()) {
                             showPasswordDialog(result);
