@@ -79,7 +79,9 @@ public class GasFeeView extends LinearLayout {
 
     public BigInteger getGasPrice() {
         BigDecimal gasWei = mGasPriceGWei.multiply(new BigDecimal(100 + mGasPriceBar.getProgress() * 9)).divide(new BigDecimal(100));
-        return Convert.toWei(gasWei, Convert.Unit.GWEI).toBigInteger();
+        BigInteger price = Convert.toWei(gasWei, Convert.Unit.GWEI).toBigInteger();
+        Log.d(TAG, "getGasPrice: price decimal:" + gasWei + ", price integer:" + price);
+        return price;
     }
 
     private void initView() {
