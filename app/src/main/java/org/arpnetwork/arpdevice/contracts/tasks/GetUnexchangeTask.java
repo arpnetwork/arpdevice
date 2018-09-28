@@ -17,8 +17,6 @@
 package org.arpnetwork.arpdevice.contracts.tasks;
 
 import org.arpnetwork.arpdevice.contracts.ARPBank;
-import org.arpnetwork.arpdevice.ui.bean.Miner;
-import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 
 import java.math.BigInteger;
 

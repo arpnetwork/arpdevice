@@ -225,7 +225,7 @@ public class ARPBank extends Contract {
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
-    public static BigInteger getUnexchange() throws Exception {
+    public static BigInteger getUnexchange() throws IOException {
         if (Promise.get() != null) {
             final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
             String spender = Wallet.get().getAddress();
@@ -234,7 +234,7 @@ public class ARPBank extends Contract {
                 if (miner != null) {
                     BankAllowance allowance = ARPBank.allowance(miner.getAddress(), spender);
                     if (allowance == null) {
-                        throw new Exception("get allowance error");
+                        return BigInteger.ZERO;
                     } else {
                         return amount.subtract(allowance.paid);
                     }

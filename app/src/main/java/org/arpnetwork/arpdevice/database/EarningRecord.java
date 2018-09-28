@@ -20,6 +20,7 @@ import android.text.TextUtils;
 
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
+import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 
 import org.web3j.utils.Convert;
@@ -92,6 +93,10 @@ public class EarningRecord extends BaseRecord {
 
     public static EarningRecord findTopWithState(int state) {
         return new Select().from(EarningRecord.class).where("state = ?", state).orderBy("create_at DESC").limit(1).executeSingle();
+    }
+
+    public static EarningRecord clear() {
+        return new Delete().from(EarningRecord.class).executeSingle();
     }
 
     public BigInteger getCid() {

@@ -133,7 +133,12 @@ public class MyWalletFragment extends BaseFragment {
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog(R.string.get_balance_error_msg);
+                showErrorAlertDialog(R.string.get_balance_error_msg, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
             }
         });
 
@@ -194,7 +199,12 @@ public class MyWalletFragment extends BaseFragment {
                     depositBalance.post(new Runnable() {
                         @Override
                         public void run() {
-                            showErrorAlertDialog(R.string.get_balance_error_msg);
+                            showErrorAlertDialog(R.string.get_balance_error_msg, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            });
                         }
                     });
                 }
@@ -377,7 +387,12 @@ public class MyWalletFragment extends BaseFragment {
 
             @Override
             public void onFail(Throwable throwable) {
-                showErrorAlertDialog(R.string.get_balance_error_msg);
+                showErrorAlertDialog(R.string.get_balance_error_msg, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
             }
         });
     }

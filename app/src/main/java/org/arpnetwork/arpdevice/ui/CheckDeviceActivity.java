@@ -396,7 +396,9 @@ public class CheckDeviceActivity extends BaseActivity {
                     context.mTipButton.setText(R.string.check_again);
                     context.mTipButton.setVisibility(View.VISIBLE);
 
-                    context.mCheckThread.checkInstall();
+                    if (context.mCheckThread != null) {
+                        context.mCheckThread.checkInstall();
+                    }
                     break;
 
                 case Constant.CHECK_INSTALL_FAILED:
