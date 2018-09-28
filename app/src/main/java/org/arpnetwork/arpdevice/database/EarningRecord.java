@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.database;
 
 import android.text.TextUtils;
 
+import com.activeandroid.ActiveAndroid;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
 import com.activeandroid.query.Delete;
@@ -95,8 +96,8 @@ public class EarningRecord extends BaseRecord {
         return new Select().from(EarningRecord.class).where("state = ?", state).orderBy("create_at DESC").limit(1).executeSingle();
     }
 
-    public static EarningRecord clear() {
-        return new Delete().from(EarningRecord.class).executeSingle();
+    public static void clear() {
+        ActiveAndroid.execSQL("DELETE FROM earning_record;");
     }
 
     public BigInteger getCid() {
