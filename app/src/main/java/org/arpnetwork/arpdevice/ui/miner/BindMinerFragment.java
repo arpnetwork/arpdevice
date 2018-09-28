@@ -89,7 +89,7 @@ public class BindMinerFragment extends BaseFragment {
     private TextView mAmountTextView;
     private LinearLayout mRemainingAmountLayout;
     private TextView mRemainingAmountTextView;
-    private GasFeeView mGasFeeView;
+    private GasFeeView mGasView;
     private EditText mPasswordText;
     private Button mTaskBtn;
 
@@ -120,7 +120,7 @@ public class BindMinerFragment extends BaseFragment {
     public void onDestroy() {
         super.onDestroy();
 
-        mGasFeeView.cancelHttp();
+        mGasView.cancelHttp();
 
         if (mBindStateReceiver != null) {
             LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mBindStateReceiver);
@@ -136,11 +136,25 @@ public class BindMinerFragment extends BaseFragment {
         mRemainingAmountLayout = (LinearLayout) findViewById(R.id.layout_remaining_amount);
         mRemainingAmountTextView = (TextView) findViewById(R.id.tv_remaining_amount);
         mTimeTextView = (TextView) findViewById(R.id.tv_author_time);
-        mGasFeeView = (GasFeeView) findViewById(R.id.ll_gas_fee);
+        mGasView = (GasFeeView) findViewById(R.id.ll_gas_fee);
         mPasswordText = (EditText) findViewById(R.id.et_password);
         mTaskBtn = (Button) findViewById(R.id.btn_task);
 
         mAddressTextView.setText(mMiner.getAddress());
+
+        mGasView.setEthCallback(new GasFeeView.EthCallback() {
+            @Override
+            public void onEthNotEnough(boolean notEnough, BigInteger ethBalance) {
+                if (notEnough) {
+                    showErrorAlertDialog(R.string.register_underpaid, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
+                }
+            }
+        });
 
         BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
             @Override
@@ -193,6 +207,8 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void setState(int state) {
+        mProgressView.setVisibility(View.GONE);
+
         switch (state) {
             case BIND:
                 setTitle(R.string.bind_miner);
@@ -210,7 +226,7 @@ public class BindMinerFragment extends BaseFragment {
                 mTaskBtn.setBackgroundResource(R.drawable.btn_bg_orange);
                 mTaskBtn.setText(R.string.bind_btn_unbind);
                 mGasLimit = ARPRegistry.estimateUnbindGasLimit();
-                mGasFeeView.setGasLimit(mGasLimit);
+                mGasView.setGasLimit(mGasLimit);
 
                 loadAllowance();
                 break;
@@ -236,7 +252,6 @@ public class BindMinerFragment extends BaseFragment {
             public void onValueResult(BankAllowance result) {
                 if (getActivity() == null) return;
 
-                mProgressView.setVisibility(View.GONE);
                 if (result != null) {
                     float amount = result.getAmountHumanic().floatValue();
                     mAmountTextView.setText(String.format("%.2f ARP", amount));
@@ -270,7 +285,6 @@ public class BindMinerFragment extends BaseFragment {
             public void onFail(Throwable throwable) {
                 if (getActivity() == null) return;
 
-                mProgressView.setVisibility(View.GONE);
                 showErrorAlertDialog(R.string.network_error, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -282,13 +296,13 @@ public class BindMinerFragment extends BaseFragment {
     }
 
     private void startBindService(String password) {
-        Intent serviceIntent = getServiceIntent(password, OPERATION_BIND, mGasFeeView.getGasPrice());
+        Intent serviceIntent = getServiceIntent(password, OPERATION_BIND, mGasView.getGasPrice());
         serviceIntent.putExtra(KEY_BINDPROMISE, mBindPromise);
         getActivity().startService(serviceIntent);
     }
 
     private void startUnbindService(String password) {
-        Intent serviceIntent = getServiceIntent(password, OPERATION_UNBIND, mGasFeeView.getGasPrice());
+        Intent serviceIntent = getServiceIntent(password, OPERATION_UNBIND, mGasView.getGasPrice());
         getActivity().startService(serviceIntent);
     }
 
@@ -315,8 +329,6 @@ public class BindMinerFragment extends BaseFragment {
             public void onSuccess(Response response, BindPromise result) {
                 if (getActivity() == null) return;
 
-                mProgressView.setVisibility(View.GONE);
-
                 String data = String.format(Locale.US, "%s:%d:%d:%s:%s", result.getAmount(),
                         result.getSignExpired(), result.getExpired(), result.getPromiseSign(),
                         Wallet.get().getAddress());
@@ -326,7 +338,7 @@ public class BindMinerFragment extends BaseFragment {
                     mBindPromise = result;
 
                     mGasLimit = ARPRegistry.estimateBindDeviceGasLimit(mMiner.getAddress(), mBindPromise);
-                    mGasFeeView.setGasLimit(mGasLimit);
+                    mGasView.setGasLimit(mGasLimit);
 
                     mTaskBtn.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -363,7 +375,6 @@ public class BindMinerFragment extends BaseFragment {
             public void onFailure(Request request, Exception e) {
                 if (getActivity() == null) return;
 
-                mProgressView.setVisibility(View.GONE);
                 showErrorAlertDialog(R.string.load_promise_failed, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -376,7 +387,6 @@ public class BindMinerFragment extends BaseFragment {
             public void onError(Response response, int code, Exception e) {
                 if (getActivity() == null) return;
 
-                mProgressView.setVisibility(View.GONE);
                 showErrorAlertDialog(R.string.load_promise_failed, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

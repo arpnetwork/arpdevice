@@ -77,6 +77,7 @@ public class MinerListFragment extends BaseFragment {
 
     private OKHttpUtils mOkHttpUtils;
     private BindStateReceiver mBindStateReceiver;
+    private boolean mIgnoreExchage;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -106,7 +107,7 @@ public class MinerListFragment extends BaseFragment {
     public void onDestroy() {
         super.onDestroy();
 
-        if (mPingThread != null){
+        if (mPingThread != null) {
             mPingThread.interrupt();
             mPingThread = null;
         }
@@ -210,7 +211,11 @@ public class MinerListFragment extends BaseFragment {
                 } else if (unbindingTask != null && !miner.getAddress().equals(unbindingTask.address)) {
                     UIHelper.showToast(getActivity(), R.string.unbinding_other);
                 } else {
-                    checkPromise(miner);
+                    if (mIgnoreExchage) {
+                        showMinerPage(miner);
+                    } else {
+                        checkPromise(miner);
+                    }
                 }
             }
         });
@@ -242,6 +247,7 @@ public class MinerListFragment extends BaseFragment {
                         if (getActivity() == null) return;
 
                         showMinerPage(miner);
+                        mIgnoreExchage = true;
                     }
                 });
     }

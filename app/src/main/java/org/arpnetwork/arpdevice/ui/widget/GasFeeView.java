@@ -24,6 +24,9 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
+import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
+import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.PriceProvider;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Convert;
@@ -34,13 +37,23 @@ import java.math.BigInteger;
 public class GasFeeView extends LinearLayout {
     private static final String TAG = "GasFeeView";
 
-    private static BigDecimal mGasPriceGWei = BigDecimal.ZERO;
-    private static BigDecimal mEthToYuanRate = BigDecimal.ZERO;
-    private static BigInteger mGasLimit = BigInteger.ZERO;
-    private static BigInteger mGasCost = BigInteger.ZERO;
+    private BigDecimal mGasPriceGWei = BigDecimal.ZERO;
+    private BigDecimal mEthToYuanRate = BigDecimal.ZERO;
+    private BigInteger mGasLimit = BigInteger.ZERO;
+    private BigInteger mGasCost = BigInteger.ZERO;
 
     private TextView mGasValue;
     private SeekBar mGasPriceBar;
+
+    public interface EthCallback {
+        void onEthNotEnough(boolean notEnough, BigInteger ethBalance);
+    }
+
+    public EthCallback mCallback;
+
+    public void setEthCallback(EthCallback ethCallback) {
+        this.mCallback = ethCallback;
+    }
 
     public GasFeeView(Context context) {
         super(context);
@@ -134,5 +147,20 @@ public class GasFeeView extends LinearLayout {
             double yuan = Util.getYuanCost(price, mGasLimit, mEthToYuanRate);
             mGasValue.setText(String.format(getContext().getString(R.string.register_gas_value), ethSpend.floatValue(), yuan));
         }
+
+        EtherAPI.getEtherBalance(Wallet.get().getAddress(), new SimpleOnValueResult<BigInteger>() {
+            @Override
+            public void onValueResult(BigInteger result) {
+                if (result.compareTo(mGasCost) < 0) {
+                    if (mCallback != null) {
+                        mCallback.onEthNotEnough(true, result);
+                    }
+                }
+            }
+
+            @Override
+            public void onFail(Throwable throwable) {
+            }
+        });
     }
 }

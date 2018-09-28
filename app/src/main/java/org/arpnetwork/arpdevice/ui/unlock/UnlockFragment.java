@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.ui.unlock;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -108,6 +109,19 @@ public class UnlockFragment extends BaseFragment {
         mGasLimit = ARPRegistry.estimateUnbindGasLimit();
         mGasView = (GasFeeView) findViewById(R.id.ll_gas_fee);
         mGasView.setGasLimit(mGasLimit);
+        mGasView.setEthCallback(new GasFeeView.EthCallback() {
+            @Override
+            public void onEthNotEnough(boolean notEnough, BigInteger ethBalance) {
+                if (notEnough) {
+                    showErrorAlertDialog(R.string.register_underpaid, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
+                }
+            }
+        });
 
         mUnlockBtn = (Button) findViewById(R.id.btn_unlock);
         mUnlockBtn.setOnClickListener(new View.OnClickListener() {

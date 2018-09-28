@@ -135,7 +135,7 @@
     <string name="register_auth">①合约预授权</string>
     <string name="register_transfer"> → ②合约转账</string>
     <string name="register_lock"> → ③合约锁仓</string>
-    <string name="register_author_tip">将进行合约预授权，预授权不扣ARP</string>
+    <string name="register_auth_tip">将进行合约预授权，预授权不扣ARP</string>
     <string name="register_transfer_tip">将会转账500个ARP，用于登记锁仓</string>
     <string name="register_lock_tip">将把上一步转账的500个ARP锁仓，完成设备登记</string>
     <string name="register_transfer_amount">合约转账</string>
@@ -168,7 +168,6 @@
     <string name="binding">正在绑定，请耐心等待</string>
     <string name="unbinding">正在解绑，请耐心等待</string>
 
-    <string name="bind_miner_error_balance_insufficient">账户余额不足以支撑绑定矿工请求</string>
     <string name="bind_miner">绑定矿工</string>
     <string name="unbind_miner">解绑矿工</string>
     <string name="bind_hint">选择一个矿工，他会为您撮合订单</string>
@@ -279,12 +278,14 @@
     <string name="exchange">提现</string>
     <string name="cashing">正在提现，请耐心等待</string>
     <string name="withdrawing">正在取回押金，请耐心等待</string>
+    <string name="bank_approving">正在锁仓，请耐心等待</string>
     <string name="exchange_tip_title">请尽快提现</string>
     <string name="exchange_tip_msg">您已经累积收入%sARP，绑定的矿工（提现）有效期为%s，是否提现</string>
     <string name="exchange_tip_cancel">暂不提现</string>
     <string name="exchange_unchanged_promise_found">您还有未提现的ARP</string>
-    <string name="exchange_change_miner_msg">您还有%.2f ARP未提现\n请在换绑矿工钱提现\n否则将自动作废</string>
-    <string name="exchange_unbind_miner_msg">您还有%.2f ARP未提现\n请在解绑矿工钱提现\n否则将自动作废</string>
+    <string name="exchange_change_miner_msg">您还有%.2f ARP未提现\n请在换绑矿工前提现\n否则将自动作废</string>
+    <string name="exchange_unbind_miner_msg">您还有%.2f ARP未提现\n请在解绑矿工期提现\n否则将自动作废</string>
     <string name="exchange_change_miner_ignore">继续换绑</string>
     <string name="exchange_unbind_miner_ignore">继续解绑</string>
+
 </resources>

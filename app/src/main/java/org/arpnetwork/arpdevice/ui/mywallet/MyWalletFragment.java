@@ -279,6 +279,8 @@ public class MyWalletFragment extends BaseFragment {
             UIHelper.showToast(getContext(), R.string.unbinding);
         } else if (StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING) != null) {
             UIHelper.showToast(getContext(), R.string.binding);
+        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_APPROVE_RUNNING) != null) {
+            UIHelper.showToast(getContext(), R.string.bank_approving);
         } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_CASH_RUNNING) != null) {
             UIHelper.showToast(getContext(), R.string.cashing);
         } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_WITHDRAW_RUNNING) != null) {

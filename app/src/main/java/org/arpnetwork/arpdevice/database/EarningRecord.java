@@ -60,7 +60,7 @@ public class EarningRecord extends BaseRecord {
     }
 
     public static List<EarningRecord> findAll() {
-        return new Select().from(EarningRecord.class).orderBy("create_at DESC").execute();
+        return new Select().from(EarningRecord.class).orderBy("time DESC").execute();
     }
 
     public static EarningRecord get(String transactionHash) {

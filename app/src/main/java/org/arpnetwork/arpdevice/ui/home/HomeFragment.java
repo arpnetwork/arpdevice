@@ -150,7 +150,9 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                     public void onValueResult(@Nullable Miner result) {
                         hideProgressDialog();
 
-                        if (result == null) {
+                        if (StateHolder.getTaskByState(StateHolder.STATE_BANK_WITHDRAW_RUNNING) != null) {
+                            showAlertDialog(R.string.withdrawing);
+                        } else if (result == null) {
                             ARPBank.allowanceAsync(Wallet.get().getAddress(), ARPRegistry.CONTRACT_ADDRESS, new SimpleOnValueResult<BankAllowance>() {
                                 @Override
                                 public void onValueResult(BankAllowance result) {

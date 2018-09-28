@@ -126,7 +126,7 @@
     <string name="register_auth">①Authorize</string>
     <string name="register_transfer"> → ②Transfer</string>
     <string name="register_lock"> → ③Lock up</string>
-    <string name="register_author_tip">Author ARP to contract, cost no ARP</string>
+    <string name="register_auth_tip">Author ARP to contract, cost no ARP</string>
     <string name="register_transfer_tip">Transfer 500ARP for locking up</string>
     <string name="register_lock_tip">Lock up the 500ARP transferred last step</string>
     <string name="register_transfer_amount">Transfer</string>
@@ -159,7 +159,6 @@
     <string name="binding">Binding, please wait</string>
     <string name="unbinding">Unbinding, please wait</string>
 
-    <string name="bind_miner_error_balance_insufficient">Balance insufficient for binding miner.</string>
     <string name="bind_miner">Bind miner</string>
     <string name="unbind_miner">Unbind miner</string>
     <string name="bind_hint">Choose a miner to make matches</string>
@@ -276,6 +275,7 @@
     <string name="exchange">Exchange</string>
     <string name="cashing">Exchanging, pleas wait...</string>
     <string name="withdrawing">Withdrawing, pleas wait...</string>
+    <string name="bank_approving">Locking, pleas wait...</string>
     <string name="exchange_tip_title">Please exchange your promise soon</string>
     <string name="exchange_tip_msg">You have accumulated %s ARP,the bound miner expired is %s</string>
     <string name="exchange_tip_cancel">Pending exchange</string>

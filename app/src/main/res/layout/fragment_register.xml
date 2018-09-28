@@ -32,7 +32,7 @@
             android:layout_marginRight="@dimen/plain_margin"
             android:layout_marginTop="20dp"
             android:gravity="center_horizontal"
-            android:text="@string/register_author_tip"
+            android:text="@string/register_auth_tip"
             android:textColor="@color/register_step_text_color" />
 
         <LinearLayout

@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.ui.order.details;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -139,6 +140,20 @@ public class ExchangeFragment extends BaseFragment {
         mExchangeValue.setText(String.format(getString(R.string.exchange_arp_amount), getHumanicAmount(mAmount)));
 
         setState();
+
+        mGasView.setEthCallback(new GasFeeView.EthCallback() {
+            @Override
+            public void onEthNotEnough(boolean notEnough, BigInteger ethBalance) {
+                if (notEnough) {
+                    showErrorAlertDialog(R.string.register_underpaid, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     @Override

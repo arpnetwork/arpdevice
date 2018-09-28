@@ -18,6 +18,7 @@ package org.arpnetwork.arpdevice.ui.miner;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
@@ -39,7 +40,6 @@ import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
-import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
@@ -127,6 +127,23 @@ public class RegisterFragment extends BaseFragment {
         mForwardBtn = (Button) findViewById(R.id.btn_forward);
         mForwardBtn.setEnabled(false);
 
+        showProgressDialog("", false);
+        startLoad();
+
+        mGasView.setEthCallback(new GasFeeView.EthCallback() {
+            @Override
+            public void onEthNotEnough(boolean notEnough, BigInteger ethBalance) {
+                if (notEnough) {
+                    showErrorAlertDialog(R.string.register_underpaid, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    });
+                }
+            }
+        });
+
         mForwardBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -136,33 +153,17 @@ public class RegisterFragment extends BaseFragment {
                     return;
                 }
 
-                final String address = Wallet.get().getAddress();
-                EtherAPI.getEtherBalance(address, new SimpleOnValueResult<BigInteger>() {
-                    @Override
-                    public void onValueResult(BigInteger result) {
-                        if (result.compareTo(mGasView.getGasCost()) < 0) {
-                            UIHelper.showToast(getActivity(), R.string.register_underpaid);
-                        } else {
-                            startServiceIntent(mStep);
-                        }
-                    }
-
-                    @Override
-                    public void onFail(Throwable throwable) {
-                        showErrorAlertDialog(R.string.network_error);
-                    }
-                });
+                startServiceIntent(mStep);
             }
         });
-        showProgressDialog("", false);
-        startLoad();
     }
 
     private void setStepState(int stepState) {
-        hideProgressDialog();
-        findViewById(R.id.ll_register).setVisibility(View.VISIBLE);
         mProgressView.setVisibility(View.GONE);
         mPasswordText.setText("");
+
+        hideProgressDialog();
+        findViewById(R.id.ll_register).setVisibility(View.VISIBLE);
 
         String deviceAddress = Wallet.get().getAddress();
         String allSteps = getString(R.string.register_auth) + getString(R.string.register_transfer) + getString(R.string.register_lock);
@@ -170,7 +171,7 @@ public class RegisterFragment extends BaseFragment {
         switch (stepState) {
             case APPROVE:
                 mStepText.setText(highlight(allSteps, getString(R.string.register_auth)));
-                mStepTipText.setText(getString(R.string.register_author_tip));
+                mStepTipText.setText(getString(R.string.register_auth_tip));
                 mAmountView.setVisibility(View.GONE);
                 mValueView.setVisibility(View.GONE);
 
@@ -264,6 +265,7 @@ public class RegisterFragment extends BaseFragment {
 
     private void setProcess(int stepState) {
         mProgressView.setVisibility(View.VISIBLE);
+
         switch (stepState) {
             case APPROVE:
                 mProgressTip.setText(R.string.register_authoring);
@@ -404,7 +406,7 @@ public class RegisterFragment extends BaseFragment {
 
                 case StateHolder.STATE_APPROVE_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.bind_approve_failed));
-                    startLoad();
+                    mProgressView.setVisibility(View.GONE);
                     break;
 
                 case StateHolder.STATE_DEPOSIT_RUNNING:
@@ -418,7 +420,7 @@ public class RegisterFragment extends BaseFragment {
 
                 case StateHolder.STATE_DEPOSIT_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.bind_deposit_failed));
-                    startLoad();
+                    mProgressView.setVisibility(View.GONE);
                     break;
 
                 case StateHolder.STATE_BANK_APPROVE_RUNNING:
@@ -431,7 +433,7 @@ public class RegisterFragment extends BaseFragment {
 
                 case StateHolder.STATE_BANK_APPROVE_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.bind_lock_failed));
-                    startLoad();
+                    mProgressView.setVisibility(View.GONE);
                     break;
 
                 default:
