@@ -52,6 +52,7 @@ public class AppManager {
     private Handler mOuterHandler;
     private Handler mInnerHandler;
     private State mState;
+    private OnAppManagerListener mOnAppManagerListener;
 
     public enum State {
         IDLE,
@@ -60,6 +61,10 @@ public class AppManager {
         INSTALLED,
         LAUNCHING,
         LAUNCHED
+    }
+
+    public interface OnAppManagerListener {
+        void onInstall(boolean success);
     }
 
     public static AppManager getInstance(Context context) {
@@ -71,6 +76,10 @@ public class AppManager {
 
     public void setHandler(Handler handler) {
         mOuterHandler = handler;
+    }
+
+    public void setOnAppManagerListener(OnAppManagerListener listener) {
+        mOnAppManagerListener = listener;
     }
 
     public void setOnTopTaskListener(TaskHelper.OnTopTaskListener listener) {
@@ -117,6 +126,7 @@ public class AppManager {
                 saveInstalledApp(packageName);
             }
             DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
+            mState = State.INSTALLED;
             return;
         }
         if (mState == State.LAUNCHING || mState == State.LAUNCHED) {
@@ -241,6 +251,9 @@ public class AppManager {
                 mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
                     DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
+                    if (mOnAppManagerListener != null) {
+                        mOnAppManagerListener.onInstall(true);
+                    }
                 }
             }
 
@@ -250,6 +263,9 @@ public class AppManager {
                 mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
                     DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
+                    if (mOnAppManagerListener != null) {
+                        mOnAppManagerListener.onInstall(false);
+                    }
                 }
             }
 

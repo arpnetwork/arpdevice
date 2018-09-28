@@ -51,16 +51,19 @@ import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.server.http.Dispatcher;
 import org.arpnetwork.arpdevice.server.http.HttpServer;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.ui.CheckDeviceActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
+import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
 
-public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener, TaskHelper.OnTopTaskListener {
+public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener,
+        TaskHelper.OnTopTaskListener, AppManager.OnAppManagerListener {
     private static final String TAG = ReceiveOrderFragment.class.getSimpleName();
 
     private TextView mOrderStateView;
@@ -103,7 +106,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         registerReceiver();
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
 
-        AppManager.getInstance(getContext().getApplicationContext()).getInstalledApps();
+        mAppManager = AppManager.getInstance(getContext().getApplicationContext());
+        mAppManager.getInstalledApps();
     }
 
     @Override
@@ -174,6 +178,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }, 2000);
     }
 
+    @Override
+    public void onInstall(boolean success) {
+        if (!success) {
+            startCheckActivity(mMiner);
+        }
+    }
+
     private void initViews() {
         mOrderStateView = (TextView) findViewById(R.id.tv_order_state);
         mOrderStateView.setText(R.string.starting_service);
@@ -182,13 +193,20 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         exitButton.setOnClickListener(mOnClickExitListener);
     }
 
+    private void startCheckActivity(Miner miner) {
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(Constant.KEY_MINER, miner);
+        bundle.putBoolean(Constant.KEY_FROM_MY, true);
+        startActivity(CheckDeviceActivity.class, bundle);
+    }
+
     private synchronized void startDeviceService() {
         if (!mStartService) {
             silentOn();
 
-            mAppManager = AppManager.getInstance(getContext().getApplicationContext());
             mAppManager.setHandler(DataServer.getInstance().getHandler());
             mAppManager.setOnTopTaskListener(this);
+            mAppManager.setOnAppManagerListener(this);
 
             DataServer.getInstance().setListener(mConnectionListener);
             DataServer.getInstance().setAppManager(mAppManager);
@@ -212,6 +230,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mStartService) {
             mAppManager.setHandler(null);
             mAppManager.setOnTopTaskListener(null);
+            mAppManager.setOnAppManagerListener(null);
 
             DownloadManager.getInstance().cancelAll();
             stopHttpServer();

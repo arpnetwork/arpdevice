@@ -49,7 +49,6 @@ import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.ui.miner.MinerListActivity;
 import org.arpnetwork.arpdevice.ui.miner.RegisterActivity;
 
-import org.arpnetwork.arpdevice.ui.CheckDeviceActivity;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
@@ -58,6 +57,7 @@ import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
+import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
@@ -357,7 +357,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                                         if (!SignUtil.signerExists()) {
                                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                                         } else {
-                                            startCheckActivity(miner);
+                                            startReceiveOrderActivity(miner);
                                         }
                                     }
                                 });
@@ -387,11 +387,10 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
         getActivity().unregisterReceiver(mBatteryChangedReceiver);
     }
 
-    private void startCheckActivity(Miner miner) {
+    private void startReceiveOrderActivity(Miner miner) {
         Bundle bundle = new Bundle();
         bundle.putSerializable(Constant.KEY_MINER, miner);
-        bundle.putBoolean(Constant.KEY_FROM_MY, true);
-        startActivity(CheckDeviceActivity.class, bundle);
+        startActivity(ReceiveOrderActivity.class, bundle);
     }
 
     private void startReceiveOrder() {
@@ -430,7 +429,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                         } else if (!SignUtil.signerExists()) {
                             showPasswordDialog(result);
                         } else {
-                            startCheckActivity(result);
+                            startReceiveOrderActivity(result);
                         }
                     } else {
                         showNoBindingDialog();

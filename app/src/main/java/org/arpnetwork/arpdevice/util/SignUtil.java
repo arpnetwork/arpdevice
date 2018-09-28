@@ -65,6 +65,13 @@ public class SignUtil {
         }
     }
 
+    /**
+     * Reset signer
+     */
+    public static void resetSigner() {
+        sSigner = null;
+    }
+
     private static boolean isTransactionData(String data) {
         try {
             JSONObject object = new JSONObject(data);

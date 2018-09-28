@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.ui.wallet;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.Spanned;
@@ -31,6 +32,7 @@ import org.arpnetwork.arpdevice.config.Constant;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.home.HomeActivity;
+import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.crypto.WalletUtils;
 
@@ -134,8 +136,10 @@ public class WalletImporterFragment extends BaseFragment {
                             if (success) {
                                 // clear earning record
                                 EarningRecord.clear();
-                                startActivity(HomeActivity.class);
-                                finish();
+                                SignUtil.resetSigner();
+                                Intent intent = new Intent(getActivity(), HomeActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(intent);
                             }
                         }
                     });

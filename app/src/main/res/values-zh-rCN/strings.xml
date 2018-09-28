@@ -265,7 +265,7 @@
     <string name="miner_connected">矿工已连接</string>
     <string name="wait_for_order">等待接单</string>
     <string name="received_order">接到订单</string>
-    <string name="receive_order">开始接单</string>
+    <string name="receive_order">接单中</string>
     <string name="dont_touch_screen">请勿触碰屏幕</string>
     <string name="receive_order_tips">接到订单后请勿触碰屏幕\n否则将会退出接到的订单\n影响您的收入和他人体验</string>
     <string name="exit_order">退出接单</string>

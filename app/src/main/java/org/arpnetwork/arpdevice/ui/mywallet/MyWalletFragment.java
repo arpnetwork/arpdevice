@@ -50,7 +50,6 @@ import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.ui.order.details.ExchangeActivity;
-import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.unlock.UnlockActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
@@ -66,7 +65,6 @@ import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
 import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_WITHDRAW;
-import static org.arpnetwork.arpdevice.util.Util.getHumanicAmount;
 
 public class MyWalletFragment extends BaseFragment {
     private static final String TAG = MyWalletFragment.class.getSimpleName();
@@ -162,7 +160,7 @@ public class MyWalletFragment extends BaseFragment {
             @Override
             public void onClick(View v) {
                 if (!checkReady()) return;
-                checkPromise();
+                getUnexchange();
             }
         });
     }
@@ -212,33 +210,6 @@ public class MyWalletFragment extends BaseFragment {
         }).start();
     }
 
-    private void checkPromise() {
-        PromiseDialog.show(getContext(), R.string.exchange_unbind_miner_msg,
-                getString(R.string.exchange_unbind_miner_ignore),
-                new PromiseDialog.PromiseListener() {
-                    @Override
-                    public void onError() {
-                    }
-
-                    @Override
-                    public void onExchange(BigInteger unexchanged) {
-                        if (getActivity() == null) return;
-
-                        Bundle bundle = new Bundle();
-                        bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
-                        bundle.putString(KEY_EXCHANGE_AMOUNT, unexchanged.toString());
-                        startActivity(ExchangeActivity.class, bundle);
-                    }
-
-                    @Override
-                    public void onIgnore() {
-                        if (getActivity() == null) return;
-
-                        checkAuthor();
-                    }
-                });
-    }
-
     private void checkAuthor() {
         final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
         builder.setOnClickListener(new DialogInterface.OnClickListener() {
@@ -251,7 +222,7 @@ public class MyWalletFragment extends BaseFragment {
                     } else {
                         dialog.dismiss();
                         if (Wallet.loadCredentials(password) != null) {
-                            getUnexchange();
+                            resetWallet();
                         } else {
                             Toast.makeText(getContext(), getString(R.string.input_passwd_error), Toast.LENGTH_SHORT).show();
                         }
@@ -326,10 +297,17 @@ public class MyWalletFragment extends BaseFragment {
         startActivity(ExchangeActivity.class, bundle);
     }
 
+    private void showExchange(BigInteger unexchanged) {
+        Bundle bundle = new Bundle();
+        bundle.putInt(KEY_EXCHANGE_TYPE, OPERATION_CASH);
+        bundle.putString(KEY_EXCHANGE_AMOUNT, unexchanged.toString());
+        startActivity(ExchangeActivity.class, bundle);
+    }
+
     private void getUnexchange() {
         ARPBank.getUnexchangeAsync(new SimpleOnValueResult<BigInteger>() {
             @Override
-            public void onValueResult(BigInteger result) {
+            public void onValueResult(final BigInteger result) {
                 if (getActivity() == null) return;
 
                 if (result != null && result.compareTo(BigInteger.ZERO) > 0) {
@@ -341,15 +319,13 @@ public class MyWalletFragment extends BaseFragment {
                             .setPositiveButton(getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    Intent intent = new Intent();
-                                    intent.setClass(getActivity(), MyEarningActivity.class);
-                                    startActivity(intent);
+                                    showExchange(result);
                                 }
                             })
                             .setNegativeButton(getString(R.string.exchange_change_wallet_ignore), new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    resetWallet();
+                                    checkAuthor();
                                 }
                             })
                             .create()

@@ -236,10 +236,8 @@ public class CheckDeviceActivity extends BaseActivity {
         if (!Wallet.exists()) {
             intent.putExtra(Constant.KEY_FROM_LAUNCHER, true);
             intent.setClass(this, WalletImporterActivity.class);
-        } else if (mFromMy) {
-            intent.setClass(this, ReceiveOrderActivity.class);
-            intent.putExtra(Constant.KEY_MINER, mMiner);
         } else {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.setClass(this, HomeActivity.class);
         }
 
