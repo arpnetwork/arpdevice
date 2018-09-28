@@ -454,12 +454,14 @@ public class CheckDeviceActivity extends BaseActivity {
                         context.mImage.setVisibility(View.VISIBLE);
                         context.mTipText.setVisibility(View.VISIBLE);
 
-                        context.mUIHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                context.jumpToNextActivity();
-                            }
-                        }, 500);
+                        if (context.mUIHandler != null) {
+                            context.mUIHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    context.jumpToNextActivity();
+                                }
+                            }, 500);
+                        }
                     } else {
                         context.mTitleText.setText(R.string.check_network);
                         context.mTipText.setText(R.string.check_network_error);

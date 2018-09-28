@@ -168,6 +168,9 @@ public class DeviceManager implements DeviceConnection.Listener {
     @Override
     public void onException(DeviceConnection conn, Throwable cause) {
         Log.e(TAG, "onException. message = " + cause.getMessage());
+
+        mClosed = true;
+        handleError(0, R.string.connect_miner_failed);
     }
 
     private void onDeviceMessage(Message msg) {

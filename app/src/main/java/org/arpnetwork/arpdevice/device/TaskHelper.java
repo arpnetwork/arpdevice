@@ -68,6 +68,14 @@ public class TaskHelper {
         mOnTopTaskListener = listener;
     }
 
+    public void installApp(String apkPath, ShellChannel.ShellListener listener) {
+        mAdb.installApp(apkPath, listener);
+    }
+
+    public void uninstallApp(String pkgName, ShellChannel.ShellListener listener) {
+        mAdb.uninstallApp(pkgName, listener);
+    }
+
     public boolean launchApp(String packageName, Runnable runnable) {
         if (TextUtils.isEmpty(packageName)) {
             return false;
@@ -104,11 +112,17 @@ public class TaskHelper {
         }
     }
 
+    public void clearUserData(String pkgName) {
+        if (pkgName != null) {
+            mAdb.clearApplicationUserData(pkgName);
+        }
+    }
+
     public void killLaunchedApp() {
         stopCheckTopTimer();
         if (mPackageName != null) {
             mAdb.killApp(mPackageName);
-            mAdb.clearApplicationUserData(mPackageName);
+            clearUserData(mPackageName);
             mPackageName = null;
         }
 

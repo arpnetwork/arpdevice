@@ -23,12 +23,10 @@ import android.os.Handler;
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.database.InstalledApp;
-import org.arpnetwork.arpdevice.device.Adb;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.download.IDownloadListener;
 import org.arpnetwork.arpdevice.server.DataServer;
-import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
 
@@ -113,12 +111,15 @@ public class AppManager {
 
     public void appInstall(final String packageName, String url, int fileSize, String md5) {
         boolean isInstalled = mInstalledApps != null && mInstalledApps.contains(packageName);
-        if (InstalledApp.exists(packageName) && isInstalled) {
+        if (isInstalled) {
+            if (!InstalledApp.exists(packageName)) {
+                mTaskHelper.clearUserData(packageName);
+                saveInstalledApp(packageName);
+            }
             DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
             return;
         }
-        if (isInstalled || mState == State.LAUNCHING
-                || mState == State.LAUNCHED) {
+        if (mState == State.LAUNCHING || mState == State.LAUNCHED) {
             DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
             return;
         }
@@ -194,9 +195,7 @@ public class AppManager {
 
     public void uninstallApp(String packageName) {
         mState = State.IDLE;
-
-        Adb adb = new Adb(Touch.getInstance().getConnection());
-        adb.uninstallApp(packageName, null);
+        mTaskHelper.uninstallApp(packageName, null);
 
         File apkFile = new File(Environment.getExternalStorageDirectory(), String.format("arpdevice/%s.apk", packageName));
         if (apkFile.exists()) {
@@ -224,19 +223,20 @@ public class AppManager {
         mState = State.IDLE;
     }
 
+    private void saveInstalledApp(String pkgName) {
+        InstalledApp installedApp = new InstalledApp();
+        installedApp.pkgName = pkgName;
+        installedApp.saveRecord();
+    }
+
     private synchronized void appInstall(File file, final String packageName) {
         mState = State.INSTALLING;
         mTaskHelper.startCheckTopTimer(DELAY_START_TIMER, DELAY_START_TIMER);
-
-        Adb adb = new Adb(Touch.getInstance().getConnection());
-        adb.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {
+        mTaskHelper.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 mState = State.INSTALLED;
-
-                InstalledApp installedApk = new InstalledApp();
-                installedApk.pkgName = packageName;
-                installedApk.saveRecord();
+                saveInstalledApp(packageName);
 
                 mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
