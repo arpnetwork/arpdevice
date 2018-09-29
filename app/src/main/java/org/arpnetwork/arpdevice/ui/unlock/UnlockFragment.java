@@ -30,6 +30,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Constant;
@@ -53,6 +54,7 @@ public class UnlockFragment extends BaseFragment {
     private static BigInteger mGasLimit = BigInteger.ZERO;
 
     private LinearLayout mProgressView;
+    private TextView mProgressTip;
     private GasFeeView mGasView;
     private EditText mPasswordText;
     private Button mUnlockBtn;
@@ -104,6 +106,7 @@ public class UnlockFragment extends BaseFragment {
 
     private void initViews() {
         mProgressView = (LinearLayout) findViewById(R.id.ll_progress);
+        mProgressTip = (TextView) findViewById(R.id.tv_progress_tip);
         mPasswordText = (EditText) findViewById(R.id.et_password);
 
         mGasLimit = ARPRegistry.estimateUnbindGasLimit();
@@ -127,17 +130,41 @@ public class UnlockFragment extends BaseFragment {
         mUnlockBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (isCorrectPassword()) {
-                    startServiceIntent(OPERATION_UNBIND);
-                    hideSoftInput(mProgressView);
-                } else {
-                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                }
+                showProgress(R.string.handling);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isCorrectPassword()) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideSoftInput(mUnlockBtn);
+
+                                    startServiceIntent(OPERATION_UNBIND);
+                                }
+                            });
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+
+                                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                }
+                            });
+                        }
+                    }
+                }).start();
             }
         });
     }
 
     private void showProgress() {
+        mProgressView.setVisibility(View.VISIBLE);
+    }
+
+    private void showProgress(int textId) {
+        mProgressTip.setText(textId);
         mProgressView.setVisibility(View.VISIBLE);
     }
 

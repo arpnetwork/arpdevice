@@ -246,6 +246,20 @@ public class BindMinerFragment extends BaseFragment {
         }
     }
 
+    private void showProgress(int textId) {
+        mProgressTip.setText(textId);
+        mProgressView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgress() {
+        mProgressView.setVisibility(View.GONE);
+    }
+
+    private boolean isCorrectPassword() {
+        String password = mPasswordText.getText().toString();
+        return !TextUtils.isEmpty(password) && Wallet.loadCredentials(password) != null;
+    }
+
     private void loadAllowance() {
         ARPBank.allowanceAsync(mMiner.getAddress(), Wallet.get().getAddress(), new SimpleOnValueResult<BankAllowance>() {
             @Override
@@ -270,12 +284,31 @@ public class BindMinerFragment extends BaseFragment {
                     mTaskBtn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            String password = mPasswordText.getText().toString();
-                            if (TextUtils.isEmpty(password) || Wallet.loadCredentials(password) == null) {
-                                UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                            } else {
-                                checkPromise();
-                            }
+                            showProgress(R.string.handling);
+                            new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (isCorrectPassword()) {
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                hideSoftInput(mTaskBtn);
+
+                                                checkPromise();
+                                            }
+                                        });
+                                    } else {
+                                        runOnUiThread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                hideProgress();
+
+                                                UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                            }
+                                        });
+                                    }
+                                }
+                            }).start();
                         }
                     });
                 }
@@ -344,13 +377,31 @@ public class BindMinerFragment extends BaseFragment {
                         @Override
                         public void onClick(View v) {
                             if (mBindPromise.getSignExpired().longValue() - System.currentTimeMillis() / 1000 > SIGN_EXP) {
-                                String password = mPasswordText.getText().toString();
-                                if (Wallet.loadCredentials(password) != null) {
-                                    startBindService(password);
-                                    finish();
-                                } else {
-                                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                                }
+                                showProgress(R.string.handling);
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (isCorrectPassword()) {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    hideSoftInput(mTaskBtn);
+
+                                                    startBindService(mPasswordText.getText().toString());
+                                                }
+                                            });
+                                        } else {
+                                            runOnUiThread(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    hideProgress();
+
+                                                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                                }
+                                            });
+                                        }
+                                    }
+                                }).start();
                             } else {
                                 showErrorAlertDialog(R.string.bind_apply_expired, new DialogInterface.OnClickListener() {
                                     @Override
@@ -422,7 +473,6 @@ public class BindMinerFragment extends BaseFragment {
                         if (getActivity() == null) return;
 
                         startUnbindService(mPasswordText.getText().toString());
-                        finish();
                     }
                 });
     }

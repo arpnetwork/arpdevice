@@ -185,19 +185,38 @@ public class ExchangeFragment extends BaseFragment {
                 mExchangeBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (isCorrectPassword()) {
-                            startServiceIntent(OPERATION_CASH);
-                            mExchangeBtn.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    // wait hash saved to db.
-                                    finish();
-                                }
-                            }, 1200);
+                        showProgress(R.string.handling);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (isCorrectPassword()) {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            hideSoftInput(mExchangeBtn);
 
-                        } else {
-                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                        }
+                                            startServiceIntent(OPERATION_CASH);
+                                            mExchangeBtn.postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // wait hash saved to db.
+                                                    finish();
+                                                }
+                                            }, 1200);
+                                        }
+                                    });
+                                } else {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            hideProgress();
+
+                                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                        }
+                                    });
+                                }
+                            }
+                        }).start();
                     }
                 });
                 break;
@@ -213,11 +232,31 @@ public class ExchangeFragment extends BaseFragment {
                 mExchangeBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (isCorrectPassword()) {
-                            startServiceIntent(OPERATION_WITHDRAW);
-                        } else {
-                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                        }
+                        showProgress(R.string.handling);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (isCorrectPassword()) {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            hideSoftInput(mExchangeBtn);
+
+                                            startServiceIntent(OPERATION_WITHDRAW);
+                                        }
+                                    });
+                                } else {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            hideProgress();
+
+                                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                        }
+                                    });
+                                }
+                            }
+                        }).start();
                     }
                 });
                 break;

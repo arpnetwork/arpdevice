@@ -147,13 +147,31 @@ public class RegisterFragment extends BaseFragment {
         mForwardBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String password = mPasswordText.getText().toString();
-                if (TextUtils.isEmpty(password) || Wallet.loadCredentials(password) == null) {
-                    UIHelper.showToast(getActivity(), R.string.input_passwd_error);
-                    return;
-                }
+                showProgress(R.string.handling);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isCorrectPassword()) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideSoftInput(mForwardBtn);
 
-                startServiceIntent(mStep);
+                                    startServiceIntent(mStep);
+                                }
+                            });
+                        } else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    hideProgress();
+
+                                    UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                                }
+                            });
+                        }
+                    }
+                }).start();
             }
         });
     }
@@ -282,6 +300,20 @@ public class RegisterFragment extends BaseFragment {
             default:
                 break;
         }
+    }
+
+    private void showProgress(int textId) {
+        mProgressTip.setText(textId);
+        mProgressView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideProgress() {
+        mProgressView.setVisibility(View.GONE);
+    }
+
+    private boolean isCorrectPassword() {
+        String password = mPasswordText.getText().toString();
+        return !TextUtils.isEmpty(password) && Wallet.loadCredentials(password) != null;
     }
 
     private void startLoad() {
