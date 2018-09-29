@@ -72,6 +72,7 @@ public class PromiseHandler {
                 && Numeric.cleanHexPrefix(promise.getTo()).equals(Numeric.cleanHexPrefix(walletAddr))
                 && VerifyAPI.isEffectivePromise(promise)
                 && new BigInteger(promise.getAmount(), 16).compareTo(allowance.amount) <= 0
+                && new BigInteger(promise.getAmount(), 16).compareTo(allowance.paid) > 0
                 && new BigInteger(promise.getAmount(), 16).compareTo(lastAmount) > 0) {
             res = true;
         }
