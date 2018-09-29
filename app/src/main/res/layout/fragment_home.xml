@@ -167,6 +167,15 @@
         android:layout_marginTop="20dp"
         android:text="@string/start_ordering" />
 
+    <TextView
+        android:id="@+id/tv_version"
+        style="@style/MyItemLabel"
+        android:layout_width="match_parent"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="10dp"
+        android:gravity="right|bottom"
+        android:textColor="#a9a9a9" />
+
     <android.opengl.GLSurfaceView
         android:id="@+id/gl_surface"
         android:layout_width="1px"

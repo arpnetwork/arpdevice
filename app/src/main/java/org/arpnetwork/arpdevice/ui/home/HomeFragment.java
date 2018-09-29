@@ -240,6 +240,9 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
         findViewById(R.id.layout_order_details).setOnClickListener(this);
         findViewById(R.id.btn_order).setOnClickListener(this);
 
+        TextView version = (TextView) findViewById(R.id.tv_version);
+        version.setText(Util.getAppVersion(getActivity()));
+
         GLSurfaceView surfaceView = (GLSurfaceView) findViewById(R.id.gl_surface);
         surfaceView.setEGLContextClientVersion(1);
         surfaceView.setEGLConfigChooser(8, 8, 8, 8, 0, 0);
