@@ -29,6 +29,7 @@ import android.widget.EditText;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.home.HomeActivity;
@@ -136,6 +137,7 @@ public class WalletImporterFragment extends BaseFragment {
                             if (success) {
                                 // clear earning record
                                 EarningRecord.clear();
+                                Promise.clear();
                                 SignUtil.resetSigner();
                                 Intent intent = new Intent(getActivity(), HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

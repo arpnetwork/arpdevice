@@ -36,6 +36,8 @@ import java.util.List;
 public class AppManager {
     private static final String TAG = AppManager.class.getSimpleName();
 
+    private static final int LAUNCH_TIMEOUT = 10000;
+
     private static final int INSTALL_SUCCESS = 0;
     private static final int DOWNLOAD_FAILED = 1;
     private static final int INSTALL_FAILED = 2;
@@ -121,8 +123,8 @@ public class AppManager {
     public void appInstall(final String packageName, String url, int fileSize, String md5) {
         boolean isInstalled = mInstalledApps != null && mInstalledApps.contains(packageName);
         if (isInstalled) {
+            mTaskHelper.clearUserData(packageName);
             if (!InstalledApp.exists(packageName)) {
-                mTaskHelper.clearUserData(packageName);
                 saveInstalledApp(packageName);
             }
             DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
@@ -175,11 +177,15 @@ public class AppManager {
         if (InstalledApp.exists(packageName)) {
             mState = State.LAUNCHING;
 
+            if (mOuterHandler != null) {
+                mOuterHandler.sendEmptyMessageDelayed(DataServer.MSG_LAUNCH_APP_FAILED, LAUNCH_TIMEOUT);
+            }
             boolean success = mTaskHelper.launchApp(packageName, new Runnable() {
                 @Override
                 public void run() {
                     mState = State.LAUNCHED;
                     if (mOuterHandler != null) {
+                        mOuterHandler.removeMessages(DataServer.MSG_LAUNCH_APP_FAILED);
                         mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_SUCCESS);
                     }
                 }
@@ -187,6 +193,7 @@ public class AppManager {
             if (!success) {
                 mState = State.INSTALLED;
                 if (mOuterHandler != null) {
+                    mOuterHandler.removeMessages(DataServer.MSG_LAUNCH_APP_FAILED);
                     mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
                 }
             }

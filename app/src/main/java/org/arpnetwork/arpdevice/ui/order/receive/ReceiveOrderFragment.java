@@ -57,7 +57,6 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
-import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
@@ -145,6 +144,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     @Override
     public void onDestroy() {
+        mHandler.removeCallbacksAndMessages(null);
         NetworkHelper.getInstance().unregisterNetworkListener(mNetworkChangeListener);
         stopDeviceService();
         unregisterReceiver();
@@ -157,25 +157,18 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     @Override
     public void onTopTaskIllegal() {
-        runOnUiThread(new Runnable() {
+        mHandler.post(new Runnable() {
             @Override
             public void run() {
                 stopDeviceService();
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkTopTaskAndStart();
+                    }
+                }, 2000);
             }
         });
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mAppManager.getTopTask(new TaskHelper.OnGetTopTaskListener() {
-                    @Override
-                    public void onGetTopTask(String pkgName) {
-                        if (pkgName.contains(getContext().getPackageName())) {
-                            startDeviceService();
-                        }
-                    }
-                });
-            }
-        }, 2000);
     }
 
     @Override
@@ -191,6 +184,22 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         Button exitButton = (Button) findViewById(R.id.btn_exit);
         exitButton.setOnClickListener(mOnClickExitListener);
+    }
+
+    private void checkTopTaskAndStart() {
+        mAppManager.getTopTask(new TaskHelper.OnGetTopTaskListener() {
+            @Override
+            public void onGetTopTask(String pkgName) {
+                if (pkgName.contains(getContext().getPackageName())) {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            startDeviceService();
+                        }
+                    });
+                }
+            }
+        });
     }
 
     private void startCheckActivity(Miner miner) {
@@ -462,6 +471,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onError(int code, int msg) {
+            stopDeviceService();
             showAlertDialog(getString(msg));
         }
     };

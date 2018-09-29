@@ -154,7 +154,9 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                     public void onValueResult(@Nullable Miner result) {
                         hideProgressDialog();
 
-                        if (StateHolder.getTaskByState(StateHolder.STATE_BANK_WITHDRAW_RUNNING) != null) {
+                        if (StateHolder.getTaskByState(StateHolder.STATE_BANK_CASH_RUNNING) != null) {
+                            showAlertDialog(R.string.cashing);
+                        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_WITHDRAW_RUNNING) != null) {
                             showAlertDialog(R.string.withdrawing);
                         } else if (result == null) {
                             ARPBank.allowanceAsync(Wallet.get().getAddress(), ARPRegistry.CONTRACT_ADDRESS, new SimpleOnValueResult<BankAllowance>() {
@@ -439,7 +441,9 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                             return;
                         }
 
-                        if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+                        if (StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING) != null) {
+                            showAlertDialog(R.string.binding_miner);
+                        } else if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
                             showAlertDialog(R.string.unbinding_miner);
                         } else if (!result.expiredValid() || !bankAllowance.valid()) {
                             showAlertDialog(R.string.invalid_miner);

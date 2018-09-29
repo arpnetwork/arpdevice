@@ -222,9 +222,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private void onReceiveTimestamp(long clientTime) {
-        // fixme: add time delay with client.
-        /*Message pkt = ProtocolPacket.generateTimestamp(clientTime);
-        mConn.write(pkt);*/
+        Message pkt = ProtocolPacket.generateTimestamp(clientTime);
+        mConn.write(pkt);
     }
 
     private void onClientMinitouchData(String cmd) {
@@ -355,6 +354,9 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
             stopHeartbeatTimer();
             stopHeartbeatTimeout();
+            mHandler.removeMessages(MSG_CONNECTED_TIMEOUT);
+            mHandler.removeMessages(MSG_LAUNCH_APP_SUCCESS);
+            mHandler.removeMessages(MSG_LAUNCH_APP_FAILED);
         }
 
         if (mAppManager != null) {

@@ -97,6 +97,7 @@
     <string name="no_port_forward">请在路由器开启upnp端口转发功能</string>
     <string name="no_wifi">请在WIFI网络使用</string>
     <string name="invalid_miner">您绑定的矿工已停止服务，请绑定新的矿工</string>
+    <string name="binding_miner">绑定矿工中，暂不能开始接单</string>
     <string name="unbinding_miner">解绑矿工中，暂不能开始接单</string>
     <string name="amount_insufficient">授权剩余额度不足，无法接单，请更换矿工后再试</string>
 

@@ -44,7 +44,6 @@ import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.dialog.MessageDialog;
 import org.arpnetwork.arpdevice.dialog.PasswordDialog;
-import org.arpnetwork.arpdevice.dialog.PromiseDialog;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
@@ -382,13 +381,13 @@ public class MyWalletFragment extends BaseFragment {
     }
 
     private class BindStateReceiver extends BroadcastReceiver {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS,
                     StateHolder.STATE_BANK_WITHDRAW_SUCCESS)) {
                 case StateHolder.STATE_BANK_CASH_SUCCESS:
                     UIHelper.showToast(getActivity(), getString(R.string.exchange_success));
+                    getARPBalance(Wallet.get().getAddress());
                     break;
 
                 case StateHolder.STATE_BANK_CASH_FAILED:
