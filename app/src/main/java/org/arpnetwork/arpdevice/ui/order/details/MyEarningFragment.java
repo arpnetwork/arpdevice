@@ -66,11 +66,7 @@ public class MyEarningFragment extends BaseFragment {
     private MyEarningAdapter mAdapter;
     private MyEarningHeader mHeaderView;
 
-    private boolean mLoading;
-    private BigInteger exchanged = BigInteger.ZERO;
     private BigInteger mUnexchanged = BigInteger.ZERO;
-    private BigInteger mTopCid = BigInteger.ZERO;
-    private BigInteger mTopAmount = BigInteger.ZERO;
 
     private BindStateReceiver mBindStateReceiver;
 
@@ -93,6 +89,12 @@ public class MyEarningFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
         loadData();
     }
 
@@ -143,44 +145,46 @@ public class MyEarningFragment extends BaseFragment {
     }
 
     private void refreshData() {
-        loadNextRemote();
+        BigInteger exchanged = BigInteger.ZERO;
+
+        loadNextRemote();  // Update state.
         List<EarningRecord> oneTime = EarningRecord.findAll();
+        for (EarningRecord record : oneTime) {
+            if (record.state == EarningRecord.STATE_SUCCESS) {
+                exchanged = exchanged.add(record.getEarning());
+            }
+        }
         mAdapter.setData(oneTime);
         mHeaderView.setData(Util.getHumanicAmount(exchanged), mAdapter.getCount() > 0);
+
         getUnexchange();
     }
 
     @Override
     protected void loadData() {
-        if (mLoading) {
-            return;
-        }
-
-        mLoading = true;
+        BigInteger exchanged = BigInteger.ZERO;
 
         List<EarningRecord> oneTime;
         if (EarningRecord.findTop() != null) {
-            exchanged = BigInteger.ZERO;
-            oneTime = EarningRecord.findAll();
-            Collections.reverse(oneTime); // Get latest record.
-            for (EarningRecord record : oneTime) {
-                if (record.state == EarningRecord.STATE_SUCCESS) {
-                    exchanged = exchanged.add(record.getEarning());
-                    setTopAmount(record.getCid(), record.getEarning());
-                }
-            }
-            Collections.reverse(oneTime); // Displayed time decreased.
             if (EarningRecord.find(EarningRecord.STATE_PENDING) != null) {
                 loadNextRemote(); // Update state.
             }
+            oneTime = EarningRecord.findAll();
+            for (EarningRecord record : oneTime) {
+                if (record.state == EarningRecord.STATE_SUCCESS) {
+                    exchanged = exchanged.add(record.getEarning());
+                }
+            }
         } else {
             oneTime = loadNextRemote();
+            for (EarningRecord record : oneTime) {
+                exchanged = exchanged.add(record.getEarning());
+            }
         }
         mAdapter.setData(oneTime);
-
         mHeaderView.setData(Util.getHumanicAmount(exchanged), mAdapter.getCount() > 0);
+
         getUnexchange();
-        mLoading = false;
     }
 
     private List<EarningRecord> loadNextRemote() {
@@ -221,9 +225,6 @@ public class MyEarningFragment extends BaseFragment {
         }
 
         byte[] data = Hex.decode(Numeric.cleanHexPrefix(log.getData()));
-        byte[] cidByte = new byte[32];
-        System.arraycopy(data, 0, cidByte, 0, 32);
-        BigInteger cid = new BigInteger(cidByte);
 
         byte[] amountByte = new byte[32];
         System.arraycopy(data, 32, amountByte, 0, 32);
@@ -232,9 +233,6 @@ public class MyEarningFragment extends BaseFragment {
         byte[] topic = Hex.decode(Numeric.cleanHexPrefix(log.getTopics().get(1)));
         byte[] addressByte = new byte[20];
         System.arraycopy(topic, 12, addressByte, 0, 20);
-
-        exchanged = exchanged.add(amount);
-        setTopAmount(cid, amount);
 
         EarningRecord earning = EarningRecord.get(log.getTransactionHash());
         earning.time = logDate;
@@ -248,11 +246,13 @@ public class MyEarningFragment extends BaseFragment {
     }
 
     private void getUnexchange() {
-        mUnexchanged = BigInteger.ZERO;
         ARPBank.getUnexchangeAsync(new SimpleOnValueResult<BigInteger>() {
             @Override
             public void onValueResult(BigInteger result) {
-                mUnexchanged = result;
+                mUnexchanged = BigInteger.ZERO;
+                if (result != null) {
+                    mUnexchanged = result;
+                }
                 mHeaderView.setUnexchanged(Convert.fromWei(new BigDecimal(mUnexchanged), Convert.Unit.ETHER).floatValue());
             }
 
@@ -272,17 +272,7 @@ public class MyEarningFragment extends BaseFragment {
         });
     }
 
-    private void setTopAmount(BigInteger cid, BigInteger amount) {
-        if (mTopCid.compareTo(BigInteger.ZERO) == 0 || mTopCid.compareTo(cid) != 0) {
-            mTopCid = cid;
-            mTopAmount = amount;
-        } else {
-            mTopAmount = mTopAmount.add(amount);
-        }
-    }
-
     private class BindStateReceiver extends BroadcastReceiver {
-
         @Override
         public void onReceive(Context context, Intent intent) {
             switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS, StateHolder.STATE_BANK_CASH_RUNNING)) {

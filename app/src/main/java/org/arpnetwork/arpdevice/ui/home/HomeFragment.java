@@ -27,6 +27,7 @@ import android.opengl.GLSurfaceView;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -55,6 +56,7 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerHelper;
 import org.arpnetwork.arpdevice.ui.miner.StateHolder;
+import org.arpnetwork.arpdevice.ui.miner.TaskInfo;
 import org.arpnetwork.arpdevice.ui.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
@@ -122,6 +124,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
         regBatteryChangedReceiver();
         loadMinerAddr();
+        registerStateReceiver();
     }
 
     @Override
@@ -130,6 +133,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
         unregBatteryChangedReceiver();
         dismissPasswordDialog();
+        unregStateReceiver();
     }
 
     @Override
@@ -389,6 +393,19 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
         getActivity().unregisterReceiver(mBatteryChangedReceiver);
     }
 
+    private void registerStateReceiver() {
+        IntentFilter statusIntentFilter = new IntentFilter(
+                Constant.BROADCAST_ACTION_STATUS);
+        statusIntentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
+                mBindStateReceiver,
+                statusIntentFilter);
+    }
+
+    private void unregStateReceiver() {
+        LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mBindStateReceiver);
+    }
+
     private void startReceiveOrderActivity(Miner miner) {
         Bundle bundle = new Bundle();
         bundle.putSerializable(Constant.KEY_MINER, miner);
@@ -477,6 +494,28 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
         @Override
         public void onStopTrackingTouch(SeekBar seekBar) {
             DeviceInfo.get().setPrice(mOrderPrice);
+        }
+    };
+
+    private BroadcastReceiver mBindStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (intent.getIntExtra(Constant.EXTENDED_DATA_STATUS,
+                    StateHolder.STATE_APPROVE_RUNNING)) {
+                case StateHolder.STATE_BIND_SUCCESS:
+                    UIHelper.showToast(getActivity(), getString(R.string.bind_success));
+                    TaskInfo bindTask = StateHolder.getTaskByState(StateHolder.STATE_BIND_SUCCESS);
+                    mMinerName.setText(bindTask.address);
+                    break;
+
+                case StateHolder.STATE_UNBIND_SUCCESS:
+                    UIHelper.showToast(getActivity(), getString(R.string.unbind_success));
+                    mMinerName.setText("");
+                    break;
+
+                default:
+                    break;
+            }
         }
     };
 }

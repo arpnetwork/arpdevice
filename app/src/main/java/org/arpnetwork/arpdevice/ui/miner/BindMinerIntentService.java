@@ -136,6 +136,12 @@ public class BindMinerIntentService extends IntentService {
                     break;
                 }
 
+                if (result) {
+                    Promise.clear();
+
+                    StateHolder.clearAllState();
+                    CustomApplication.sInstance.stopMonitorService();
+                }
                 mBroadcaster.broadcastWithState(result ? STATE_UNBIND_SUCCESS : STATE_UNBIND_FAILED, type, address);
                 break;
             }
@@ -167,6 +173,9 @@ public class BindMinerIntentService extends IntentService {
                     break;
                 }
 
+                if (result) {
+                    CustomApplication.sInstance.startMonitorService();
+                }
                 mBroadcaster.broadcastWithState(result ? STATE_BIND_SUCCESS : STATE_BIND_FAILED, type, address);
                 break;
             }
@@ -353,32 +362,19 @@ public class BindMinerIntentService extends IntentService {
 
     private boolean unbindDevice(CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
         ARPRegistry registry = ARPRegistry.load(manager, gasPrice, gasLimit);
-
-        TransactionReceipt unbindDeviceReceipt = registry.unbindDevice().send();
-
-        Boolean result = TransactionAPI.isStatusOK(unbindDeviceReceipt.getStatus());
-        if (result) {
-            Promise.clear();
-
-            StateHolder.clearAllState();
-            CustomApplication.sInstance.stopMonitorService();
-        }
-        return result;
+        TransactionReceipt receipt = registry.unbindDevice().send();
+        return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
     private boolean bindDevice(String address, BindPromise bindPromise, CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
         ARPRegistry registry = ARPRegistry.load(manager, gasPrice, gasLimit);
 
-        TransactionReceipt bindDeviceReceipt = registry.bindDevice(address, bindPromise.getAmount(),
+        TransactionReceipt receipt = registry.bindDevice(address, bindPromise.getAmount(),
                 bindPromise.getExpired(), bindPromise.getSignExpired(),
                 new BigInteger(String.valueOf(bindPromise.getSignatureData().getV())),
                 bindPromise.getSignatureData().getR(), bindPromise.getSignatureData().getS()).send();
 
-        boolean result = TransactionAPI.isStatusOK(bindDeviceReceipt.getStatus());
-        if (result) {
-            CustomApplication.sInstance.startMonitorService();
-        }
-        return result;
+        return TransactionAPI.isStatusOK(receipt.getStatus());
     }
 
     private boolean arpApprove(CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {

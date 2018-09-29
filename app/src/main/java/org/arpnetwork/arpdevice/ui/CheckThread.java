@@ -188,7 +188,7 @@ public class CheckThread {
 
     private void appInstall(File file, final String packageName) {
         final TaskHelper mTaskHelper = new TaskHelper(mContext.getApplicationContext());
-        mTaskHelper.startCheckTopTimer(DELAY_START_TIMER, DELAY_START_TIMER);
+        mTaskHelper.startCheckTopTimer(1000, DELAY_START_TIMER);
 
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.installApp(file.getAbsolutePath(), new ShellChannel.ShellListener() {

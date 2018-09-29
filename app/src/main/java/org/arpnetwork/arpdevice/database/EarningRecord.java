@@ -99,10 +99,4 @@ public class EarningRecord extends BaseRecord {
     public static void clear() {
         ActiveAndroid.execSQL("DELETE FROM earning_record;");
     }
-
-    public BigInteger getCid() {
-        String cid = key.split(":")[0];
-        return new BigInteger(cid, 16);
-    }
-
 }

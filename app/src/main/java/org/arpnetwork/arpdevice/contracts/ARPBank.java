@@ -236,7 +236,11 @@ public class ARPBank extends Contract {
                     if (allowance == null) {
                         return BigInteger.ZERO;
                     } else {
-                        return amount.subtract(allowance.paid);
+                        BigInteger result = amount.subtract(allowance.paid);
+                        if (result.compareTo(BigInteger.ZERO) > 0) {
+                            return result;
+                        }
+                        return BigInteger.ZERO;
                     }
                 }
             }

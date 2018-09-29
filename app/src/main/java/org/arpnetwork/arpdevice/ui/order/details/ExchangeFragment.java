@@ -187,7 +187,14 @@ public class ExchangeFragment extends BaseFragment {
                     public void onClick(View v) {
                         if (isCorrectPassword()) {
                             startServiceIntent(OPERATION_CASH);
-                            finish();
+                            mExchangeBtn.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // wait hash saved to db.
+                                    finish();
+                                }
+                            }, 1200);
+
                         } else {
                             UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
                         }
