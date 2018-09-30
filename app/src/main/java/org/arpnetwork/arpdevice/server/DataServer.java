@@ -157,7 +157,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         heartbeat();
 
         if (mDApp == null) {
-            close();
+            close(false);
             return;
         }
 
@@ -364,9 +364,12 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         }
     }
 
-    private void close() {
+    private void close(boolean stopApp) {
         if (mConn != null) {
             mConn.closeConnection();
+        }
+        if (mAppManager != null && stopApp) {
+            mAppManager.stopApp();
         }
     }
 
@@ -383,7 +386,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             switch (msg.what) {
                 case MSG_CONNECTED_TIMEOUT:
                     if (dataServer != null && !dataServer.sessionExists()) {
-                        dataServer.close();
+                        dataServer.close(true);
                     }
                     break;
                 case MSG_LAUNCH_APP_SUCCESS:
@@ -394,7 +397,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                     break;
                 case MSG_LAUNCH_APP_FAILED:
                     if (dataServer != null) {
-                        dataServer.close();
+                        dataServer.close(false);
                     }
                     break;
                 default:

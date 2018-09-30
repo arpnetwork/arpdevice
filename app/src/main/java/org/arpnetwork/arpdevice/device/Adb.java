@@ -67,6 +67,13 @@ public class Adb {
         }
     }
 
+    public void getUIInfo(ShellChannel.ShellListener listener) {
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            ShellChannel ss = mConnection.openShell("uiautomator dump /sdcard/arpdevice/ui");
+            ss.setListener(listener);
+        }
+    }
+
     public void killApp(String packageName) {
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
             mConnection.openShell(String.format("am force-stop %s", packageName));

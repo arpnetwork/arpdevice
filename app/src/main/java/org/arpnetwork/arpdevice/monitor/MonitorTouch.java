@@ -37,7 +37,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class MonitorTouch {
     private static final String TAG = "MonitorTouch";
-    private static final int MONITOR_DURATION = 100; // ms
+    private static final int MONITOR_DURATION = 300; // ms
 
     private final LinkedBlockingQueue<String> mRemotePacketQueue = new LinkedBlockingQueue<String>();
     private final ConcurrentLinkedQueue<String> mCmdQueue = new ConcurrentLinkedQueue<String>();

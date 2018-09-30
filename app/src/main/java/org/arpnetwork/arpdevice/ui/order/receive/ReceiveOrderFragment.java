@@ -345,7 +345,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         if (audioManager != null) {
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            audioManager.getStreamVolume(AudioManager.STREAM_RING);
+            audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
         }
     }
 

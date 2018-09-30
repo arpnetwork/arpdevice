@@ -25,7 +25,7 @@ import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.stream.Touch;
-import org.arpnetwork.arpdevice.util.UIHelper;
+import org.arpnetwork.arpdevice.util.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -203,18 +203,38 @@ public class TaskHelper {
                             mLaunchRunnable = null;
                         }
                     } else if (topPackage.contains("com.miui.wakepath")) {
-                        int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
-                        int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
-                        sendTouch(x, y);
-                    } else if (!TextUtils.isEmpty(topPackage)) {
+                        handleTouch("resource\\-id=\"android:id\\/button1\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"");
+                    } else if (!TextUtils.isEmpty(topPackage) && !topPackage.equals(mContext.getPackageName())) {
                         stopCheckTopTimer();
                         onTopTaskIllegal();
                     }
                 } else if (topPackage.contains("com.miui.securitycenter")) {
-                    int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
-                    int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
+                    handleTouch("resource\\-id=\"android:id\\/button2\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"");
+                }
+            }
+        });
+    }
+
+    private void handleTouch(final String regex) {
+        mAdb.getUIInfo(new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+                String uiInfo = Util.stringFromFile("/sdcard/arpdevice/ui");
+                Pattern p = Pattern.compile(regex);
+                Matcher m = p.matcher(uiInfo);
+                if (m.find()) {
+                    int x = (Integer.parseInt(m.group(1)) + Integer.parseInt(m.group(3))) / 2;
+                    int y = (Integer.parseInt(m.group(2)) + Integer.parseInt(m.group(4))) / 2;
                     sendTouch(x, y);
                 }
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
             }
         });
     }

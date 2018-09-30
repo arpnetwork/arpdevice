@@ -24,6 +24,7 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.BatteryManager;
+import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -35,9 +36,11 @@ import org.spongycastle.util.encoders.Hex;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -95,6 +98,22 @@ public class Util {
                 }
             }
         }
+    }
+
+    public static String stringFromFile(String path) {
+        StringBuilder builder = new StringBuilder();
+        try {
+            FileReader fileReader = new FileReader(path);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String str;
+            while ((str = bufferedReader.readLine()) != null) {
+                builder.append(str);
+            }
+            bufferedReader.close();
+            fileReader.close();
+        } catch (Exception e) {
+        }
+        return builder.toString();
     }
 
     public static final String ObjToJson(Object obj) {
