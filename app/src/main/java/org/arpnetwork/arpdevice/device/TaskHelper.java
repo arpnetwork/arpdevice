@@ -16,15 +16,19 @@
 
 package org.arpnetwork.arpdevice.device;
 
+import android.annotation.TargetApi;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.text.TextUtils;
 
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.util.ArrayList;
@@ -41,6 +45,7 @@ public class TaskHelper {
     private static final int CHECK_TOP_INTERVAL = 800; // shell cost 80ms.
 
     private String mPackageName;
+    private String mTopPackage;
     private final Adb mAdb;
     private Timer mTimer;
     private Context mContext;
@@ -84,6 +89,8 @@ public class TaskHelper {
         stopCheckTopTimer();
         mPackageName = packageName;
         mLaunchRunnable = runnable;
+        mTopPackage = null;
+
         PackageManager packageManager = CustomApplication.sInstance.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(mPackageName);
         if (intent != null) {
@@ -118,6 +125,7 @@ public class TaskHelper {
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
     public void killLaunchedApp() {
         stopCheckTopTimer();
         if (mPackageName != null) {
@@ -130,7 +138,17 @@ public class TaskHelper {
             @Override
             public void onGetTopTask(String pkgName) {
                 if (!pkgName.equals(mContext.getPackageName())) {
-                    mAdb.killApp(pkgName);
+                    if (!pkgName.startsWith("android")) {
+                        mAdb.killApp(pkgName);
+                    } else {
+                        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+                        List<ActivityManager.AppTask> list = am.getAppTasks();
+                        for (ActivityManager.AppTask task : list) {
+                            if (task.getTaskInfo().topActivity.getClassName().contains(ReceiveOrderActivity.class.getSimpleName())) {
+                                task.moveToFront();
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -204,13 +222,15 @@ public class TaskHelper {
                         }
                     } else if (topPackage.contains("com.miui.wakepath")) {
                         handleTouch("resource\\-id=\"android:id\\/button1\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"");
-                    } else if (!TextUtils.isEmpty(topPackage) && !topPackage.equals(mContext.getPackageName())) {
+                    } else if (!TextUtils.isEmpty(topPackage) && (!topPackage.contains(mPackageName)
+                            && (mTopPackage != null && mTopPackage.contains(mPackageName)))) {
                         stopCheckTopTimer();
                         onTopTaskIllegal();
                     }
                 } else if (topPackage.contains("com.miui.securitycenter")) {
                     handleTouch("resource\\-id=\"android:id\\/button2\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"");
                 }
+                mTopPackage = topPackage;
             }
         });
     }

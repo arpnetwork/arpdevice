@@ -22,6 +22,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
 public class Message {
+    public static final int DEFAULT = -2;
     public static final int HEARTBEAT = -1;
     public static final int VIDEO = 0;
     public static final int AUDIO = 1;
@@ -29,7 +30,7 @@ public class Message {
     public static final int PROTOCOL = 3;
     public static final int TIME = 4;
 
-    private int mType = -1;
+    private int mType = DEFAULT;
     private ByteBuf mData;
 
     public Message() {
@@ -41,7 +42,7 @@ public class Message {
     }
 
     public int getType() {
-        if (mType == -1) {
+        if (mType == DEFAULT) {
             mType = mData.readByte();
         }
         return mType;

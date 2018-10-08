@@ -308,7 +308,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         DAppApi.requestPayment(dApp, new Runnable() {
             @Override
             public void run() {
-                releaseDApp();
+                finish();
             }
         });
         postRequestPayment(dApp);

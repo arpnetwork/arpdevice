@@ -94,6 +94,9 @@ public class RecordHelper {
         Context context = CustomApplication.sInstance;
         int videoHeight = (int) ((UIHelper.getHeightNoVirtualBar(context) - UIHelper.getStatusbarHeight(context))
                 / (double) UIHelper.getWidthNoVirtualBar(context) * VIDEO_WIDTH);
+        if (videoHeight % 2 != 0) {
+            videoHeight -= 1;
+        }
         return videoHeight;
     }
 }
