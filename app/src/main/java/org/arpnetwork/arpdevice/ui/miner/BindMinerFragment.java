@@ -208,6 +208,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private void setState(int state) {
         mProgressView.setVisibility(View.GONE);
+        mPasswordText.getText().clear();
 
         switch (state) {
             case BIND:

@@ -49,7 +49,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private static final String TAG = "DataServer";
     private static final boolean DEBUG = Config.DEBUG;
 
-    private static final int HEARTBEAT_TIMEOUT = 10000;
+    private static final int HEARTBEAT_TIMEOUT = 15000;
     private static final int HEARTBEAT_INTERVAL = 5000;
 
     private static volatile DataServer sInstance;

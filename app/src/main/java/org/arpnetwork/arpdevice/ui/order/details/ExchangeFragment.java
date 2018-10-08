@@ -196,13 +196,6 @@ public class ExchangeFragment extends BaseFragment {
                                             hideSoftInput(mExchangeBtn);
 
                                             startServiceIntent(OPERATION_CASH);
-                                            mExchangeBtn.postDelayed(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    // wait hash saved to db.
-                                                    finish();
-                                                }
-                                            }, 1200);
                                         }
                                     });
                                 } else {

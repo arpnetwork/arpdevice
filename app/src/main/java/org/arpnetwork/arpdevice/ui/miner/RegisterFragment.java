@@ -178,7 +178,7 @@ public class RegisterFragment extends BaseFragment {
 
     private void setStepState(int stepState) {
         mProgressView.setVisibility(View.GONE);
-        mPasswordText.setText("");
+        mPasswordText.getText().clear();
 
         hideProgressDialog();
         findViewById(R.id.ll_register).setVisibility(View.VISIBLE);

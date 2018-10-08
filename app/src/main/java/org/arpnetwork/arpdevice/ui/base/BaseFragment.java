@@ -197,6 +197,9 @@ public abstract class BaseFragment extends Fragment {
     }
 
     protected void finish() {
+        if (getFragmentManager() == null || getActivity() == null) {
+            return;
+        }
         if (getFragmentManager().getBackStackEntryCount() > 0) {
             getFragmentManager().popBackStack();
         } else {

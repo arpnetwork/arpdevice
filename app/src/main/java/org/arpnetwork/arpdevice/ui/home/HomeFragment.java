@@ -172,7 +172,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
                                 @Override
                                 public void onFail(Throwable throwable) {
-                                    UIHelper.showToast(getActivity(), getString(R.string.network_error));
+                                    showErrorAlertDialog(R.string.network_error);
                                 }
                             });
                         } else {
@@ -185,7 +185,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                     @Override
                     public void onFail(Throwable throwable) {
                         hideProgressDialog();
-                        UIHelper.showToast(getActivity(), getString(R.string.network_error));
+                        showErrorAlertDialog(R.string.network_error);
                     }
                 });
                 break;
