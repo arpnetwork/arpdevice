@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.util;
 
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.app.Activity;
@@ -24,7 +25,9 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.BatteryManager;
-import android.text.TextUtils;
+import android.provider.Settings;
+import android.view.Window;
+import android.view.WindowManager;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -357,5 +360,47 @@ public class Util {
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
         return isCharging;
+    }
+
+    public static float getScreenBrightness(Context context) {
+        float result = 1;
+        int value = 0;
+        ContentResolver cr = context.getContentResolver();
+        try {
+            value = Settings.System.getInt(cr,
+                    Settings.System.SCREEN_BRIGHTNESS);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        result = (float) value / 255;
+        return result;
+    }
+
+    public static void dimOn(Activity activity) {
+        Window window = activity.getWindow();
+        WindowManager.LayoutParams params = window.getAttributes();
+
+        params.screenBrightness = 0.08f;
+        window.setAttributes(params);
+    }
+
+    public static void dimOff(Activity activity, float screenBrightness) {
+        Window window = activity.getWindow();
+        WindowManager.LayoutParams params = window.getAttributes();
+
+        if (params.screenBrightness == WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE) {
+            params.screenBrightness = getScreenBrightness(activity);
+        }
+
+        params.screenBrightness = screenBrightness;
+
+        if (params.screenBrightness > 1.0f) {
+            params.screenBrightness = 1.0f;
+        }
+        if (params.screenBrightness <= 0.01f) {
+            params.screenBrightness = 0.01f;
+        }
+        window.setAttributes(params);
     }
 }

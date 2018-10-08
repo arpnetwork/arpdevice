@@ -57,6 +57,7 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
+import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
@@ -89,6 +90,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private int mDataPort;
     private int mHttpPort;
 
+    private float mDeviceBright = 0;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -107,6 +110,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         mAppManager = AppManager.getInstance(getContext().getApplicationContext());
         mAppManager.getInstalledApps();
+
+        mDeviceBright = Util.getScreenBrightness(getContext());
     }
 
     @Override
@@ -151,6 +156,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mAlertDialog != null) {
             mAlertDialog.dismiss();
         }
+        Util.dimOff(getActivity(), mDeviceBright);
 
         super.onDestroy();
     }
@@ -212,6 +218,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private synchronized void startDeviceService() {
         if (!mStartService) {
             silentOn();
+            Util.dimOn(getActivity());
 
             mAppManager.setHandler(DataServer.getInstance().getHandler());
             mAppManager.setOnTopTaskListener(this);
