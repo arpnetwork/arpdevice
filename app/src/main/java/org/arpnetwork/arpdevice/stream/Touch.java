@@ -62,9 +62,6 @@ public class Touch {
     private RecordHelper mRecordHelper;
     private MonitorTouch mMonitor;
 
-    private long mLastSend = 0;
-    private static final long DELTA = 17;
-
     public static Touch getInstance() {
         if (sInstance == null) {
             synchronized (Touch.class) {
@@ -97,15 +94,8 @@ public class Touch {
 
     public void sendTouch(String touchInfo) {
         if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mShell != null) {
-            long delta = System.currentTimeMillis() - mLastSend;
-            if (DELTA > delta) {
-                int diff = (int) (DELTA - delta);
-                String wait = String.format("w %d\n", diff);
-                mShell.write(wait);
-            }
-
             mShell.write(touchInfo);
-            mLastSend = System.currentTimeMillis();
+            mShell.write("w 10\n");
 
             if (mMonitor != null) {
                 mMonitor.enqueueTouch(touchInfo);
