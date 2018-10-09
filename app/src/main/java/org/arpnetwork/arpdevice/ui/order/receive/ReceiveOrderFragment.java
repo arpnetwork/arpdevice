@@ -57,7 +57,6 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
-import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
@@ -79,6 +78,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private int mTotalTime;
     private boolean mStartService;
     private boolean mPaused;
+    private boolean mInstallSuccess;
 
     private TouchLocalReceiver mTouchLocalReceiver;
     private ChargingReceiver mChargingReceiver;
@@ -130,6 +130,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onResume() {
         super.onResume();
 
+        mHandler.removeCallbacks(mStopRunnable);
         if (!mPaused) {
             startDeviceService();
         } else {
@@ -142,8 +143,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onPause();
 
         if (mAppManager.getState() != AppManager.State.INSTALLING && mAppManager.getState() != AppManager.State.LAUNCHING) {
-            stopDeviceService();
-            mPaused = true;
+            mHandler.postDelayed(mStopRunnable, 500);
         }
     }
 
@@ -179,8 +179,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     @Override
     public void onInstall(boolean success) {
-        if (!success) {
+        if (!success && !mInstallSuccess) {
             startCheckActivity(mMiner);
+        } else {
+            mInstallSuccess = true;
         }
     }
 
@@ -499,6 +501,14 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                     }
                 }, 500);
             }
+        }
+    };
+
+    private Runnable mStopRunnable = new Runnable() {
+        @Override
+        public void run() {
+            stopDeviceService();
+            mPaused = true;
         }
     };
 
