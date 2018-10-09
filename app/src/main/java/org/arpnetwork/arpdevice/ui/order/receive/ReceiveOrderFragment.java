@@ -78,6 +78,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private int mTotalTime;
     private boolean mStartService;
     private boolean mPaused;
+    private boolean mCheckInstall;
     private boolean mInstallSuccess;
 
     private TouchLocalReceiver mTouchLocalReceiver;
@@ -131,8 +132,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onResume();
 
         mHandler.removeCallbacks(mStopRunnable);
-        if (!mPaused) {
+        if (!mPaused || mCheckInstall) {
             startDeviceService();
+            mCheckInstall = false;
+            mPaused = false;
         } else {
             finish();
         }
@@ -159,6 +162,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         Util.dimOff(getActivity(), mDeviceBright);
 
         super.onDestroy();
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == 0) {
+            mInstallSuccess = true;
+        }
     }
 
     @Override
@@ -211,10 +221,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void startCheckActivity(Miner miner) {
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(Constant.KEY_MINER, miner);
-        bundle.putBoolean(Constant.KEY_FROM_MY, true);
-        startActivity(CheckDeviceActivity.class, bundle);
+        if (!mCheckInstall) {
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(Constant.KEY_MINER, miner);
+            bundle.putBoolean(Constant.KEY_FROM_MY, true);
+            startActivityForResult(CheckDeviceActivity.class, 0, bundle);
+            mCheckInstall = true;
+        }
     }
 
     private synchronized void startDeviceService() {

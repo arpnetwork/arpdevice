@@ -232,6 +232,11 @@ public class CheckDeviceActivity extends BaseActivity {
     }
 
     private void jumpToNextActivity() {
+        if (mFromMy) {
+            finish();
+            return;
+        }
+
         Intent intent = new Intent();
         if (!Wallet.exists()) {
             intent.putExtra(Constant.KEY_FROM_LAUNCHER, true);
