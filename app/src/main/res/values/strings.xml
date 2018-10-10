@@ -254,7 +254,7 @@
     <!-- receive order -->
     <string name="start_service_failed">Start service failed</string>
     <string name="incompatible_protocol">App version is too low</string>
-    <string name="connect_miner_failed">Connect miner failed</string>
+    <string name="connect_miner_failed">Connect miner failed. Error code: %d</string>
     <string name="verify_failed">Verify failed</string>
     <string name="low_upload_speed">The upload speed is too low to receive the order</string>
     <string name="starting_service">Starting service</string>

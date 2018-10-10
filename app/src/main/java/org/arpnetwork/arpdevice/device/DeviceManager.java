@@ -160,7 +160,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     public void onClosed(DeviceConnection conn) {
         reset();
         if (!mClosed) {
-            handleError(0, R.string.connect_miner_failed);
+            handleError(-101, R.string.connect_miner_failed);
         }
         mClosed = false;
     }
@@ -170,7 +170,7 @@ public class DeviceManager implements DeviceConnection.Listener {
         Log.e(TAG, "onException. message = " + cause.getMessage());
 
         mClosed = true;
-        handleError(0, R.string.connect_miner_failed);
+        handleError(-102, R.string.connect_miner_failed);
     }
 
     private void onDeviceMessage(Message msg) {

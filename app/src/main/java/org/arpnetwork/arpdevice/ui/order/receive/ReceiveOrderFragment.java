@@ -494,7 +494,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onError(int code, int msg) {
             stopDeviceService();
-            showAlertDialog(getString(msg));
+            showAlertDialog(String.format(getString(msg), code));
         }
     };
 

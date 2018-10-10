@@ -257,7 +257,7 @@
     <!-- 接单 -->
     <string name="start_service_failed">启动服务失败</string>
     <string name="incompatible_protocol">App版本过低</string>
-    <string name="connect_miner_failed">连接矿工失败</string>
+    <string name="connect_miner_failed">连接矿工失败，错误码：%d</string>
     <string name="verify_failed">验证失败</string>
     <string name="low_upload_speed">上传网速过低，无法接单</string>
     <string name="starting_service">服务启动中</string>
