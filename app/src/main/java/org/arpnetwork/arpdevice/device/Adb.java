@@ -67,9 +67,9 @@ public class Adb {
         }
     }
 
-    public void getUIInfo(ShellChannel.ShellListener listener) {
+    public void getUIInfo(String path, ShellChannel.ShellListener listener) {
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
-            ShellChannel ss = mConnection.openShell("uiautomator dump /sdcard/arpdevice/ui");
+            ShellChannel ss = mConnection.openShell(String.format("uiautomator dump %s", path));
             ss.setListener(listener);
         }
     }

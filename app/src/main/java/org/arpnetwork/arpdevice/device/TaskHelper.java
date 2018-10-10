@@ -29,6 +29,7 @@ import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
+import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.util.ArrayList;
@@ -221,25 +222,31 @@ public class TaskHelper {
                             mLaunchRunnable = null;
                         }
                     } else if (topPackage.contains("com.miui.wakepath")) {
-                        handleTouch("resource\\-id=\"android:id\\/button1\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"");
+                        String regex = "resource\\-id=\"android:id\\/button1\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"";
+                        int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
+                        int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
+                        handleTouch("/sdcard/arpdevice/ui_launch.xml", regex, x, y);
                     } else if (!TextUtils.isEmpty(topPackage) && (!topPackage.contains(mPackageName)
                             && (mTopPackage != null && mTopPackage.contains(mPackageName)))) {
                         stopCheckTopTimer();
                         onTopTaskIllegal();
                     }
                 } else if (topPackage.contains("com.miui.securitycenter")) {
-                    handleTouch("resource\\-id=\"android:id\\/button2\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"");
+                    String regex = "resource\\-id=\"android:id\\/button2\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"";
+                    int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
+                    int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
+                    handleTouch("/sdcard/arpdevice/ui_install.xml", regex, x, y);
                 }
                 mTopPackage = topPackage;
             }
         });
     }
 
-    private void handleTouch(final String regex) {
-        mAdb.getUIInfo(new ShellChannel.ShellListener() {
+    private void handleTouch(final String path, final String regex, final int defaultX, final int defaultY) {
+        mAdb.getUIInfo(path, new ShellChannel.ShellListener() {
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
-                String uiInfo = Util.stringFromFile("/sdcard/arpdevice/ui");
+                String uiInfo = Util.stringFromFile(path);
                 Pattern p = Pattern.compile(regex);
                 Matcher m = p.matcher(uiInfo);
                 if (m.find()) {
@@ -251,6 +258,7 @@ public class TaskHelper {
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
+                sendTouch(defaultX, defaultY);
             }
 
             @Override
