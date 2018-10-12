@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.text.TextUtils;
 
 import org.arpnetwork.adb.ShellChannel;
@@ -32,6 +33,7 @@ import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -54,7 +56,7 @@ public class TaskHelper {
     private OnTopTaskListener mOnTopTaskListener;
 
     public interface OnTopTaskListener {
-        void onTopTaskIllegal();
+        void onTopTaskIllegal(String pkgName);
     }
 
     public interface OnGetTopTaskListener {
@@ -222,20 +224,22 @@ public class TaskHelper {
                             mLaunchRunnable = null;
                         }
                     } else if (topPackage.contains("com.miui.wakepath")) {
+                        File file = new File(Environment.getExternalStorageDirectory(), "arpdevice/ui_launch.xml");
                         String regex = "resource\\-id=\"android:id\\/button1\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"";
                         int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
                         int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
-                        handleTouch("/sdcard/arpdevice/ui_launch.xml", regex, x, y);
+                        handleTouch(file.getPath(), regex, x, y);
                     } else if (!TextUtils.isEmpty(topPackage) && (!topPackage.contains(mPackageName)
                             && (mTopPackage != null && mTopPackage.contains(mPackageName)))) {
                         stopCheckTopTimer();
-                        onTopTaskIllegal();
+                        onTopTaskIllegal(mPackageName);
                     }
                 } else if (topPackage.contains("com.miui.securitycenter")) {
+                    File file = new File(Environment.getExternalStorageDirectory(), "arpdevice/ui_install.xml");
                     String regex = "resource\\-id=\"android:id\\/button2\".*?bounds=\"\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]\"";
                     int x = UIHelper.getWidthNoVirtualBar(mContext) / 4;
                     int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
-                    handleTouch("/sdcard/arpdevice/ui_install.xml", regex, x, y);
+                    handleTouch(file.getPath(), regex, x, y);
                 }
                 mTopPackage = topPackage;
             }
@@ -291,9 +295,9 @@ public class TaskHelper {
         Touch.getInstance().sendTouch("u 0 \nc\n");
     }
 
-    private void onTopTaskIllegal() {
+    private void onTopTaskIllegal(String pkgName) {
         if (mOnTopTaskListener != null) {
-            mOnTopTaskListener.onTopTaskIllegal();
+            mOnTopTaskListener.onTopTaskIllegal(pkgName);
         }
     }
 }

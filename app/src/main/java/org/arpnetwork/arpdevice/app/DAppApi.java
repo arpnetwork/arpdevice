@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.app;
 
+
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Result;
@@ -36,6 +37,7 @@ public class DAppApi {
 
     private static final String METHOD_NONCE_GET = "nonce_get";
     private static final String METHOD_APP_INSTALL = "app_notifyInstall";
+    private static final String METHOD_APP_STOP = "app_notifyStop";
     private static final String METHOD_CLIENT_CONNECTED = "client_connected";
     private static final String METHOD_CLIENT_DISCONNECTED = "client_disconnected";
     private static final String METHOD_REQUEST_PAYMENT = "account_requestPayment";
@@ -92,6 +94,26 @@ public class DAppApi {
         String url = String.format(Locale.US, "http://%s:%d", dApp.ip, dApp.port);
 
         new OKHttpUtils().post(url, json, METHOD_APP_INSTALL, null);
+    }
+
+    public static void appStop(final String pkg, int reason, final DApp dApp) {
+        String nonce = AtomicNonce.getAndIncrement(dApp.address);
+
+        RPCRequest request = new RPCRequest();
+        request.setId(null);
+        request.setMethod(METHOD_APP_STOP);
+        request.putString(pkg);
+        request.putInt(reason);
+        request.putString(nonce);
+
+        String data = String.format(Locale.US, "%s:%s:%d:%s:%s", METHOD_APP_STOP, pkg, reason, nonce, dApp.address);
+        String sign = SignUtil.sign(data);
+        request.putString(sign);
+
+        String json = request.toJSON();
+        String url = String.format(Locale.US, "http://%s:%d", dApp.ip, dApp.port);
+
+        new OKHttpUtils().post(url, json, METHOD_APP_STOP, null);
     }
 
     public static void clientConnected(String session, final DApp dApp, final Runnable successRunnable, final Runnable failedRunnable) {

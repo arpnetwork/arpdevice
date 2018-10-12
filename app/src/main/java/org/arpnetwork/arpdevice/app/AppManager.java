@@ -26,7 +26,6 @@ import org.arpnetwork.arpdevice.database.InstalledApp;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.download.IDownloadListener;
-import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
 
@@ -51,8 +50,7 @@ public class AppManager {
     private String mLastDAppAddress;
     private List<String> mInstalledApps;
     private TaskHelper mTaskHelper;
-    private Handler mOuterHandler;
-    private Handler mInnerHandler;
+    private Handler mHandler;
     private State mState;
     private OnAppManagerListener mOnAppManagerListener;
 
@@ -66,7 +64,9 @@ public class AppManager {
     }
 
     public interface OnAppManagerListener {
-        void onInstall(boolean success);
+        void onAppInstall(boolean success);
+
+        void onAppLaunch(boolean success);
     }
 
     public static AppManager getInstance(Context context) {
@@ -74,10 +74,6 @@ public class AppManager {
             sInstance = new AppManager(context);
         }
         return sInstance;
-    }
-
-    public void setHandler(Handler handler) {
-        mOuterHandler = handler;
     }
 
     public void setOnAppManagerListener(OnAppManagerListener listener) {
@@ -107,7 +103,7 @@ public class AppManager {
 
     public synchronized void setDApp(DApp dApp) {
         if (mLastDAppAddress != null) {
-            mInnerHandler.removeCallbacksAndMessages(null);
+            mHandler.removeCallbacksAndMessages(null);
             if (!mLastDAppAddress.equals(dApp.address)) {
                 uninstallAll();
             }
@@ -173,40 +169,31 @@ public class AppManager {
         }
     }
 
-    public void startApp(String packageName) {
-        if (InstalledApp.exists(packageName)) {
+    public void startApp(final String pkgName) {
+        if (InstalledApp.exists(pkgName)) {
             mState = State.LAUNCHING;
 
-            if (mOuterHandler != null) {
-                mOuterHandler.sendEmptyMessageDelayed(DataServer.MSG_LAUNCH_APP_FAILED, LAUNCH_TIMEOUT);
-            }
-            boolean success = mTaskHelper.launchApp(packageName, new Runnable() {
+            postLaunchFailedDelayed();
+            boolean success = mTaskHelper.launchApp(pkgName, new Runnable() {
                 @Override
                 public void run() {
                     mState = State.LAUNCHED;
-                    if (mOuterHandler != null) {
-                        mOuterHandler.removeMessages(DataServer.MSG_LAUNCH_APP_FAILED);
-                        mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_SUCCESS);
-                    }
+                    onAppLaunch(true);
                 }
             });
             if (!success) {
                 mState = State.INSTALLED;
-                if (mOuterHandler != null) {
-                    mOuterHandler.removeMessages(DataServer.MSG_LAUNCH_APP_FAILED);
-                    mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
-                }
+                onAppLaunch(false);
             }
         } else {
             mState = State.IDLE;
-            if (mOuterHandler != null) {
-                mOuterHandler.sendEmptyMessage(DataServer.MSG_LAUNCH_APP_FAILED);
-            }
+            onAppLaunch(false);
         }
     }
 
     public void stopApp() {
         mState = State.IDLE;
+        mHandler.removeCallbacks(mLaunchFailedRunnable);
         mTaskHelper.killLaunchedApp();
     }
 
@@ -225,7 +212,7 @@ public class AppManager {
     public void clear() {
         mState = State.IDLE;
         mDApp = null;
-        mInnerHandler.postDelayed(new Runnable() {
+        mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 mLastDAppAddress = null;
@@ -236,7 +223,7 @@ public class AppManager {
 
     private AppManager(Context context) {
         mTaskHelper = new TaskHelper(context.getApplicationContext());
-        mInnerHandler = new Handler();
+        mHandler = new Handler();
         mState = State.IDLE;
     }
 
@@ -259,7 +246,7 @@ public class AppManager {
                 if (mDApp != null) {
                     DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
                     if (mOnAppManagerListener != null) {
-                        mOnAppManagerListener.onInstall(true);
+                        mOnAppManagerListener.onAppInstall(true);
                     }
                 }
             }
@@ -271,7 +258,7 @@ public class AppManager {
                 if (mDApp != null) {
                     DAppApi.appInstalled(packageName, INSTALL_FAILED, mDApp);
                     if (mOnAppManagerListener != null) {
-                        mOnAppManagerListener.onInstall(false);
+                        mOnAppManagerListener.onAppInstall(false);
                     }
                 }
             }
@@ -288,4 +275,22 @@ public class AppManager {
             uninstallApp(app.pkgName);
         }
     }
+
+    private void postLaunchFailedDelayed() {
+        mHandler.postDelayed(mLaunchFailedRunnable, LAUNCH_TIMEOUT);
+    }
+
+    private void onAppLaunch(boolean success) {
+        mHandler.removeCallbacks(mLaunchFailedRunnable);
+        if (mOnAppManagerListener != null) {
+            mOnAppManagerListener.onAppLaunch(success);
+        }
+    }
+
+    private Runnable mLaunchFailedRunnable = new Runnable() {
+        @Override
+        public void run() {
+            onAppLaunch(false);
+        }
+    };
 }

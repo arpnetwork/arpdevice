@@ -74,6 +74,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private BigInteger mLastAmount = BigInteger.ZERO;
     private BigInteger mReceivedAmount = BigInteger.ZERO;
+    private long mLaunchTime;
     private int mQuality;
     private int mTotalTime;
     private boolean mStartService;
@@ -172,7 +173,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     @Override
-    public void onTopTaskIllegal() {
+    public void onTopTaskIllegal(String pkgName) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -185,15 +186,27 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 }, 2000);
             }
         });
+
+        long now = System.currentTimeMillis();
+        if (now - mLaunchTime < 2000) {
+            DAppApi.appStop(pkgName, 0, mDeviceManager.getDapp());
+        }
     }
 
     @Override
-    public void onInstall(boolean success) {
+    public void onAppInstall(boolean success) {
         if (!success && !mInstallSuccess) {
             startCheckActivity(mMiner);
         } else {
             mInstallSuccess = true;
         }
+    }
+
+    @Override
+    public void onAppLaunch(boolean success) {
+        mLaunchTime = success ? System.currentTimeMillis() : 0;
+
+        DataServer.getInstance().onAppLaunch(success);
     }
 
     private void initViews() {
@@ -235,7 +248,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             silentOn();
             Util.dimOn(getActivity());
 
-            mAppManager.setHandler(DataServer.getInstance().getHandler());
             mAppManager.setOnTopTaskListener(this);
             mAppManager.setOnAppManagerListener(this);
 
@@ -259,7 +271,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private synchronized void stopDeviceService() {
         if (mStartService) {
-            mAppManager.setHandler(null);
             mAppManager.setOnTopTaskListener(null);
             mAppManager.setOnAppManagerListener(null);
 
@@ -323,7 +334,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         DAppApi.requestPayment(dApp, new Runnable() {
             @Override
             public void run() {
-                finish();
+                releaseDApp();
             }
         });
         postRequestPayment(dApp);
