@@ -20,6 +20,9 @@ import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.stream.Touch;
+import org.arpnetwork.arpdevice.util.DeviceUtil;
+
+import java.io.File;
 
 public class Adb {
     private static final String TAG = "Adb";
@@ -47,8 +50,13 @@ public class Adb {
 
     public void installApp(String srcFilePath, ShellChannel.ShellListener listener) {
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
-            ShellChannel ss = mConnection.openShell("pm install -r " + srcFilePath);
-            ss.setListener(listener);
+            if (DeviceUtil.getSdk() >= 28) { // fix android P install.
+                ShellChannel ss = mConnection.openShell("cat " + srcFilePath + " | pm install -S " + new File(srcFilePath).length());
+                ss.setListener(listener);
+            } else {
+                ShellChannel ss = mConnection.openShell("pm install -r " + srcFilePath);
+                ss.setListener(listener);
+            }
         } else {
             if (listener != null) {
                 listener.onStderr(null, null);
