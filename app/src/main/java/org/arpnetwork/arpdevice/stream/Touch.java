@@ -95,7 +95,9 @@ public class Touch {
     public void sendTouch(String touchInfo) {
         if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mShell != null) {
             mShell.write(touchInfo);
-            mShell.write("w 10\n");
+            if (touchInfo.startsWith("m")) {
+                mShell.write("w 16\n");
+            }
 
             if (mMonitor != null) {
                 mMonitor.enqueueTouch(touchInfo);

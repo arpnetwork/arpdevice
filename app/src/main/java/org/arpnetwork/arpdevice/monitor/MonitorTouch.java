@@ -37,7 +37,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class MonitorTouch {
     private static final String TAG = "MonitorTouch";
-    private static final int MONITOR_DURATION = 300; // ms
+    private static final int MONITOR_DURATION = 1000; // ms
 
     private final LinkedBlockingQueue<String> mRemotePacketQueue = new LinkedBlockingQueue<String>();
     private final ConcurrentLinkedQueue<String> mCmdQueue = new ConcurrentLinkedQueue<String>();
@@ -105,28 +105,29 @@ public class MonitorTouch {
     private Runnable mMonitorRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mCmdQueue.containsAll(mLocalOutQueue)) {
+            synchronized (mCmdQueue) {
+                if (mCmdQueue.containsAll(mLocalOutQueue)) {
+                    if (mTimerCount == 0 && mRemoteCommits >= mTimerCount) {
+                        mTimerCount++;
+                        mNeedDeleteCount = mCmdQueue.size();
+                    } else if (mTimerCount != 0 && mRemoteCommits >= mTimerCount) {
+                        mTimerCount++;
+                        int m = mCmdQueue.size();
 
-                if (mTimerCount == 0 && mRemoteCommits >= mTimerCount) {
-                    mTimerCount++;
-                    mNeedDeleteCount = mCmdQueue.size();
-                } else if (mTimerCount != 0 && mRemoteCommits >= mTimerCount) {
-                    mTimerCount++;
-                    int m = mCmdQueue.size();
-
-                    for (int i = 0; i < mNeedDeleteCount; i++) {
-                        mCmdQueue.poll();
+                        for (int i = 0; i < mNeedDeleteCount; i++) {
+                            mCmdQueue.poll();
+                        }
+                        mNeedDeleteCount = m - mNeedDeleteCount;
                     }
-                    mNeedDeleteCount = m - mNeedDeleteCount;
+                    mLocalOutQueue.clear();
+                } else {
+                    Log.e(TAG, "abnormal");
+                    stopMonitor();
+                    sendBroadcast();
                 }
-                mLocalOutQueue.clear();
-            } else {
-                Log.e(TAG, "abnormal");
-                stopMonitor();
-                sendBroadcast();
-            }
 
-            mHandler.postDelayed(this, MONITOR_DURATION);
+                mHandler.postDelayed(this, MONITOR_DURATION);
+            }
         }
     };
 
