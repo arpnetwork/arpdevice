@@ -29,6 +29,7 @@ public class Message {
     public static final int TOUCH = 2;
     public static final int PROTOCOL = 3;
     public static final int TIME = 4;
+    public static final int KEYEVENT = 5;
 
     private int mType = DEFAULT;
     private ByteBuf mData;
@@ -112,6 +113,10 @@ public class Message {
 
             case TIME:
                 obj = mData.readLong();
+                break;
+
+            case KEYEVENT:
+                obj = mData.readInt();
                 break;
 
             default:

@@ -23,8 +23,8 @@
     <string name="check_highlight_developer_options">developer options</string>
     <string name="check_highlight_USB_debug">USB debug</string>
     <string name="check_tcp">Checking activation</string>
-    <string name="check_fail_tcp">Please connect your device with pc by usb\nand follow the guild of ARP-tool to activate your device</string>
-    <string name="download_tcp_tool">download from: https://arpnetwork.org</string>
+    <string name="check_fail_tcp">Please connect your device with pc by usb\nand follow the guild of ARP-tool to activate your device\nyou need to reactive when your device reboot.</string>
+    <string name="download_tcp_tool">download from: http://t.cn/E7Ag0s9</string>
     <string name="check_authorization">Checking authorization</string>
     <string name="check_authorization_tip">1. RSA key:\n%s\n2. %s from this computer\n3. click ok</string>
     <string name="check_always_allow">Check always allow</string>

@@ -66,6 +66,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private static final String TAG = ReceiveOrderFragment.class.getSimpleName();
 
     private TextView mOrderStateView;
+    private View mFloatView;
 
     private DeviceManager mDeviceManager;
     private HttpServer mHttpServer;
@@ -203,18 +204,40 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     @Override
-    public void onAppLaunch(boolean success) {
+    public void onAppLaunch(final boolean success) {
         mLaunchTime = success ? System.currentTimeMillis() : 0;
 
         DataServer.getInstance().onAppLaunch(success);
+
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (success) {
+                    showFloatLayer();
+                }
+            }
+        });
     }
 
     private void initViews() {
         mOrderStateView = (TextView) findViewById(R.id.tv_order_state);
         mOrderStateView.setText(R.string.starting_service);
+        mFloatView = findViewById(R.id.view_float);
 
         Button exitButton = (Button) findViewById(R.id.btn_exit);
         exitButton.setOnClickListener(mOnClickExitListener);
+    }
+
+    private void showFloatLayer() {
+        ((BaseActivity) getActivity()).hideToolbar();
+        mFloatView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideFloatLayer() {
+        if (getActivity() != null) {
+            ((BaseActivity) getActivity()).showToolbar();
+            mFloatView.setVisibility(View.GONE);
+        }
     }
 
     private void checkTopTaskAndStart() {
@@ -246,7 +269,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private synchronized void startDeviceService() {
         if (!mStartService) {
             silentOn();
-            Util.dimOn(getActivity());
+            mHandler.postDelayed(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            Util.dimOn(getActivity());
+                        }
+                    }, 30 * 1000);
 
             mAppManager.setOnTopTaskListener(this);
             mAppManager.setOnAppManagerListener(this);
@@ -285,6 +314,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
             mStartService = false;
         }
+
+        hideFloatLayer();
     }
 
     private void startHttpServer(Dispatcher dispatcher) {
@@ -539,7 +570,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private BaseActivity.OnBackListener mOnBackListener = new BaseActivity.OnBackListener() {
         @Override
         public boolean onBacked() {
-            showExitDialog();
+            if (mFloatView.getVisibility() == View.VISIBLE) {
+                // disable OnBackListener
+            } else {
+                showExitDialog();
+            }
+
             return true;
         }
     };

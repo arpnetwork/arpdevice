@@ -1,52 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:keepScreenOn="true">
+    android:layout_height="match_parent">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_marginLeft="60dp"
-        android:layout_marginRight="60dp"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        android:paddingBottom="50dp">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:keepScreenOn="true">
 
-        <TextView
-            android:id="@+id/tv_order_state"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Preparing"
-            android:textColor="#ff333333"
-            android:textSize="16sp" />
+            android:layout_centerInParent="true"
+            android:layout_marginLeft="60dp"
+            android:layout_marginRight="60dp"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="50dp">
 
-        <TextView
-            android:id="@+id/tv_"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/tv_tips"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
-            android:text="@string/dont_touch_screen"
-            android:textColor="#ff14ad84"
-            android:textSize="16sp" />
+            <TextView
+                android:id="@+id/tv_order_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Preparing"
+                android:textColor="#ff333333"
+                android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/tv_tips"
-            style="@style/MyItemLabel"
-            android:layout_marginTop="40dp"
-            android:text="@string/receive_order_tips"
-            android:textColor="#ff999999"
-            android:gravity="center_horizontal"/>
+            <TextView
+                android:id="@+id/tv_"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/tv_tips"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="20dp"
+                android:text="@string/dont_touch_screen"
+                android:textColor="#ff14ad84"
+                android:textSize="16sp" />
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/tv_tips"
+                style="@style/MyItemLabel"
+                android:layout_marginTop="40dp"
+                android:gravity="center_horizontal"
+                android:text="@string/receive_order_tips"
+                android:textColor="#ff999999" />
 
-    <Button
-        android:id="@+id/btn_exit"
-        style="@style/ButtonOrange"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="@dimen/plain_margin"
-        android:text="@string/exit_order" />
-</RelativeLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_exit"
+            style="@style/ButtonOrange"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="@dimen/plain_margin"
+            android:text="@string/exit_order" />
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/view_float"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:clickable="true"
+        android:visibility="gone" />
+</FrameLayout>

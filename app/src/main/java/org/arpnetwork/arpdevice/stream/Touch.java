@@ -62,6 +62,8 @@ public class Touch {
     private RecordHelper mRecordHelper;
     private MonitorTouch mMonitor;
 
+    private long mLastKeyTime = 0;
+
     public static Touch getInstance() {
         if (sInstance == null) {
             synchronized (Touch.class) {
@@ -101,6 +103,18 @@ public class Touch {
 
             if (mMonitor != null) {
                 mMonitor.enqueueTouch(touchInfo);
+            }
+        }
+    }
+
+    public void sendKeyevent(int keyeventValue) { // KeyEvent.KEYCODE_BACK
+        if (System.currentTimeMillis() - mLastKeyTime < 160) {
+            mLastKeyTime = System.currentTimeMillis();
+            Log.d(TAG, "drop keyevent");
+        } else {
+            mLastKeyTime = System.currentTimeMillis();
+            if (getState() == STATE_CONNECTED) {
+                mConn.openExec("input keyevent " + keyeventValue);
             }
         }
     }

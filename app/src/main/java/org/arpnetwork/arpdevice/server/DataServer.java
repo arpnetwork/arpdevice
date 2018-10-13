@@ -34,7 +34,6 @@ import org.arpnetwork.arpdevice.data.Req;
 import org.arpnetwork.arpdevice.data.TouchSetting;
 import org.arpnetwork.arpdevice.data.VideoInfo;
 
-import java.lang.ref.SoftReference;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import io.netty.buffer.ByteBuf;
@@ -196,6 +195,10 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
             case Message.PROTOCOL:
                 processProtocolPacket(msg.parsePacket(String.class));
+                break;
+
+            case Message.KEYEVENT:
+                Touch.getInstance().sendKeyevent(msg.parsePacket(Integer.class));
                 break;
 
             default:

@@ -32,8 +32,8 @@
     <string name="check_highlight_developer_options">勾选开发者选项</string>
     <string name="check_highlight_USB_debug">USB调试</string>
     <string name="check_tcp">检测设备激活</string>
-    <string name="check_fail_tcp">您的设备未激活，请在官网下载安装激活工具\n并将手机连接电脑完成激活操作</string>
-    <string name="download_tcp_tool">下载地址：https://arpnetwork.org</string>
+    <string name="check_fail_tcp">您的设备未激活，请在官网下载安装激活工具\n并将手机连接电脑完成激活操作\n手机重启后需要重新连接电脑激活</string>
+    <string name="download_tcp_tool">下载地址：http://t.cn/E7Ag0s9</string>
     <string name="check_authorization">检测USB授权</string>
     <string name="check_authorization_tip">1. 核对RSA密钥：\n%s\n2. %sUSB调试\n3. 点击确定</string>
     <string name="check_btn_reset_author">重新授权</string>
