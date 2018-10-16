@@ -477,6 +477,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onStop() {
             stopRecord();
+
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    hideFloatLayer();
+                }
+            });
             if (!Util.isCharging(getActivity())) {
                 finish();
             }
