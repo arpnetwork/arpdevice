@@ -26,6 +26,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.BatteryManager;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -47,6 +48,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -58,6 +61,7 @@ import java.util.Locale;
 import java.util.Random;
 
 public class Util {
+    private static final String TAG = "Util";
     private Util() {
         // prevent initial.
     }
@@ -402,5 +406,18 @@ public class Util {
             params.screenBrightness = 0.01f;
         }
         window.setAttributes(params);
+    }
+
+    public static void setArgV0(String text) {
+        try {
+            Method setter = android.os.Process.class.getMethod("setArgV0", String.class);
+            setter.invoke(android.os.Process.class, text);
+        } catch (NoSuchMethodException e) {
+            Log.e(TAG, "NoSuchMethodException");
+        } catch (IllegalAccessException e) {
+            Log.e(TAG, "IllegalAccessException");
+        } catch (InvocationTargetException e) {
+            Log.e(TAG, "InvocationTargetException");
+        }
     }
 }

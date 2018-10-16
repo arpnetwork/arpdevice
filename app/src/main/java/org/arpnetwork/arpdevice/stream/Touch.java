@@ -49,6 +49,7 @@ public class Touch {
 
     private Connection mConn;
     private ShellChannel mShell;
+    private ShellChannel mKeyInputShell;
 
     private Auth mAuth;
     private String mBanner;
@@ -61,8 +62,6 @@ public class Touch {
 
     private RecordHelper mRecordHelper;
     private MonitorTouch mMonitor;
-
-    private long mLastKeyTime = 0;
 
     public static Touch getInstance() {
         if (sInstance == null) {
@@ -107,15 +106,10 @@ public class Touch {
         }
     }
 
-    public void sendKeyevent(int keyeventValue) { // KeyEvent.KEYCODE_BACK
-        if (System.currentTimeMillis() - mLastKeyTime < 160) {
-            mLastKeyTime = System.currentTimeMillis();
-            Log.d(TAG, "drop keyevent");
-        } else {
-            mLastKeyTime = System.currentTimeMillis();
-            if (getState() == STATE_CONNECTED) {
-                mConn.openExec("input keyevent " + keyeventValue);
-            }
+    public void sendKeyevent(int keycode) { // KeyEvent.KEYCODE_BACK
+        if (mKeyInputShell != null) {
+            mKeyInputShell.write("" + keycode);
+            mKeyInputShell.write("\n"); // KeyInput stdIn.readLine() need \n.
         }
     }
 
@@ -182,6 +176,7 @@ public class Touch {
             } else {
                 mState = STATE_CONNECTED;
                 openUSBSafeDebug();
+                openKeyInputPath();
             }
         }
 
@@ -330,6 +325,42 @@ public class Touch {
 
         private void handleCopyFailed() {
             mCheckHandler.obtainMessage(Constant.CHECK_TOUCH_COPY_FAILED).sendToTarget();
+        }
+
+        private void openKeyInputPath() {
+            ShellChannel path = mConn.openShell("pm path " + "org.arpnetwork.arpdevice");
+            path.setListener(new ShellChannel.ShellListener() {
+                StringBuilder sb = new StringBuilder();
+                boolean find = false;
+
+                @Override
+                public void onStdout(ShellChannel ch, byte[] data) {
+                    String item = new String(data); // last item is \n.
+                    sb.append(item);
+                    if (sb.length() > "package:".length()) {
+                        String path = sb.toString().split(":")[1].trim();
+                        if (!TextUtils.isEmpty(path)) {
+                            if (!find) {
+                                find = true;
+                                startKeyInput(path);
+                            }
+                        }
+                    }
+                }
+
+                @Override
+                public void onStderr(ShellChannel ch, byte[] data) {
+                }
+
+                @Override
+                public void onExit(ShellChannel ch, int code) {
+                }
+            });
+        }
+
+        private void startKeyInput(String path) {
+            String keyInput = "export CLASSPATH=" + path + ";" + " exec app_process /system/bin " + "org.arpnetwork.arpdevice.stream.KeyInput";
+            mKeyInputShell = mConn.openShell(keyInput);
         }
 
     }
