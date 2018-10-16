@@ -40,7 +40,7 @@ import android.widget.TextView;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;

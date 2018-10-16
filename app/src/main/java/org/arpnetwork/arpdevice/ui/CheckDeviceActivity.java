@@ -37,13 +37,12 @@ import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.home.HomeActivity;
-import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
 import org.arpnetwork.arpdevice.upnp.ClingRegistryListener;
@@ -247,7 +246,7 @@ public class CheckDeviceActivity extends BaseActivity {
         }
 
         CustomApplication.sInstance.setPortArray(mDataPort, mHttpPort);
-        DeviceInfo.get().setDataPort(mDataPort);
+        DeviceInfo.get().setDataPort(mDataPort, mHttpPort);
 
         startActivity(intent);
         finish();

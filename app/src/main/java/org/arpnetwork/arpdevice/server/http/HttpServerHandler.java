@@ -41,7 +41,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
-class HttpServerHandler extends ChannelInboundHandlerAdapter {
+public class HttpServerHandler extends ChannelInboundHandlerAdapter {
     private static final String TAG = HttpServerHandler.class.getSimpleName();
 
     private static final String CONTENT_TYPE = "content-type";

@@ -25,6 +25,8 @@ import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.data.DApp;
+import org.arpnetwork.arpdevice.netty.Connection;
+import org.arpnetwork.arpdevice.netty.DefaultConnector;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.data.ChangeQualityReq;
 import org.arpnetwork.arpdevice.data.ConnectReq;
@@ -38,10 +40,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import io.netty.buffer.ByteBuf;
 
-public final class DataServer implements NettyConnection.ConnectionListener {
-    //    public static final int MSG_CONNECTED_TIMEOUT = 1;
-//    public static final int MSG_LAUNCH_APP_SUCCESS = MSG_CONNECTED_TIMEOUT + 1;
-//    public static final int MSG_LAUNCH_APP_FAILED = MSG_LAUNCH_APP_SUCCESS + 1;
+public final class DataServer extends DefaultConnector {
     public static final int CONNECTED_TIMEOUT = 10000;
 
     private static final String TAG = "DataServer";
@@ -63,8 +62,6 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private int mQuality;
     private boolean mStop;
     private AppManager mAppManager;
-
-    private NettyConnection mConn;
 
     private ConnectionListener mListener;
 
@@ -108,33 +105,12 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         mAppManager = appManager;
     }
 
-    public void startServer(final int port) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mConn.startServer(port);
-                } catch (InterruptedException ignored) {
-                }
-            }
-        }).start();
-    }
-
-    public void shutdown() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mConn.shutdown();
-            }
-        }).start();
-    }
-
     public void onAppLaunch(boolean success) {
         if (success) {
             start();
             mHandler.postDelayed(mConnectTimeoutRunnable, CONNECTED_TIMEOUT);
         } else {
-            close(false);
+            closeAndStopApp(false);
         }
     }
 
@@ -148,7 +124,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     public void onVideoChanged(int width, int height, int quality) {
         VideoInfo videoInfo = new VideoInfo(width, height, quality);
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.VIDEO_CHANGED, 0, videoInfo);
-        mConn.write(pkt);
+        write(pkt);
     }
 
     public void enqueueAVPacket(ByteBuf byteBuf) {
@@ -156,11 +132,11 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     @Override
-    public void onConnected(NettyConnection conn) {
+    public void onConnected(Connection conn) {
         heartbeat();
 
         if (mDApp == null) {
-            close(false);
+            close();
             return;
         }
 
@@ -169,7 +145,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     @Override
-    public void onClosed(NettyConnection conn) {
+    public void onClosed(Connection conn) {
 
         if (mDApp != null) {
             stop();
@@ -179,7 +155,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     @Override
-    public void onMessage(NettyConnection conn, Message msg) throws Exception {
+    public void onMessage(Connection conn, Message msg) throws Exception {
         switch (msg.getType()) {
             case Message.HEARTBEAT:
                 onReceiveHeartbeat();
@@ -207,7 +183,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     @Override
-    public void onException(NettyConnection conn, Throwable cause) {
+    public void onException(Connection conn, Throwable cause) {
         cause.printStackTrace();
 
         stop();
@@ -218,7 +194,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     }
 
     private DataServer() {
-        mConn = new NettyConnection(this);
+        super();
+
         mGson = new Gson();
         mHandler = new Handler();
         mStop = true;
@@ -232,7 +209,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private void onReceiveTimestamp(long clientTime) {
 
         Message pkt = ProtocolPacket.generateTimestamp(clientTime);
-        mConn.write(pkt);
+        write(pkt);
     }
 
     private void onClientMinitouchData(String cmd) {
@@ -248,7 +225,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
                 final ConnectReq connectReq = mGson.fromJson(protocolJson, ConnectReq.class);
                 if (!protocolCompatible(connectReq)) {
                     Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, ProtocolPacket.RESULT_NOT_SUPPORT, null);
-                    mConn.write(pkt);
+                    write(pkt);
                     stop();
                 } else if (!verifySession(connectReq)) {
                     stop(); // close client.
@@ -302,12 +279,12 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         mQuality = req.data.quality;
 
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CONNECT_RESP, 0, null);
-        mConn.write(pkt);
+        write(pkt);
     }
 
     private void onReceiveDisconnect() {
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.DISCONNECT_RESP, 0, null);
-        mConn.write(pkt);
+        write(pkt);
 
         stop();
     }
@@ -317,7 +294,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         // TODO: change quality need sync to execute.
 
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.CHANGE_QUALITY_RESP, 0, null);
-        mConn.write(pkt);
+        write(pkt);
     }
 
     /**
@@ -326,7 +303,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
     private void onMinitouchData() {
         TouchSetting touchSetting = TouchSetting.createTouchSetting();
         Message pkt = ProtocolPacket.generateProtocol(ProtocolPacket.TOUCH_INFO, 0, touchSetting);
-        mConn.write(pkt);
+        write(pkt);
     }
 
     private void start() {
@@ -356,7 +333,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
             }
 
             mPacketQueue.clear();
-            mConn.closeConnection();
+            close();
 
             // fix client terminate with no touch up.
             Touch.getInstance().sendTouch("r\n");
@@ -371,10 +348,8 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         }
     }
 
-    private void close(boolean stopApp) {
-        if (mConn != null) {
-            mConn.closeConnection();
-        }
+    private void closeAndStopApp(boolean stopApp) {
+        close();
         if (mAppManager != null && stopApp) {
             mAppManager.stopApp();
         }
@@ -384,7 +359,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         @Override
         public void run() {
             if (!sessionExists()) {
-                close(true);
+                closeAndStopApp(true);
             } else {
             }
         }
@@ -408,7 +383,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
         }
 
         private void send(ByteBuf packet) {
-            mConn.write(new Message(packet));
+            write(new Message(packet));
         }
 
         private void cancel() {
@@ -426,7 +401,7 @@ public final class DataServer implements NettyConnection.ConnectionListener {
 
     private void heartbeat() {
         Message pkt = ProtocolPacket.generateHeartbeat();
-        mConn.write(pkt);
+        write(pkt);
     }
 
     private void startHeartbeatTimer() {

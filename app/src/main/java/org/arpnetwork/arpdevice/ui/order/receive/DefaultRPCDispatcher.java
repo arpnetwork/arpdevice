@@ -47,6 +47,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
     private PromiseHandler mPromiseHandler;
     private ConcurrentMap<String, BigInteger> mNonceMap;
     private Miner mMiner;
+    private boolean mProxy;
 
     public DefaultRPCDispatcher(Context context, Miner miner) {
         mContext = context;
@@ -60,6 +61,10 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
 
     public void setPromiseHandler(PromiseHandler handler) {
         mPromiseHandler = handler;
+    }
+
+    public void setProxy(boolean proxy) {
+        mProxy = proxy;
     }
 
     @Override
@@ -132,7 +137,7 @@ public class DefaultRPCDispatcher extends RPCDispatcher {
 
     private boolean checkRemoteAddress(RPCRequest request, DApp dApp) {
         String remoteAddress = request.getRemoteAddress();
-        if (remoteAddress.equals(mMiner.getIpString()) || (dApp != null && remoteAddress.equals(dApp.ip))) {
+        if (remoteAddress.equals(mMiner.getIpString()) || (dApp != null && remoteAddress.equals(dApp.ip)) || mProxy) {
             return true;
         }
         return false;

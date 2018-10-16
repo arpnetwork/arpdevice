@@ -28,7 +28,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;

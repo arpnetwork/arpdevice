@@ -5,7 +5,7 @@ import android.os.Message;
 import android.util.Log;
 
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.upnp.action.ActionService;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
 import org.fourthline.cling.controlpoint.ControlPoint;

@@ -26,9 +26,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static org.arpnetwork.arpdevice.config.Constant.KEY_ADDRESS;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_TX_HASH;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_ADDRESS;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_OP;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_TX_HASH;
 
 public class StateHolder {
     public static final int STATE_APPROVE_RUNNING = 1;

@@ -33,7 +33,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService;
@@ -44,10 +44,10 @@ import org.arpnetwork.arpdevice.util.UIHelper;
 
 import java.math.BigInteger;
 
-import static org.arpnetwork.arpdevice.config.Constant.KEY_GASLIMIT;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_GASPRICE;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_GASLIMIT;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_GASPRICE;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_OP;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_PASSWD;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_UNBIND;
 
 public class UnlockFragment extends BaseFragment {

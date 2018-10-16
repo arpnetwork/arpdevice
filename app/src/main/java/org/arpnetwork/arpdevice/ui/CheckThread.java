@@ -26,7 +26,7 @@ import android.provider.Settings;
 
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.adb.SyncChannel;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.device.Adb;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.stream.AssetCopyHelper;

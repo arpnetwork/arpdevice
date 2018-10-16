@@ -31,7 +31,7 @@ import android.widget.ListView;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AtomicNonce;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.tasks.AbsExceptionTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
@@ -57,8 +57,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static org.arpnetwork.arpdevice.config.Config.API_SERVER_INFO;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_EXCHANGE_AMOUNT;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 
 public class MinerListFragment extends BaseFragment {

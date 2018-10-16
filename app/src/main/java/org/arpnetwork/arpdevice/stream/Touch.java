@@ -27,7 +27,7 @@ import org.arpnetwork.adb.Connection;
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.adb.SyncChannel;
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.monitor.MonitorTouch;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.util.PreferenceManager;

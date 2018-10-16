@@ -23,7 +23,7 @@ import android.os.BatteryManager;
 import android.support.v4.content.LocalBroadcastManager;
 
 import org.arpnetwork.arpdevice.CustomApplication;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 
 public class PowerConnectionReceiver extends BroadcastReceiver {
     @Override

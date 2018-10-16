@@ -25,7 +25,7 @@ import android.util.Log;
 
 import org.arpnetwork.adb.RawChannel;
 import org.arpnetwork.arpdevice.CustomApplication;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.web3j.utils.Numeric;
 

@@ -21,7 +21,7 @@ import android.content.Context;
 import com.google.gson.annotations.SerializedName;
 
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.util.DeviceUtil;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.web3j.utils.Convert;
@@ -29,8 +29,8 @@ import org.web3j.utils.Convert;
 import java.math.BigInteger;
 
 public class DeviceInfo {
+    public String proxy;
     public String ver;
-    public int port;
     public String brand;
     public String model;
     public String imsi;
@@ -41,6 +41,12 @@ public class DeviceInfo {
     public int width;
     public int height;
     public BigInteger price;
+
+    @SerializedName("tcp_port")
+    public int tcpPort;
+
+    @SerializedName("http_port")
+    public int httpPort;
 
     @SerializedName("os_ver")
     public String osVer;
@@ -92,7 +98,8 @@ public class DeviceInfo {
         return orderPrice >= 0 ? orderPrice : Config.ORDER_PRICE_DEFAULT;
     }
 
-    public void setDataPort(int port) {
-        this.port = port;
+    public void setDataPort(int tcpPort, int httpPort) {
+        this.tcpPort = tcpPort;
+        this.httpPort = httpPort;
     }
 }

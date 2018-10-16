@@ -20,6 +20,8 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.arpnetwork.arpdevice.constant.ErrorCode;
+
 import com.google.gson.Gson;
 
 import org.arpnetwork.arpdevice.R;
@@ -37,6 +39,8 @@ import org.arpnetwork.arpdevice.data.Response;
 import org.arpnetwork.arpdevice.data.VerifyData;
 import org.arpnetwork.arpdevice.data.VerifyReq;
 import org.arpnetwork.arpdevice.data.VerifyResponse;
+import org.arpnetwork.arpdevice.netty.Connection;
+import org.arpnetwork.arpdevice.netty.DefaultConnector;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.Util;
@@ -47,7 +51,7 @@ import java.security.SignatureException;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class DeviceManager implements DeviceConnection.Listener {
+public class DeviceManager extends DefaultConnector {
     private static final String TAG = DeviceManager.class.getSimpleName();
 
     public static final int VERIFIED = 2;
@@ -62,7 +66,6 @@ public class DeviceManager implements DeviceConnection.Listener {
 
     private static final int HEARTBEAT_INTERVAL = 30000;
 
-    private DeviceConnection mConnection;
     private Gson mGson;
     private Miner mMiner;
     private DApp mDapp;
@@ -71,7 +74,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     private boolean mRegistered;
     private boolean mClosed;
 
-    private Handler mHandler = new Handler();
+    private Handler mHandler;
     private OnDeviceStateChangedListener mOnDeviceStateChangedListener;
 
     public interface OnDeviceStateChangedListener {
@@ -87,7 +90,10 @@ public class DeviceManager implements DeviceConnection.Listener {
     }
 
     public DeviceManager() {
+        super();
+
         mGson = new Gson();
+        mHandler = new Handler();
         mRegistered = false;
         mClosed = false;
     }
@@ -97,12 +103,11 @@ public class DeviceManager implements DeviceConnection.Listener {
     }
 
     /**
-     * Connect to a server
+     * Connect to a miner
      */
     public void connect(Miner miner) {
         mMiner = miner;
-        mConnection = new DeviceConnection(this);
-        mConnection.connect(miner.getIpString(), miner.getPortTcpInt());
+        connect(miner.getIpString(), miner.getPortTcpInt());
     }
 
     /**
@@ -110,9 +115,7 @@ public class DeviceManager implements DeviceConnection.Listener {
      */
     public void close() {
         mClosed = true;
-        if (mConnection != null) {
-            mConnection.close();
-        }
+        close(true);
     }
 
     /**
@@ -134,7 +137,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     }
 
     @Override
-    public void onConnected(DeviceConnection conn) {
+    public void onConnected(Connection conn) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -147,7 +150,7 @@ public class DeviceManager implements DeviceConnection.Listener {
     }
 
     @Override
-    public void onMessage(DeviceConnection conn, Message msg) {
+    public void onMessage(Connection conn, Message msg) {
         int type = msg.getType();
         if (type == MSG_SPEED) {
             onSpeedMessage(msg);
@@ -157,20 +160,21 @@ public class DeviceManager implements DeviceConnection.Listener {
     }
 
     @Override
-    public void onClosed(DeviceConnection conn) {
+    public void onClosed(Connection conn) {
+
         reset();
         if (!mClosed) {
-            handleError(-101, R.string.connect_miner_failed);
+            handleError(ErrorCode.RESET_BY_REMOTE, R.string.connect_miner_failed);
         }
         mClosed = false;
     }
 
     @Override
-    public void onException(DeviceConnection conn, Throwable cause) {
+    public void onException(Connection conn, Throwable cause) {
         Log.e(TAG, "onException. message = " + cause.getMessage());
 
         mClosed = true;
-        handleError(-102, R.string.connect_miner_failed);
+        handleError(ErrorCode.NETWORK_ERROR, R.string.connect_miner_failed);
     }
 
     private void onDeviceMessage(Message msg) {
@@ -304,7 +308,7 @@ public class DeviceManager implements DeviceConnection.Listener {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                mConnection.write(null);
+                write((Message) null);
                 startHeartbeat();
             }
         }, HEARTBEAT_INTERVAL);
@@ -344,7 +348,7 @@ public class DeviceManager implements DeviceConnection.Listener {
             byteBuf.writeBytes(content.getBytes());
         }
 
-        mConnection.write(byteBuf);
+        write(new Message(byteBuf));
     }
 
     private void reset() {

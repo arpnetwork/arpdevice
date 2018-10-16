@@ -27,6 +27,9 @@ public class Config {
     public static final String API_SERVER_INFO = "server_info";
     public static final String API_SERVER_BIND_PROMISE = "server_bindPromise";
 
+    public static final String PROXY_HOST = "ap.arpnetwork.org";
+    public static final int PROXY_PORT = 3000;
+
     public static final int DATA_SERVER_PORT = 33333;
     public static final int HTTP_SERVER_PORT = 33334;
 

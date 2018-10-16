@@ -34,7 +34,7 @@ import android.widget.Toast;
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.api.EtherAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
@@ -56,8 +56,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_EXCHANGE_AMOUNT;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 
 public class MyEarningFragment extends BaseFragment {

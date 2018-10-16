@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.config;
+package org.arpnetwork.arpdevice.constant;
 
 public class Constant {
     public static final int CHECK_DEFAULT = -1;

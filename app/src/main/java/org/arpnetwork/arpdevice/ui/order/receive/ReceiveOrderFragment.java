@@ -29,6 +29,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+
+import org.arpnetwork.arpdevice.constant.ErrorCode;
+import org.arpnetwork.arpdevice.data.DeviceInfo;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,16 +44,20 @@ import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.app.AppManager;
 import org.arpnetwork.arpdevice.app.DAppApi;
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
+import org.arpnetwork.arpdevice.proxy.HttpProxy;
+import org.arpnetwork.arpdevice.proxy.PortProxy;
+import org.arpnetwork.arpdevice.proxy.TcpProxy;
 import org.arpnetwork.arpdevice.server.DataServer;
 import org.arpnetwork.arpdevice.server.http.Dispatcher;
 import org.arpnetwork.arpdevice.server.http.HttpServer;
+import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.CheckDeviceActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
@@ -57,9 +65,12 @@ import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
+import org.arpnetwork.arpdevice.util.OKHttpUtils;
+import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
+import java.util.Locale;
 
 public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener,
         TaskHelper.OnTopTaskListener, AppManager.OnAppManagerListener {
@@ -72,6 +83,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private HttpServer mHttpServer;
     private AppManager mAppManager;
     private Miner mMiner;
+
+    private DefaultRPCDispatcher mDispatcher;
+    private PortProxy mTcpPortProxy;
+    private PortProxy mHttpPortProxy;
+    private TcpProxy mTcpProxy;
+    private HttpProxy mHttpProxy;
 
     private BigInteger mLastAmount = BigInteger.ZERO;
     private BigInteger mReceivedAmount = BigInteger.ZERO;
@@ -266,6 +283,69 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     }
 
+    private void checkPort(int tcpPort, int httpPort) {
+        RPCRequest request = new RPCRequest();
+        request.setId("");
+        request.setMethod("device_checkPort");
+        request.putInt(tcpPort);
+        request.putInt(httpPort);
+
+        String json = request.toJSON();
+        String url = String.format(Locale.US, "http://%s:%d", mMiner.getIpString(), mMiner.getPortHttpInt());
+
+        new OKHttpUtils().post(url, json, "device_checkPort", new SimpleCallback<Void>() {
+            @Override
+            public void onSuccess(okhttp3.Response response, Void result) {
+
+                connectMiner();
+            }
+
+            @Override
+            public void onFailure(okhttp3.Request request, Exception e) {
+
+                useProxy();
+            }
+
+            @Override
+            public void onError(okhttp3.Response response, int code, Exception e) {
+
+                useProxy();
+            }
+        });
+    }
+
+    private void useProxy() {
+        DeviceInfo.get().proxy = Config.PROXY_HOST;
+        DataServer.getInstance().shutdown();
+        stopHttpServer();
+        requestTcpPort();
+    }
+
+    private void requestTcpPort() {
+        mTcpPortProxy = new PortProxy(new ProxyListener(), true);
+        mTcpPortProxy.connect();
+    }
+
+    private void requestHttpPort() {
+        mHttpPortProxy = new PortProxy(new ProxyListener(), false);
+        mHttpPortProxy.connect();
+    }
+
+    private void closeProxy() {
+        if (mTcpPortProxy != null) {
+            mTcpPortProxy.close(true);
+        }
+        if (mHttpPortProxy != null) {
+            mHttpPortProxy.close(true);
+        }
+    }
+
+    private void connectMiner() {
+        mDeviceManager = new DeviceManager();
+        mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
+        mDeviceManager.connect(mMiner);
+    }
+
     private synchronized void startDeviceService() {
         if (!mStartService) {
             silentOn();
@@ -282,16 +362,19 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
             DataServer.getInstance().setListener(mConnectionListener);
             DataServer.getInstance().setAppManager(mAppManager);
-            DataServer.getInstance().startServer(mDataPort);
+            try {
+                DataServer.getInstance().startServer(mDataPort);
+            } catch (Exception e) {
+                showAlertDialog(getString(R.string.start_service_failed));
+                return;
+            }
 
-            DefaultRPCDispatcher dispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
-            dispatcher.setAppManager(mAppManager);
-            dispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
-            startHttpServer(dispatcher);
+            mDispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
+            mDispatcher.setAppManager(mAppManager);
+            mDispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
+            startHttpServer(mDispatcher);
 
-            mDeviceManager = new DeviceManager();
-            mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
-            mDeviceManager.connect(mMiner);
+            checkPort(DeviceInfo.get().tcpPort, DeviceInfo.get().httpPort);
 
             mStartService = true;
             mOrderStateView.setText(R.string.connecting_miners);
@@ -311,6 +394,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 mDeviceManager.setOnDeviceStateChangedListener(null);
                 mDeviceManager.close();
             }
+            closeProxy();
 
             mStartService = false;
         }
@@ -497,7 +581,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private DeviceManager.OnDeviceStateChangedListener mOnDeviceStateChangedListener = new DeviceManager.OnDeviceStateChangedListener() {
         @Override
         public void onConnected() {
-            mOrderStateView.setText(R.string.miner_connected);
         }
 
         @Override
@@ -664,6 +747,48 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 stopDeviceService();
                 showAlertDialog(getString(R.string.invalid_miner));
             }
+        }
+    }
+
+    private class ProxyListener implements PortProxy.Listener {
+        @Override
+        public void onPort(int port, boolean tcp) {
+
+            if (tcp) {
+                DeviceInfo.get().tcpPort = port;
+                requestHttpPort();
+            } else {
+                DeviceInfo.get().httpPort = port;
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        connectMiner();
+                    }
+                });
+            }
+        }
+
+        @Override
+        public void onProxy(int port, boolean tcp) {
+
+            if (tcp) {
+                mTcpProxy = new TcpProxy();
+                mTcpProxy.connect(port);
+            } else {
+                mDispatcher.setProxy(true);
+                mHttpProxy = new HttpProxy(mDispatcher);
+                mHttpProxy.connect(port);
+            }
+        }
+
+        @Override
+        public void onException(Throwable cause) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    showAlertDialog(String.format(getString(R.string.connect_miner_failed), ErrorCode.CONNECT_PROXY_FAILED));
+                }
+            });
         }
     }
 }

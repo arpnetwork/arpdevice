@@ -25,7 +25,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +34,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
@@ -60,8 +59,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_AMOUNT;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_EXCHANGE_TYPE;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_EXCHANGE_AMOUNT;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_EXCHANGE_TYPE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_CASH;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_WITHDRAW;
 

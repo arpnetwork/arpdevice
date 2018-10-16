@@ -36,7 +36,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.R;
-import org.arpnetwork.arpdevice.config.Constant;
+import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
@@ -52,10 +52,10 @@ import org.web3j.utils.Convert;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
-import static org.arpnetwork.arpdevice.config.Constant.KEY_GASLIMIT;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_GASPRICE;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_OP;
-import static org.arpnetwork.arpdevice.config.Constant.KEY_PASSWD;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_GASLIMIT;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_GASPRICE;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_OP;
+import static org.arpnetwork.arpdevice.constant.Constant.KEY_PASSWD;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_ARP_APPROVE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_BANK_APPROVE;
 import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION_BANK_DEPOSIT;
