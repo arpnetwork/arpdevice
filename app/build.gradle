@@ -7,8 +7,8 @@ android {
         applicationId "org.arpnetwork.arpdevice"
         minSdkVersion 22
         targetSdkVersion 22
-        versionCode 10
-        versionName "1.0.10"
+        versionCode 19
+        versionName "1.0.19"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -56,11 +56,11 @@ dependencies {
 
     implementation 'io.netty:netty-all:4.1.25.Final'
     implementation 'com.google.code.gson:gson:2.3.1'
-    implementation 'com.android.support:appcompat-v7:27.1.1'
-    implementation 'org.web3j:core:3.3.1-android'
     implementation 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
+    implementation 'org.web3j:core:3.3.1-android'
 
-    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

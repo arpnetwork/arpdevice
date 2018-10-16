@@ -241,7 +241,9 @@ public class TaskHelper {
                     int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
                     handleTouch(file.getPath(), regex, x, y);
                 }
-                mTopPackage = topPackage;
+                if (!TextUtils.isEmpty(topPackage)) {
+                    mTopPackage = topPackage;
+                }
             }
         });
     }
