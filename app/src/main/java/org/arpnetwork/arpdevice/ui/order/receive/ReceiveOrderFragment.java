@@ -30,6 +30,7 @@ import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
+import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.constant.ErrorCode;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 
@@ -48,6 +49,7 @@ import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Promise;
+import org.arpnetwork.arpdevice.device.Adb;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
@@ -70,11 +72,13 @@ import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.Util;
 
 import java.math.BigInteger;
+import java.util.LinkedList;
 import java.util.Locale;
 
 public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener,
         TaskHelper.OnTopTaskListener, AppManager.OnAppManagerListener {
     private static final String TAG = ReceiveOrderFragment.class.getSimpleName();
+    private static final int SCREEN_BRIGHTNESS_WAITING = 20;
 
     private TextView mOrderStateView;
     private View mFloatView;
@@ -110,7 +114,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private int mDataPort;
     private int mHttpPort;
 
-    private float mDeviceBright = 0;
+    private int mScreenBrightnessMode = -1; // 0: close 1:open
+    private int mScreenBrightness = -1; // 0-255
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -129,7 +134,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
 
         mAppManager = AppManager.getInstance(getContext().getApplicationContext());
-        mDeviceBright = Util.getScreenBrightness(getContext());
     }
 
     @Override
@@ -176,7 +180,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mAlertDialog != null) {
             mAlertDialog.dismiss();
         }
-        Util.dimOff(getActivity(), mDeviceBright);
+        globalDimOff();
 
         super.onDestroy();
     }
@@ -240,18 +244,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         Button exitButton = (Button) findViewById(R.id.btn_exit);
         exitButton.setOnClickListener(mOnClickExitListener);
-    }
-
-    private void showFloatLayer() {
-        ((BaseActivity) getActivity()).hideToolbar();
-        mFloatView.setVisibility(View.VISIBLE);
-    }
-
-    private void hideFloatLayer() {
-        if (getActivity() != null) {
-            ((BaseActivity) getActivity()).showToolbar();
-            mFloatView.setVisibility(View.GONE);
-        }
     }
 
     private void checkTopTaskAndStart() {
@@ -368,7 +360,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                     new Runnable() {
                         @Override
                         public void run() {
-                            Util.dimOn(getActivity());
+                            globalDimOn(SCREEN_BRIGHTNESS_WAITING);
                         }
                     }, 30 * 1000);
 
@@ -514,6 +506,49 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             audioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
         }
+    }
+
+    private void showFloatLayer() {
+        ((BaseActivity) getActivity()).hideToolbar();
+        mFloatView.setVisibility(View.VISIBLE);
+    }
+
+    private void hideFloatLayer() {
+        if (getActivity() != null) {
+            ((BaseActivity) getActivity()).showToolbar();
+            mFloatView.setVisibility(View.GONE);
+        }
+    }
+
+    private void globalDimOn(int screenBrightness) {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        final LinkedList<String> items = new LinkedList<String>();
+        adb.globalDimOn(screenBrightness, new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+                // 1
+                // 89
+                String item = new String(data).trim();
+                items.add(item);
+                if (items.size() > 1) {
+                    mScreenBrightnessMode = Integer.parseInt(items.get(0).trim());
+                    mScreenBrightness = Integer.parseInt(items.get(1).trim());
+                }
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+            }
+        });
+    }
+
+    private void globalDimOff() {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.globalDimRestore(mScreenBrightnessMode, mScreenBrightness);
     }
 
     private void showAlertDialog(String msg) {

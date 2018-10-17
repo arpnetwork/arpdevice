@@ -23,13 +23,16 @@ import android.os.Handler;
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.database.InstalledApp;
+import org.arpnetwork.arpdevice.device.Adb;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.download.IDownloadListener;
+import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.utils.Numeric;
 
 import java.io.File;
+import java.util.LinkedList;
 import java.util.List;
 
 public class AppManager {
@@ -44,6 +47,8 @@ public class AppManager {
     private static final int DELAY_START_TIMER = 2000;
     private static final int DELAY_REMOVE_APP = 5 * 60 * 1000;
 
+    private static final int SCREEN_BRIGHTNESS_RUNNING = 4;
+
     private static AppManager sInstance;
 
     private DApp mDApp;
@@ -53,6 +58,9 @@ public class AppManager {
     private Handler mHandler;
     private State mState;
     private OnAppManagerListener mOnAppManagerListener;
+
+    private int mScreenBrightnessMode = -1; // 0: close 1:open
+    private int mScreenBrightness = -1; // 0-255
 
     public enum State {
         IDLE,
@@ -174,6 +182,8 @@ public class AppManager {
                 public void run() {
                     mState = State.LAUNCHED;
                     onAppLaunch(true);
+
+                    globalDimOn(SCREEN_BRIGHTNESS_RUNNING); // dim screen
                 }
             });
             if (!success) {
@@ -190,6 +200,8 @@ public class AppManager {
         mState = State.IDLE;
         mHandler.removeCallbacks(mLaunchFailedRunnable);
         mTaskHelper.killLaunchedApp();
+
+        globalDimOff(); // restore bright
     }
 
     public void uninstallApp(String packageName) {
@@ -289,6 +301,39 @@ public class AppManager {
         if (mOnAppManagerListener != null) {
             mOnAppManagerListener.onAppLaunch(success);
         }
+    }
+
+    private void globalDimOn(int screenBrightness) {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        final LinkedList<String> items = new LinkedList<String>();
+        adb.globalDimOn(screenBrightness, new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+                // 1
+                // 89
+                String item = new String(data).trim();
+                items.add(item);
+                if (items.size() > 1) {
+                    mScreenBrightnessMode = Integer.parseInt(items.get(0).trim());
+                    mScreenBrightness = Integer.parseInt(items.get(1).trim());
+                }
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+
+            }
+        });
+    }
+
+    private void globalDimOff() {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.globalDimRestore(mScreenBrightnessMode, mScreenBrightness);
     }
 
     private Runnable mLaunchFailedRunnable = new Runnable() {

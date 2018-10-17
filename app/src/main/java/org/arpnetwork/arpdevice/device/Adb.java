@@ -99,4 +99,45 @@ public class Adb {
             mConnection.openShell("settings put global stay_on_while_plugged_in 7");
         }
     }
+
+    public void globalDimOn(final int screenBrightness, final ShellChannel.ShellListener listener) {
+        if (screenBrightness < 0 || screenBrightness > 255) return;
+
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            ShellChannel shellChannel = mConnection.openShell("settings get system screen_brightness_mode && settings get system screen_brightness");
+            shellChannel.setListener(new ShellChannel.ShellListener() {
+                @Override
+                public void onStdout(ShellChannel ch, byte[] data) {
+                    mConnection.openShell("settings put system screen_brightness_mode 0 && settings put system screen_brightness " + screenBrightness);
+
+                    if (listener != null) {
+                        listener.onStdout(ch, data);
+                    }
+                }
+
+                @Override
+                public void onStderr(ShellChannel ch, byte[] data) {
+                    if (listener != null) {
+                        listener.onStderr(ch, data);
+                    }
+                }
+
+                @Override
+                public void onExit(ShellChannel ch, int code) {
+                    if (listener != null) {
+                        listener.onExit(ch, code);
+                    }
+                }
+            });
+        }
+    }
+
+    public void globalDimRestore(int screenBrightnessMode, int screenBrightness) {
+        if (screenBrightnessMode < 0 || screenBrightnessMode > 1) return;
+        if (screenBrightness < 0 || screenBrightness > 255) return;
+
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            mConnection.openShell("settings put system screen_brightness_mode " + screenBrightnessMode + " && " + "settings put system screen_brightness " + screenBrightness);
+        }
+    }
 }
