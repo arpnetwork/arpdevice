@@ -98,6 +98,14 @@ public class DeviceInfo {
         return orderPrice >= 0 ? orderPrice : Config.ORDER_PRICE_DEFAULT;
     }
 
+    public void setProxy(String proxy) {
+        this.proxy = proxy;
+    }
+
+    public boolean isProxyMode() {
+        return this.proxy != null;
+    }
+
     public void setDataPort(int tcpPort, int httpPort) {
         this.tcpPort = tcpPort;
         this.httpPort = httpPort;

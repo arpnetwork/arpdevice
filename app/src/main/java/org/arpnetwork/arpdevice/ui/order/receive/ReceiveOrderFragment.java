@@ -129,8 +129,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
 
         mAppManager = AppManager.getInstance(getContext().getApplicationContext());
-        mAppManager.getInstalledApps();
-
         mDeviceBright = Util.getScreenBrightness(getContext());
     }
 
@@ -223,7 +221,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     @Override
     public void onAppLaunch(final boolean success) {
         mLaunchTime = success ? System.currentTimeMillis() : 0;
-
         DataServer.getInstance().onAppLaunch(success);
 
         mHandler.post(new Runnable() {
@@ -296,26 +293,23 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         new OKHttpUtils().post(url, json, "device_checkPort", new SimpleCallback<Void>() {
             @Override
             public void onSuccess(okhttp3.Response response, Void result) {
-
                 connectMiner();
             }
 
             @Override
             public void onFailure(okhttp3.Request request, Exception e) {
-
                 useProxy();
             }
 
             @Override
             public void onError(okhttp3.Response response, int code, Exception e) {
-
                 useProxy();
             }
         });
     }
 
     private void useProxy() {
-        DeviceInfo.get().proxy = Config.PROXY_HOST;
+        DeviceInfo.get().setProxy(Config.PROXY_HOST);
         DataServer.getInstance().shutdown();
         stopHttpServer();
         requestTcpPort();
@@ -338,6 +332,27 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mHttpPortProxy != null) {
             mHttpPortProxy.close(true);
         }
+    }
+
+    private void connectTcpProxy(final int port) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mTcpProxy = new TcpProxy();
+                mTcpProxy.connect(port);
+            }
+        });
+    }
+
+    private void connectHttpProxy(final int port) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mDispatcher.setProxy(true);
+                mHttpProxy = new HttpProxy(mDispatcher);
+                mHttpProxy.connect(port);
+            }
+        });
     }
 
     private void connectMiner() {
@@ -374,7 +389,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             mDispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
             startHttpServer(mDispatcher);
 
-            checkPort(DeviceInfo.get().tcpPort, DeviceInfo.get().httpPort);
+            if (!DeviceInfo.get().isProxyMode()) {
+                checkPort(DeviceInfo.get().tcpPort, DeviceInfo.get().httpPort);
+            } else {
+                useProxy();
+            }
 
             mStartService = true;
             mOrderStateView.setText(R.string.connecting_miners);
@@ -665,7 +684,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             } else {
                 showExitDialog();
             }
-
             return true;
         }
     };
@@ -769,15 +787,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
 
         @Override
-        public void onProxy(int port, boolean tcp) {
+        public void onProxy(final int port, boolean tcp) {
 
             if (tcp) {
-                mTcpProxy = new TcpProxy();
-                mTcpProxy.connect(port);
+                connectTcpProxy(port);
             } else {
-                mDispatcher.setProxy(true);
-                mHttpProxy = new HttpProxy(mDispatcher);
-                mHttpProxy.connect(port);
+                connectHttpProxy(port);
             }
         }
 

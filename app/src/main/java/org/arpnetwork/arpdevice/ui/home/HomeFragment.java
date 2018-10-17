@@ -465,6 +465,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                 @Override
                 public void onFail(Throwable throwable) {
                     hideProgressDialog();
+                    showErrorAlertDialog(R.string.network_error);
                 }
             });
         }

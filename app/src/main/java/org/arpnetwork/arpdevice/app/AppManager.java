@@ -88,15 +88,6 @@ public class AppManager {
         mTaskHelper.getTopTask(listener);
     }
 
-    public void getInstalledApps() {
-        mTaskHelper.getInstalledApps(new TaskHelper.OnGetInstalledAppsListener() {
-            @Override
-            public void onGetInstalledApps(List<String> apps) {
-                mInstalledApps = apps;
-            }
-        });
-    }
-
     public State getState() {
         return mState;
     }
@@ -110,6 +101,10 @@ public class AppManager {
         }
         mDApp = dApp;
         mLastDAppAddress = dApp.address;
+
+        if (dApp != null) {
+            getInstalledApps();
+        }
     }
 
     public DApp getDApp() {
@@ -225,6 +220,15 @@ public class AppManager {
         mTaskHelper = new TaskHelper(context.getApplicationContext());
         mHandler = new Handler();
         mState = State.IDLE;
+    }
+
+    private void getInstalledApps() {
+        mTaskHelper.getInstalledApps(new TaskHelper.OnGetInstalledAppsListener() {
+            @Override
+            public void onGetInstalledApps(List<String> apps) {
+                mInstalledApps = apps;
+            }
+        });
     }
 
     private void saveInstalledApp(String pkgName) {

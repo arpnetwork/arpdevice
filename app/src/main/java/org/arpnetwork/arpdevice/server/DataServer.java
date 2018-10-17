@@ -333,15 +333,16 @@ public final class DataServer extends DefaultConnector {
             }
 
             mPacketQueue.clear();
-            close();
 
             // fix client terminate with no touch up.
             Touch.getInstance().sendTouch("r\n");
-
-            stopHeartbeatTimer();
-            stopHeartbeatTimeout();
-            mHandler.removeCallbacks(mConnectTimeoutRunnable);
         }
+
+        close();
+
+        stopHeartbeatTimer();
+        stopHeartbeatTimeout();
+        mHandler.removeCallbacks(mConnectTimeoutRunnable);
 
         if (mAppManager != null) {
             mAppManager.stopApp();
