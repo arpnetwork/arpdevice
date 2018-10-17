@@ -31,6 +31,11 @@ public class Constant {
     public static final int CHECK_UPNP_COMPLETE = 11;
     public static final int CHECK_TOUCH_COPY_FAILED = 12;
 
+    public static final int PERMISSION_REQUEST_CODE_CAMERA = 101;
+    public static final int QRCODE_REQUEST = 102;
+
+    public static final String ACTIVITY_RESULT_KEY_PRIVATE = "PRIVATE_KEY";
+
     // Defines a custom Intent action
     public static final String BROADCAST_ACTION_STATUS = "org.arpnetwork.arpdevice.ACTION_STATUS";
     // Defines the key for the status "extra" in an Intent

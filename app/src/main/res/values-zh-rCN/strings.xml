@@ -78,6 +78,9 @@
     <string name="importing">导入中...</string>
     <string name="import_success">导入成功</string>
     <string name="import_failed">导入失败</string>
+    <string name="required_camera_permission">请在权限设置中勾选允许相机</string>
+    <string name="scanner_title">扫码</string>
+    <string name="scanner_tip">请将镜头对准二维码进行扫描</string>
 
     <!-- 我的 -->
     <string name="home">首页</string>

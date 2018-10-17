@@ -118,6 +118,9 @@
     <string name="go_unbind">Go unbinding</string>
     <string name="go_bind">Go binding</string>
     <string name="no_deposit">Have not deposited</string>
+    <string name="required_camera_permission">Please check camera permission in settings</string>
+    <string name="scanner_title">scan</string>
+    <string name="scanner_tip">Please aim the lens at the QR code for scanning</string>
 
     <!-- register -->
     <string name="register_device">Register device</string>

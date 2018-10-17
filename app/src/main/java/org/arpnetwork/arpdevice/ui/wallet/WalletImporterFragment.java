@@ -16,16 +16,27 @@
 
 package org.arpnetwork.arpdevice.ui.wallet;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.Toolbar;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.constant.Constant;
@@ -92,6 +103,44 @@ public class WalletImporterFragment extends BaseFragment {
 
         mBtnImport = (Button) findViewById(R.id.btn_import);
         mBtnImport.setOnClickListener(mOnClickImportListener);
+
+        Toolbar toolbar = getBaseActivity().getToolbar();
+        ImageButton scannerIcon = new ImageButton(toolbar.getContext());
+        scannerIcon.setImageResource(R.mipmap.qrcode);
+        scannerIcon.setBackgroundColor(Color.TRANSPARENT);
+
+        scannerIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                checkPermission();
+            }
+        });
+        Toolbar.LayoutParams lp = new Toolbar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.RIGHT);
+        lp.rightMargin = (int) getResources().getDimension(R.dimen.plain_margin);
+        toolbar.addView(scannerIcon, lp);
+    }
+
+    private void checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
+                        Manifest.permission.CAMERA)) {
+                    new AlertDialog.Builder(getActivity())
+                            .setMessage(getString(R.string.required_camera_permission))
+                            .setPositiveButton(R.string.ok, null)
+                            .create()
+                            .show();
+                } else {
+                    ActivityCompat.requestPermissions(getActivity(),
+                            new String[]{Manifest.permission.CAMERA},
+                            Constant.PERMISSION_REQUEST_CODE_CAMERA);
+                }
+                return ;
+            }
+        }
+        scanPrivateKey();
     }
 
     private boolean checkInputs(String privateKey, String password, String confirmedPassword) {
@@ -156,4 +205,29 @@ public class WalletImporterFragment extends BaseFragment {
             importWallet();
         }
     };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case Constant.PERMISSION_REQUEST_CODE_CAMERA:
+                scanPrivateKey();
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == Constant.QRCODE_REQUEST && data != null) {
+            String result = data.getExtras().getString(Constant.ACTIVITY_RESULT_KEY_PRIVATE);
+            mEditPrivateKey.setText(result);
+            mEditPassword.requestFocus();
+        }
+    }
+
+    private void scanPrivateKey() {
+        startActivityForResult(QRCodeScannerActivity.class, Constant.QRCODE_REQUEST);
+    }
 }
