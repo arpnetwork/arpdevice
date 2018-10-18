@@ -459,7 +459,25 @@ public class CheckDeviceActivity extends BaseActivity {
                 case Constant.CHECK_UPNP_COMPLETE:
                     context.mDataPort = msg.arg1;
                     context.mHttpPort = msg.arg2;
-                    if (context.mDataPort > 0) {
+                    // We ignore UPNP result here for proxy solution.
+                    context.mTitleText.setText(R.string.check_success);
+                    context.mImage.setImageResource(R.mipmap.check_success);
+                    context.mTipButton.setVisibility(View.GONE);
+                    context.mErrorText.setVisibility(View.GONE);
+                    context.mTipText.setText(R.string.check_success_tip);
+
+                    context.mImage.setVisibility(View.VISIBLE);
+                    context.mTipText.setVisibility(View.VISIBLE);
+
+                    if (context.mUIHandler != null) {
+                        context.mUIHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                context.jumpToNextActivity();
+                            }
+                        }, 500);
+                    }
+                    /*if (context.mDataPort > 0) {
                         // UPNP success.
                         context.mTitleText.setText(R.string.check_success);
                         context.mImage.setImageResource(R.mipmap.check_success);
@@ -486,7 +504,7 @@ public class CheckDeviceActivity extends BaseActivity {
                         context.mErrorText.setVisibility(View.GONE);
 
                         context.mCheckCode = Constant.ACTION_CHECK_UPNP;
-                    }
+                    }*/
                     break;
 
                 default:

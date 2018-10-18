@@ -16,9 +16,11 @@
 
 package org.arpnetwork.arpdevice.netty;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
+@ChannelHandler.Sharable
 public class ConnectionHandler extends ChannelInboundHandlerAdapter {
     private static final String TAG = ConnectionHandler.class.getSimpleName();
 

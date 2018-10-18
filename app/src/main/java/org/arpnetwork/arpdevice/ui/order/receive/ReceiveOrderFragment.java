@@ -109,6 +109,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private MinerStateChangedReceiver mStateChangedReceiver;
 
     private Dialog mAlertDialog;
+    private Dialog mExitAlertDialog;
     private Handler mHandler = new Handler();
 
     private int mDataPort;
@@ -568,17 +569,20 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void showExitDialog() {
-        new AlertDialog.Builder(getContext())
-                .setMessage(getResources().getString(R.string.confirm_to_exit))
-                .setNegativeButton(getResources().getString(R.string.cancel), null)
-                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                })
-                .create()
-                .show();
+        if (mExitAlertDialog == null) {
+            mExitAlertDialog = new AlertDialog.Builder(getContext())
+                    .setMessage(getResources().getString(R.string.confirm_to_exit))
+                    .setNegativeButton(getResources().getString(R.string.cancel), null)
+                    .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+                    })
+                    .create();
+            mExitAlertDialog.setCancelable(false);
+        }
+        mExitAlertDialog.show();
     }
 
     @Override
@@ -716,6 +720,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         public boolean onBacked() {
             if (mFloatView.getVisibility() == View.VISIBLE) {
                 // disable OnBackListener
+                if (mExitAlertDialog != null && mExitAlertDialog.isShowing()) {
+                    mExitAlertDialog.hide();
+                }
             } else {
                 showExitDialog();
             }

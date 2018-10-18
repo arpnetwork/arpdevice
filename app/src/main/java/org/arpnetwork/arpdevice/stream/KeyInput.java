@@ -62,7 +62,12 @@ public class KeyInput {
                     new InputStreamReader(System.in));
             String line;
             while ((line = stdIn.readLine()) != null) {
-                keyPress(KeyEvent.KEYCODE_BACK, 0);
+                try {
+                    int keyCode = Integer.valueOf(line);
+                    keyPress(keyCode, 0);
+                } catch (Exception e) {
+                    // Must catch exception to keep loop.
+                }
             }
         } catch (IOException e) {
             Log.w(TAG, "IOException");
