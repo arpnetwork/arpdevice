@@ -17,20 +17,26 @@
 package org.arpnetwork.arpdevice.proxy;
 
 import org.arpnetwork.arpdevice.config.Config;
-import org.arpnetwork.arpdevice.netty.Connection;
 import org.arpnetwork.arpdevice.netty.Connector;
 import org.arpnetwork.arpdevice.server.http.Dispatcher;
 import org.arpnetwork.arpdevice.server.http.HttpServerHandler;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 
-public class HttpProxy extends Connector {
+public class HttpProxy extends Connector implements HttpServerHandler.Listener {
+    private byte[] mSession;
 
-    public HttpProxy(Dispatcher dispatcher) {
+    public HttpProxy(Dispatcher dispatcher, byte[] session) {
         super();
 
-        addHandler(new HttpServerHandler(dispatcher));
+        mSession = session;
+        addHandler(new HttpServerHandler(dispatcher, this));
     }
 
     public void connect(int port) {
@@ -38,15 +44,42 @@ public class HttpProxy extends Connector {
     }
 
     @Override
-    public void onClosed(Connection conn) {
-        super.onClosed(conn);
+    public void onChannelActive(ChannelHandlerContext ctx) {
+        if (mSession != null) {
+            ByteBuf buf = Unpooled.buffer();
+            buf.writeByte(mSession.length);
+            buf.writeBytes(mSession);
+            ctx.writeAndFlush(buf);
+        }
+    }
 
+    @Override
+    public void onChannelInactive(ChannelHandlerContext ctx) {
         shutdown();
     }
 
     @Override
     protected void addHandlers() {
-        addHandler(new HttpResponseEncoder());
+        addHandler(new HttpResponseEncoderWrapper(new HttpResponseEncoder()));
         addHandler(new HttpRequestDecoder());
+    }
+
+    static class HttpResponseEncoderWrapper extends ChannelOutboundHandlerAdapter {
+        private boolean mInit;
+        private HttpResponseEncoder mEncoder;
+
+        public HttpResponseEncoderWrapper(HttpResponseEncoder encoder) {
+            mEncoder = encoder;
+        }
+
+        @Override
+        public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
+            if (!mInit) {
+                super.write(ctx, msg, promise);
+                mInit = true;
+            } else {
+                mEncoder.write(ctx, msg, promise);
+            }
+        }
     }
 }

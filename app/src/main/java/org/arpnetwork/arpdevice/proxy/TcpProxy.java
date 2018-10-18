@@ -22,8 +22,17 @@ import org.arpnetwork.arpdevice.netty.Connection;
 import org.arpnetwork.arpdevice.netty.DefaultConnector;
 import org.arpnetwork.arpdevice.server.DataServer;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+
 public class TcpProxy extends DefaultConnector {
-    private static final String TAG = TcpProxy.class.getSimpleName();
+    private byte[] mSession;
+
+    public TcpProxy(byte[] session) {
+        super();
+
+        mSession = session;
+    }
 
     public void connect(int port) {
         super.connect(Config.PROXY_HOST, port);
@@ -31,6 +40,13 @@ public class TcpProxy extends DefaultConnector {
 
     @Override
     public void onConnected(Connection conn) {
+        if (mSession != null) {
+            ByteBuf buf = Unpooled.buffer();
+            buf.writeByte(mSession.length);
+            buf.writeBytes(mSession);
+            write(buf);
+        }
+
         DataServer.getInstance().resetConnection(conn);
         DataServer.getInstance().onConnected(conn);
     }

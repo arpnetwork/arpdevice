@@ -50,12 +50,42 @@ public class HttpServerHandler extends ChannelInboundHandlerAdapter {
 
     private Dispatcher mDispatcher;
     private ConcurrentMap<ChannelId, RequestData> mRequestDataMap;
+    private Listener mListener;
+
+    public interface Listener {
+        void onChannelActive(ChannelHandlerContext ctx);
+
+        void onChannelInactive(ChannelHandlerContext ctx);
+    }
 
     public HttpServerHandler(Dispatcher dispatcher) {
+        this(dispatcher, null);
+    }
+
+    public HttpServerHandler(Dispatcher dispatcher, Listener listener) {
         super();
 
         mDispatcher = dispatcher;
+        mListener = listener;
         mRequestDataMap = new ConcurrentHashMap<>();
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
+
+        if (mListener != null) {
+            mListener.onChannelActive(ctx);
+        }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+
+        if (mListener != null) {
+            mListener.onChannelInactive(ctx);
+        }
     }
 
     @Override

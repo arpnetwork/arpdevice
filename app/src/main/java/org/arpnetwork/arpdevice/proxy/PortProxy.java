@@ -16,14 +16,9 @@
 
 package org.arpnetwork.arpdevice.proxy;
 
-import android.text.TextUtils;
-
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.netty.Connection;
 import org.arpnetwork.arpdevice.netty.Connector;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -32,12 +27,13 @@ public class PortProxy extends Connector {
     private static final String TAG = PortProxy.class.getSimpleName();
 
     private Listener mListener;
+    private int mAcceptPort;
     private boolean mTcp;
 
     public interface Listener {
-        void onPort(int port, boolean tcp);
+        void onPort(int proxyPort, boolean tcp);
 
-        void onProxy(int port, boolean tcp);
+        void onHandshake(int acceptPort, byte[] session, boolean tcp);
 
         void onException(Throwable cause);
     }
@@ -55,34 +51,45 @@ public class PortProxy extends Connector {
 
     @Override
     public void onConnected(Connection conn) {
+        super.onConnected(conn);
+
         ByteBuf buf = Unpooled.buffer();
-        buf.writeBytes(new String("LISTEN 0\r\n").getBytes());
+        buf.writeBytes(new byte[]{3, 0, 0, 0});
         conn.write(buf);
     }
 
     @Override
     public void onChannelRead(Connection conn, Object msg) throws Exception {
         ByteBuf buf = (ByteBuf) msg;
-        int len = buf.readableBytes();
-        byte[] bytes = new byte[len];
-        buf.readBytes(bytes);
-        String content = new String(bytes);
+        do {
+            buf.markReaderIndex();
+            int size = buf.readByte();
+            int readableBytes = buf.readableBytes();
+            if (readableBytes < size) {
+                buf.resetReaderIndex();
+                break;
+            }
 
-        if (!TextUtils.isEmpty(content)) {
-            Pattern p = Pattern.compile("(\\d+)");
-            Matcher m = p.matcher(content);
-            if (m.find()) {
-                int port = Integer.parseInt(m.group(1));
+            int id = buf.readByte();
+            if (id == 1) {
+                int result = buf.readByte();
+                int proxyPort = buf.readUnsignedShort();
+                mAcceptPort = buf.readUnsignedShort();
 
                 if (mListener != null) {
-                    if (content.startsWith("OK")) {
-                        mListener.onPort(port, mTcp);
-                    } else {
-                        mListener.onProxy(port, mTcp);
-                    }
+                    mListener.onPort(proxyPort, mTcp);
+                }
+            } else if (id == 2) {
+                byte[] bytes = new byte[size - 1];
+                buf.readBytes(bytes);
+
+                if (mListener != null) {
+                    mListener.onHandshake(mAcceptPort, bytes, mTcp);
                 }
             }
-        }
+
+            buf.discardReadBytes();
+        } while (buf.readableBytes() > 1);
     }
 
     @Override

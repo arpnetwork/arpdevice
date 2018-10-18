@@ -327,22 +327,22 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     }
 
-    private void connectTcpProxy(final int port) {
+    private void connectTcpProxy(final int port, final byte[] session) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                mTcpProxy = new TcpProxy();
+                mTcpProxy = new TcpProxy(session);
                 mTcpProxy.connect(port);
             }
         });
     }
 
-    private void connectHttpProxy(final int port) {
+    private void connectHttpProxy(final int port, final byte[] session) {
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 mDispatcher.setProxy(true);
-                mHttpProxy = new HttpProxy(mDispatcher);
+                mHttpProxy = new HttpProxy(mDispatcher, session);
                 mHttpProxy.connect(port);
             }
         });
@@ -812,13 +812,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private class ProxyListener implements PortProxy.Listener {
         @Override
-        public void onPort(int port, boolean tcp) {
-
+        public void onPort(int proxyPort, boolean tcp) {
             if (tcp) {
-                DeviceInfo.get().tcpPort = port;
+                DeviceInfo.get().tcpPort = proxyPort;
                 requestHttpPort();
             } else {
-                DeviceInfo.get().httpPort = port;
+                DeviceInfo.get().httpPort = proxyPort;
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -829,12 +828,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
 
         @Override
-        public void onProxy(final int port, boolean tcp) {
-
+        public void onHandshake(int acceptPort, byte[] session, boolean tcp) {
             if (tcp) {
-                connectTcpProxy(port);
+                connectTcpProxy(acceptPort, session);
             } else {
-                connectHttpProxy(port);
+                connectHttpProxy(acceptPort, session);
             }
         }
 
