@@ -68,8 +68,8 @@ public class MonitorTouch {
         mHandler = new Handler(mWorker.getLooper());
         mHandler.postDelayed(mMonitorRunnable, MONITOR_DURATION);
 
-        RawChannel ss = Touch.getInstance().getConnection().openExec("getevent -l " + monitorPath);
-        ss.setListener(new RawChannel.RawListener() {
+        RawChannel geteventChannel = Touch.getInstance().getConnection().openExec("getevent -l");
+        geteventChannel.setListener(new RawChannel.RawListener() {
             @Override
             public void onRaw(RawChannel ch, byte[] data) {
                 mLocalPacketQueue.add(new String(data));
@@ -219,6 +219,13 @@ public class MonitorTouch {
                     String positionXDec = Numeric.toBigInt(posX).toString(10);
                     mLocalOutQueue.add(positionXDec);
                     matchCount++;
+                }
+                if (line.contains("KEY_MENU") || line.contains("KEY_HOME") || line.contains("KEY_BACK")
+                        || line.contains("KEY_VOLUMEDOWN") || line.contains("KEY_VOLUMEUP")) {
+                    stopMonitor();
+                    sendBroadcast();
+                    Log.e(TAG, "key abnormal");
+                    break;
                 }
             }
             return matchCount;
