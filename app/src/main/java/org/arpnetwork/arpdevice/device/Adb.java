@@ -100,6 +100,19 @@ public class Adb {
         }
     }
 
+    public void adbInstallConfirmOff() { // huawei settings
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            mConnection.openShell("settings put secure adb_install_need_confirm 0");
+        }
+    }
+
+    public void getadbInstallConfirm(ShellChannel.ShellListener listener) { // huawei settings
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            ShellChannel ss = mConnection.openShell("settings get secure adb_install_need_confirm");
+            ss.setListener(listener);
+        }
+    }
+
     public void globalDimOn(final int screenBrightness, final ShellChannel.ShellListener listener) {
         if (screenBrightness < 0 || screenBrightness > 255) return;
 

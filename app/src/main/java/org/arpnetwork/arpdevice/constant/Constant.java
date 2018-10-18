@@ -30,6 +30,7 @@ public class Constant {
     public static final int ACTION_CHECK_UPNP = 10;
     public static final int CHECK_UPNP_COMPLETE = 11;
     public static final int CHECK_TOUCH_COPY_FAILED = 12;
+    public static final int CHECK_ADB_ALLOW_CHARGING_FAILED = 13; // huawei
 
     public static final int PERMISSION_REQUEST_CODE_CAMERA = 101;
     public static final int QRCODE_REQUEST = 102;

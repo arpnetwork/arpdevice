@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.stream;
 
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -303,11 +304,16 @@ public class Touch {
                     mBanner = new String(data).trim();
 
                     Message message;
-                    boolean installViaUsb = PreferenceManager.getInstance().getBoolean(Constant.KEY_INSTALL_USB);
-                    if (!installViaUsb) {
-                        message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL);
-                    } else {
+                    if (Build.MANUFACTURER.equalsIgnoreCase("huawei")) {
+                        // We jump to next to exec adb shell adbInstallConfirmOff so that we can skip check install.
                         message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_UPNP);
+                    } else {
+                        boolean installViaUsb = PreferenceManager.getInstance().getBoolean(Constant.KEY_INSTALL_USB);
+                        if (!installViaUsb) {
+                            message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_INSTALL);
+                        } else {
+                            message = mCheckHandler.obtainMessage(Constant.ACTION_CHECK_UPNP);
+                        }
                     }
                     message.sendToTarget();
                 }

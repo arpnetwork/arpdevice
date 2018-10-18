@@ -169,6 +169,7 @@ public class CheckDeviceActivity extends BaseActivity {
                         break;
 
                     case Constant.CHECK_ADB_FAILED:
+                    case Constant.CHECK_ADB_ALLOW_CHARGING_FAILED:
                     case Constant.CHECK_ADB_SAFE_FAILED:
                     case Constant.CHECK_INSTALL_FAILED:
                         Util.jumpToSettingADB(CheckDeviceActivity.this);
@@ -336,6 +337,18 @@ public class CheckDeviceActivity extends BaseActivity {
                     context.mErrorText.setVisibility(View.GONE);
                     break;
 
+                case Constant.CHECK_ADB_ALLOW_CHARGING_FAILED:
+                    context.mCheckThread.setShouldPing(true);
+
+                    context.mTitleText.setText(R.string.check_USB);
+                    context.mTipButton.setText(R.string.check_btn_adb);
+                    highlightText = context.createHighlight(context.getString(R.string.check_fail_usb), context.getString(R.string.check_highlight_adb_install_need_confirm), context.getString(R.string.check_highlight_allow_charging_adb));
+
+                    context.mImage.setImageResource(R.mipmap.check_usb_huawei);
+                    context.mTipText.setText(highlightText);
+                    context.mErrorText.setVisibility(View.GONE);
+                    break;
+
                 case Constant.CHECK_TCP_FAILED:
                     context.mTitleText.setText(R.string.check_tcp);
                     context.mTipText.setText(R.string.check_fail_tcp);
@@ -440,6 +453,7 @@ public class CheckDeviceActivity extends BaseActivity {
                     }
 
                     context.mCheckThread.turnOnStay();
+                    context.mCheckThread.adbInstallConfirmOff();
                     break;
 
                 case Constant.CHECK_UPNP_COMPLETE:

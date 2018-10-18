@@ -19,9 +19,11 @@
     <string name="check_fail_os">Android os 7.0+ is required.</string>
     <string name="check_fail_disk">More than 1G disk capability is required.</string>
     <string name="check_USB">Checking usb debugging</string>
-    <string name="check_fail_usb">Please open %s and %s</string>
-    <string name="check_highlight_developer_options">developer options</string>
+    <string name="check_fail_usb">Please %s and %s</string>
+    <string name="check_highlight_developer_options">open developer options</string>
     <string name="check_highlight_USB_debug">USB debug</string>
+    <string name="check_highlight_adb_install_need_confirm">\nClose option: Monitor apps installed by ADB</string>
+    <string name="check_highlight_allow_charging_adb">\nOpen option: Allow ADB debugging in charge only mode</string>
     <string name="check_tcp">Checking activation</string>
     <string name="check_fail_tcp">Please connect your device with pc by usb\nand follow the guild of ARP-tool to activate your device\nyou need to reactive when your device reboot.</string>
     <string name="download_tcp_tool">download from: http://t.cn/E7Ag0s9</string>

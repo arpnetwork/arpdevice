@@ -67,11 +67,22 @@ public class CheckThread {
     public void doCheck() {
         stopPingTimer();
 
+        int allowChargingAdb = 1;
+        if (Build.MANUFACTURER.equalsIgnoreCase("huawei")) {
+            try {
+                allowChargingAdb = Settings.Global.getInt(mContext.getContentResolver(), "allow_charging_adb");
+            } catch (Settings.SettingNotFoundException ignored) {
+                // no allow_charging_adb. we consider allow_charging_adb = 1 as default.
+            }
+        }
         if (DeviceUtil.getSdk() < Build.VERSION_CODES.N) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_OS_FAILED);
             mUIHandler.sendMessage(message);
         } else if (DeviceUtil.getExternalDiskAvailable(mContext) < DISK_REQUEST) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_DISK_FAILED);
+            mUIHandler.sendMessage(message);
+        } else if (Build.MANUFACTURER.equalsIgnoreCase("huawei") && allowChargingAdb == 0) {
+            Message message = mUIHandler.obtainMessage(Constant.CHECK_ADB_ALLOW_CHARGING_FAILED);
             mUIHandler.sendMessage(message);
         } else if (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.ADB_ENABLED, 0) == 0) {
             Message message = mUIHandler.obtainMessage(Constant.CHECK_ADB_FAILED);
@@ -88,6 +99,11 @@ public class CheckThread {
     public void turnOnStay() {
         Adb adb = new Adb(Touch.getInstance().getConnection());
         adb.stayOn();
+    }
+
+    public void adbInstallConfirmOff() {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.adbInstallConfirmOff();
     }
 
     public void quit() {
