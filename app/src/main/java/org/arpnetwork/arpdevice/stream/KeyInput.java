@@ -64,7 +64,9 @@ public class KeyInput {
             while ((line = stdIn.readLine()) != null) {
                 try {
                     int keyCode = Integer.valueOf(line);
-                    keyPress(keyCode, 0);
+                    if (keyCode == KeyEvent.KEYCODE_BACK) {
+                        keyPress(keyCode, 0);
+                    }
                 } catch (Exception e) {
                     // Must catch exception to keep loop.
                 }
