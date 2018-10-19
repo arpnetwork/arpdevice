@@ -46,6 +46,7 @@ public class MonitorTouch {
 
     private RemoteParseThread mRemoteParseThread;
     private LocalParseThread mLocalParseThread;
+    private RawChannel mGeteventChannel;
 
     private HandlerThread mWorker;
     private Handler mHandler;
@@ -68,8 +69,8 @@ public class MonitorTouch {
         mHandler = new Handler(mWorker.getLooper());
         mHandler.postDelayed(mMonitorRunnable, MONITOR_DURATION);
 
-        RawChannel geteventChannel = Touch.getInstance().getConnection().openExec("getevent -l");
-        geteventChannel.setListener(new RawChannel.RawListener() {
+        mGeteventChannel = Touch.getInstance().getConnection().openExec("getevent -l");
+        mGeteventChannel.setListener(new RawChannel.RawListener() {
             @Override
             public void onRaw(RawChannel ch, byte[] data) {
                 mLocalPacketQueue.add(new String(data));
@@ -89,6 +90,10 @@ public class MonitorTouch {
             mLocalParseThread.interrupt();
         }
 
+        if (mGeteventChannel != null) {
+            mGeteventChannel.close();
+            mGeteventChannel = null;
+        }
         if (mWorker != null) {
             mWorker.quit();
             mWorker = null;
@@ -183,7 +188,13 @@ public class MonitorTouch {
     }
 
     private class LocalParseThread extends Thread {
-        private final String ABS_POS_X = "ABS_MT_POSITION_X";
+        private static final String ABS_POS_X = "ABS_MT_POSITION_X";
+        private static final String TARGET = "EV_ABS       ABS_MT_POSITION_X";
+        private static final String KEY_MENU = "KEY_MENU";
+        private static final String KEY_HOME = "KEY_HOME";
+        private static final String KEY_BACK = "KEY_BACK";
+        private static final String KEY_VOLUMEDOWN = "KEY_VOLUMEDOWN";
+        private static final String KEY_VOLUMEUP = "KEY_VOLUMEUP";
         private final int ABS_POS_X_LEN = "ABS_MT_POSITION_X".length();
         private boolean mStopped;
 
@@ -214,14 +225,14 @@ public class MonitorTouch {
             BufferedReader br = new BufferedReader(new StringReader(packet));
             String line;
             while ((line = br.readLine()) != null) {
-                if (line.contains("EV_ABS       ABS_MT_POSITION_X")) {
+                if (line.contains(TARGET)) {
                     String posX = line.substring(line.indexOf(ABS_POS_X) + ABS_POS_X_LEN).trim();
                     String positionXDec = Numeric.toBigInt(posX).toString(10);
                     mLocalOutQueue.add(positionXDec);
                     matchCount++;
                 }
-                if (line.contains("KEY_MENU") || line.contains("KEY_HOME") || line.contains("KEY_BACK")
-                        || line.contains("KEY_VOLUMEDOWN") || line.contains("KEY_VOLUMEUP")) {
+                if (line.contains(KEY_MENU) || line.contains(KEY_HOME) || line.contains(KEY_BACK)
+                        || line.contains(KEY_VOLUMEDOWN) || line.contains(KEY_VOLUMEUP)) {
                     stopMonitor();
                     sendBroadcast();
                     Log.e(TAG, "key abnormal");
