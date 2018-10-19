@@ -553,7 +553,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void showAlertDialog(String msg) {
-        if (mAlertDialog == null) {
+        if (mAlertDialog == null && getContext() != null) {
             mAlertDialog = new AlertDialog.Builder(getContext())
                     .setMessage(msg)
                     .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {

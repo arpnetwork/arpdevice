@@ -63,6 +63,7 @@ public class Touch {
 
     private RecordHelper mRecordHelper;
     private MonitorTouch mMonitor;
+    private long mLastKeyTime = 0;
 
     public static Touch getInstance() {
         if (sInstance == null) {
@@ -108,9 +109,15 @@ public class Touch {
     }
 
     public void sendKeyevent(int keycode) { // KeyEvent.KEYCODE_BACK
-        if (mKeyInputShell != null) {
-            mKeyInputShell.write("" + keycode);
-            mKeyInputShell.write("\n"); // KeyInput stdIn.readLine() need \n.
+        if (System.currentTimeMillis() - mLastKeyTime < 160) {
+            mLastKeyTime = System.currentTimeMillis();
+            Log.d(TAG, "drop keyevent");
+        } else {
+            mLastKeyTime = System.currentTimeMillis();
+            if (mKeyInputShell != null) {
+                mKeyInputShell.write("" + keycode);
+                mKeyInputShell.write("\n"); // KeyInput stdIn.readLine() need \n.
+            }
         }
     }
 
