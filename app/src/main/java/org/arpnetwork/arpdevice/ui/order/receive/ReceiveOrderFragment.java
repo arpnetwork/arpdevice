@@ -74,6 +74,7 @@ import org.arpnetwork.arpdevice.util.Util;
 import java.math.BigInteger;
 import java.util.LinkedList;
 import java.util.Locale;
+import java.util.Random;
 
 public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener,
         TaskHelper.OnTopTaskListener, AppManager.OnAppManagerListener {
@@ -107,6 +108,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private TouchLocalReceiver mTouchLocalReceiver;
     private ChargingReceiver mChargingReceiver;
     private MinerStateChangedReceiver mStateChangedReceiver;
+    private ScreenStateChangedReceiver mScreenStateChangedReceiver;
 
     private Dialog mAlertDialog;
     private Dialog mExitAlertDialog;
@@ -130,6 +132,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         int[] ports = CustomApplication.sInstance.getPortArray();
         mDataPort = ports[0];
         mHttpPort = ports[1];
+        DeviceInfo.get().setDataPort(mDataPort, mHttpPort);
 
         registerReceiver();
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
@@ -168,7 +171,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onPause();
 
         if (mAppManager.getState() != AppManager.State.INSTALLING && mAppManager.getState() != AppManager.State.LAUNCHING) {
-            mHandler.postDelayed(mStopRunnable, 500);
+            mHandler.postDelayed(mStopRunnable, 1000);
         }
     }
 
@@ -275,7 +278,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private void checkPort(int tcpPort, int httpPort) {
         RPCRequest request = new RPCRequest();
-        request.setId("");
+        request.setId(String.valueOf(new Random().nextInt(Integer.MAX_VALUE)));
         request.setMethod("device_checkPort");
         request.putInt(tcpPort);
         request.putInt(httpPort);
@@ -303,7 +306,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private void useProxy() {
         DeviceInfo.get().setProxy(Config.PROXY_HOST);
-        DataServer.getInstance().shutdown();
+        DataServer.getInstance().close(true);
         stopHttpServer();
         requestTcpPort();
     }
@@ -382,11 +385,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             mDispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
             startHttpServer(mDispatcher);
 
-            if (!DeviceInfo.get().isProxyMode()) {
-                checkPort(DeviceInfo.get().tcpPort, DeviceInfo.get().httpPort);
-            } else {
-                useProxy();
-            }
+            checkPort(mDataPort, mHttpPort);
 
             mStartService = true;
             mOrderStateView.setText(R.string.connecting_miners);
@@ -401,7 +400,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             DownloadManager.getInstance().cancelAll();
             stopHttpServer();
             releaseDApp();
-            DataServer.getInstance().shutdown();
+            DataServer.getInstance().setListener(null);
+            DataServer.getInstance().close(true);
             if (mDeviceManager != null) {
                 mDeviceManager.setOnDeviceStateChangedListener(null);
                 mDeviceManager.close();
@@ -755,6 +755,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(
                 mStateChangedReceiver,
                 stateChangedIntentFilter);
+
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        mScreenStateChangedReceiver = new ScreenStateChangedReceiver();
+        getActivity().registerReceiver(mScreenStateChangedReceiver, filter);
     }
 
     private void unregisterReceiver() {
@@ -769,6 +773,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mStateChangedReceiver != null) {
             LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mStateChangedReceiver);
             mStateChangedReceiver = null;
+        }
+        if (mScreenStateChangedReceiver != null) {
+            getActivity().unregisterReceiver(mScreenStateChangedReceiver);
+            mScreenStateChangedReceiver = null;
         }
     }
 
@@ -806,6 +814,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             if (Constant.STATE_INVALID.equals(intent.getAction())) {
                 stopDeviceService();
                 showAlertDialog(getString(R.string.invalid_miner));
+            }
+        }
+    }
+
+    private class ScreenStateChangedReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+                finish();
             }
         }
     }
