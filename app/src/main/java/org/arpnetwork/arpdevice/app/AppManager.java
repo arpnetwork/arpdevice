@@ -219,6 +219,7 @@ public class AppManager {
     public void clear() {
         mState = State.IDLE;
         mDApp = null;
+        mHandler.removeCallbacksAndMessages(null);
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -247,6 +248,7 @@ public class AppManager {
         InstalledApp installedApp = new InstalledApp();
         installedApp.pkgName = pkgName;
         installedApp.saveRecord();
+
     }
 
     private synchronized void appInstall(File file, final String packageName) {
@@ -260,7 +262,12 @@ public class AppManager {
 
                 mTaskHelper.stopCheckTopTimer();
                 if (mDApp != null) {
-                    DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            DAppApi.appInstalled(packageName, INSTALL_SUCCESS, mDApp);
+                        }
+                    }, 1000);
                     if (mOnAppManagerListener != null) {
                         mOnAppManagerListener.onAppInstall(true);
                     }
