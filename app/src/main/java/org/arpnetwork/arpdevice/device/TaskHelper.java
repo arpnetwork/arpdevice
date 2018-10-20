@@ -49,6 +49,8 @@ public class TaskHelper {
 
     private String mPackageName;
     private String mTopPackage;
+    private int mEmptyPackageNum;
+
     private final Adb mAdb;
     private Timer mTimer;
     private Context mContext;
@@ -93,6 +95,7 @@ public class TaskHelper {
         mPackageName = packageName;
         mLaunchRunnable = runnable;
         mTopPackage = null;
+        mEmptyPackageNum = 0;
 
         PackageManager packageManager = CustomApplication.sInstance.getPackageManager();
         Intent intent = packageManager.getLaunchIntentForPackage(mPackageName);
@@ -229,8 +232,9 @@ public class TaskHelper {
                         int x = UIHelper.getWidthNoVirtualBar(mContext) * 3 / 4;
                         int y = UIHelper.getHeightNoVirtualBar(mContext) - UIHelper.dip2px(mContext, 40);
                         handleTouch(file.getPath(), regex, x, y);
-                    } else if (!TextUtils.isEmpty(topPackage) && (!topPackage.contains(mPackageName)
-                            && (mTopPackage != null && mTopPackage.contains(mPackageName)))) {
+                    } else if ((!TextUtils.isEmpty(topPackage) && (!topPackage.contains(mPackageName)
+                            && (mTopPackage != null && mTopPackage.contains(mPackageName))))
+                            || (TextUtils.isEmpty(topPackage) && mEmptyPackageNum >= 1)) {
                         stopCheckTopTimer();
                         onTopTaskIllegal(mPackageName);
                     }
@@ -243,6 +247,9 @@ public class TaskHelper {
                 }
                 if (!TextUtils.isEmpty(topPackage)) {
                     mTopPackage = topPackage;
+                    mEmptyPackageNum = 0;
+                } else {
+                    mEmptyPackageNum++;
                 }
             }
         });
