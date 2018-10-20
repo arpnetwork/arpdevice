@@ -136,7 +136,7 @@ public final class DataServer extends DefaultConnector {
         heartbeat();
 
         if (mDApp == null) {
-            close();
+            closeChannel();
             return;
         }
 
@@ -184,8 +184,6 @@ public final class DataServer extends DefaultConnector {
 
     @Override
     public void onException(Connection conn, Throwable cause) {
-        cause.printStackTrace();
-
         stop();
 
         if (mListener != null) {
@@ -338,7 +336,7 @@ public final class DataServer extends DefaultConnector {
             Touch.getInstance().sendTouch("r\n");
         }
 
-        close();
+        closeChannel();
 
         stopHeartbeatTimer();
         stopHeartbeatTimeout();
@@ -350,7 +348,7 @@ public final class DataServer extends DefaultConnector {
     }
 
     private void closeAndStopApp(boolean stopApp) {
-        close();
+        closeChannel();
         if (mAppManager != null && stopApp) {
             mAppManager.stopApp();
         }
@@ -361,7 +359,6 @@ public final class DataServer extends DefaultConnector {
         public void run() {
             if (!sessionExists()) {
                 closeAndStopApp(true);
-            } else {
             }
         }
     };

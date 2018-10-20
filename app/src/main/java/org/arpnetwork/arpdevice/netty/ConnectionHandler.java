@@ -16,14 +16,10 @@
 
 package org.arpnetwork.arpdevice.netty;
 
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
-@ChannelHandler.Sharable
 public class ConnectionHandler extends ChannelInboundHandlerAdapter {
-    private static final String TAG = ConnectionHandler.class.getSimpleName();
-
     private Connection mConn;
 
     public ConnectionHandler(Connection conn) {
@@ -32,16 +28,16 @@ public class ConnectionHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        mConn.onConnected();
-
         super.channelActive(ctx);
+
+        mConn.onConnected(ctx);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        mConn.onClosed();
-
         super.channelInactive(ctx);
+
+        mConn.onClosed();
     }
 
     @Override

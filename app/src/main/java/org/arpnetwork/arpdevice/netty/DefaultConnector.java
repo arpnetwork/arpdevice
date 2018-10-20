@@ -18,6 +18,8 @@ package org.arpnetwork.arpdevice.netty;
 
 import org.arpnetwork.arpdevice.data.Message;
 
+import io.netty.channel.ChannelPipeline;
+
 public abstract class DefaultConnector extends Connector {
 
     public DefaultConnector() {
@@ -30,14 +32,16 @@ public abstract class DefaultConnector extends Connector {
 
     @Override
     public void onChannelRead(Connection conn, Object msg) throws Exception {
+        super.onChannelRead(conn, msg);
+
         onMessage(conn, (Message) msg);
     }
 
     @Override
-    protected void addHandlers() {
-        addHandler(new MessageEncoder());
-        addHandler(new MessageDecoder());
-        super.addHandlers();
+    protected void addHandlers(ChannelPipeline pipeline) {
+        pipeline.addLast(new MessageEncoder());
+        pipeline.addLast(new MessageDecoder());
+        super.addHandlers(pipeline);
     }
 
     protected abstract void onMessage(Connection conn, Message msg) throws Exception;

@@ -16,18 +16,15 @@
 
 package org.arpnetwork.arpdevice.netty;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -39,7 +36,9 @@ public class Connection {
     private NioEventLoopGroup mBossGroup;
     private EventLoopGroup mWorkerGroup;
     private ChannelFuture mChannelFuture;
-    private List<ChannelHandler> mChannelHandlerList;
+    private ChannelHandlerContext mChannelHandlerContext;
+    private ChannelInitializer mChannelInitializer;
+    private boolean mClosed;
 
     private Listener mListener;
 
@@ -53,15 +52,9 @@ public class Connection {
         void onException(Connection conn, Throwable cause);
     }
 
-    public Connection(Listener listener) {
+    public Connection(Listener listener, ChannelInitializer channelInitializer) {
         mListener = listener;
-        mChannelHandlerList = new ArrayList<>();
-    }
-
-    public void addHandler(ChannelHandler handler) {
-        if (!mChannelHandlerList.contains(handler)) {
-            mChannelHandlerList.add(handler);
-        }
+        mChannelInitializer = channelInitializer;
     }
 
     public void connect(String host, int port) {
@@ -77,6 +70,7 @@ public class Connection {
 
         mChannelFuture = b.connect(host, port);
         mChannelFuture.addListener(mChannelFutureListener);
+        mClosed = false;
     }
 
     public void startServer(int port) throws Exception {
@@ -93,15 +87,27 @@ public class Connection {
 
         mChannelFuture = b.bind(port).sync();
         mChannelFuture.addListener(mChannelFutureListener);
+        mClosed = false;
+    }
+
+    public synchronized void closeChannel() {
+        if (mChannelHandlerContext != null) {
+            mChannelHandlerContext.close().addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     public void close() {
         close(false);
     }
 
-    public void close(boolean shutdown) {
+    public synchronized void close(boolean shutdown) {
+        mChannelHandlerContext = null;
         try {
-            mChannelFuture.sync().channel().close().sync();
+            if (!mClosed) {
+                mChannelFuture.removeListener(mChannelFutureListener);
+                mChannelFuture.sync().channel().close().sync();
+                mClosed = true;
+            }
         } catch (Exception e) {
         } finally {
             if (shutdown) {
@@ -111,7 +117,6 @@ public class Connection {
     }
 
     public void shutdown() {
-        mChannelFuture.removeListener(mChannelFutureListener);
         try {
             if (mBossGroup != null) {
                 mBossGroup.shutdownGracefully();
@@ -121,24 +126,29 @@ public class Connection {
         }
     }
 
-    public void write(Object msg) {
+    public synchronized void write(Object msg) {
         if (!mChannelFuture.isSuccess()) {
             return;
         }
 
-        try {
-            mChannelFuture.channel().writeAndFlush(msg);
-        } catch (Exception e) {
+        if (msg != null && mChannelHandlerContext != null) {
+            try {
+                mChannelHandlerContext.writeAndFlush(msg);
+            } catch (Exception e) {
+            }
         }
     }
 
-    public void onConnected() {
+    public void onConnected(ChannelHandlerContext ctx) {
+        mChannelHandlerContext = ctx;
         if (mListener != null) {
             mListener.onConnected(this);
         }
     }
 
-    public void onClosed() {
+    public synchronized void onClosed() {
+        mClosed = true;
+        mChannelHandlerContext = null;
         if (mListener != null) {
             mListener.onClosed(this);
         }
@@ -155,15 +165,6 @@ public class Connection {
             mListener.onException(this, cause);
         }
     }
-
-    private ChannelInitializer mChannelInitializer = new ChannelInitializer<SocketChannel>() {
-        @Override
-        public void initChannel(SocketChannel ch) throws Exception {
-            for (ChannelHandler handler : mChannelHandlerList) {
-                ch.pipeline().addLast(handler);
-            }
-        }
-    };
 
     private GenericFutureListener<ChannelFuture> mChannelFutureListener = new GenericFutureListener<ChannelFuture>() {
         @Override

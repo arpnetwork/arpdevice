@@ -59,7 +59,7 @@ public class TcpProxy extends DefaultConnector {
     @Override
     public void onClosed(Connection conn) {
         DataServer.getInstance().onClosed(conn);
-        shutdown();
+        close(true);
     }
 
     @Override

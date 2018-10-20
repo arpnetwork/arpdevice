@@ -16,16 +16,16 @@
 
 package org.arpnetwork.arpdevice.netty;
 
-import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.socket.SocketChannel;
 
 public abstract class Connector implements Connection.Listener {
-    private static final String TAG = Connector.class.getSimpleName();
+    private final String TAG = getClass().getSimpleName();
 
     private Connection mConnection;
 
     public Connector() {
-        mConnection = new Connection(this);
-        addHandlers();
     }
 
     public void resetConnection(Connection conn) {
@@ -33,15 +33,21 @@ public abstract class Connector implements Connection.Listener {
     }
 
     public void connect(String host, int port) {
+        initConnection();
         mConnection.connect(host, port);
     }
 
     public void startServer(int port) throws Exception {
+        initConnection();
         mConnection.startServer(port);
     }
 
     public void write(Object msg) {
         mConnection.write(msg);
+    }
+
+    public void closeChannel() {
+        mConnection.closeChannel();
     }
 
     public void close() {
@@ -72,11 +78,16 @@ public abstract class Connector implements Connection.Listener {
     public void onException(Connection conn, Throwable cause) {
     }
 
-    protected void addHandlers() {
-        addHandler(new ConnectionHandler(mConnection));
+    protected void addHandlers(ChannelPipeline pipeline) {
+        pipeline.addLast(new ConnectionHandler(mConnection));
     }
 
-    protected void addHandler(ChannelHandler handler) {
-        mConnection.addHandler(handler);
+    private void initConnection() {
+        mConnection = new Connection(this, new ChannelInitializer<SocketChannel>() {
+            @Override
+            public void initChannel(SocketChannel ch) throws Exception {
+                addHandlers(ch.pipeline());
+            }
+        });
     }
 }

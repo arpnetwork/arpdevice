@@ -25,18 +25,20 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpRequestDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 
 public class HttpProxy extends Connector implements HttpServerHandler.Listener {
+    private Dispatcher mDispatcher;
     private byte[] mSession;
 
     public HttpProxy(Dispatcher dispatcher, byte[] session) {
         super();
 
         mSession = session;
-        addHandler(new HttpServerHandler(dispatcher, this));
+        mDispatcher = dispatcher;
     }
 
     public void connect(int port) {
@@ -55,13 +57,14 @@ public class HttpProxy extends Connector implements HttpServerHandler.Listener {
 
     @Override
     public void onChannelInactive(ChannelHandlerContext ctx) {
-        shutdown();
+        close(true);
     }
 
     @Override
-    protected void addHandlers() {
-        addHandler(new HttpResponseEncoderWrapper(new HttpResponseEncoder()));
-        addHandler(new HttpRequestDecoder());
+    protected void addHandlers(ChannelPipeline pipeline) {
+        pipeline.addLast(new HttpResponseEncoderWrapper(new HttpResponseEncoder()));
+        pipeline.addLast(new HttpRequestDecoder());
+        pipeline.addLast(new HttpServerHandler(mDispatcher, this));
     }
 
     static class HttpResponseEncoderWrapper extends ChannelOutboundHandlerAdapter {
