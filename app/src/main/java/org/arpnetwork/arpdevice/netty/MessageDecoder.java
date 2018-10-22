@@ -31,6 +31,6 @@ public class MessageDecoder extends ReplayingDecoder<Void> {
         Message msg = Message.readFrom(in);
         if (msg == null) return;
 
-        out.add(Message.readFrom(in));
+        out.add(msg);
     }
 }

@@ -68,6 +68,7 @@ public class Message {
     }
 
     public static Message readFrom(ByteBuf buf) throws IOException {
+        buf.markReaderIndex();
         int size = buf.readInt();
         if (size == 0) {
             int bufferSize = 1;
@@ -77,6 +78,7 @@ public class Message {
         }
 
         if (buf.readableBytes() < size) {
+            buf.resetReaderIndex();
             return null;
         }
 
