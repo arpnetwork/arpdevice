@@ -133,6 +133,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mDataPort = ports[0];
         mHttpPort = ports[1];
         DeviceInfo.get().setDataPort(mDataPort, mHttpPort);
+        DeviceInfo.get().setProxy(null);
 
         registerReceiver();
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);

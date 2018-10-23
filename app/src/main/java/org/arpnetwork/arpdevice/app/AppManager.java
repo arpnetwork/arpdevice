@@ -101,8 +101,8 @@ public class AppManager {
     }
 
     public synchronized void setDApp(DApp dApp) {
+        mHandler.removeCallbacksAndMessages(null);
         if (mLastDAppAddress != null) {
-            mHandler.removeCallbacksAndMessages(null);
             if (!mLastDAppAddress.equals(dApp.address)) {
                 uninstallAll();
             }
