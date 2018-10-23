@@ -338,9 +338,12 @@ public class AppManager {
         });
     }
 
-    private void globalDimOff() {
-        Adb adb = new Adb(Touch.getInstance().getConnection());
-        adb.globalDimRestore(mScreenBrightnessMode, mScreenBrightness);
+    private void globalDimOff() { // maybe invoked more times.
+        if (mScreenBrightness != -1) {
+            Adb adb = new Adb(Touch.getInstance().getConnection());
+            adb.globalDimRestore(mScreenBrightnessMode, mScreenBrightness);
+            mScreenBrightness = -1;
+        }
     }
 
     private Runnable mLaunchFailedRunnable = new Runnable() {
