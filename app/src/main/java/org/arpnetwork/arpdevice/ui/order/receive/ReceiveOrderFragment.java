@@ -834,7 +834,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         public void onPort(int proxyPort, boolean tcp) {
             if (tcp) {
                 DeviceInfo.get().tcpPort = proxyPort;
-                requestHttpPort();
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        requestHttpPort();
+                    }
+                });
             } else {
                 DeviceInfo.get().httpPort = proxyPort;
                 mHandler.post(new Runnable() {

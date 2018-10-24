@@ -16,6 +16,8 @@
 
 package org.arpnetwork.arpdevice.proxy;
 
+import android.os.Handler;
+
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.netty.Connection;
 import org.arpnetwork.arpdevice.netty.Connector;
@@ -26,9 +28,14 @@ import io.netty.buffer.Unpooled;
 public class PortProxy extends Connector {
     private static final String TAG = PortProxy.class.getSimpleName();
 
+    private static final int ID_PORT = 1;
+    private static final int ID_HANDSHAKE = 2;
+
     private Listener mListener;
     private int mAcceptPort;
     private boolean mTcp;
+
+    private Handler mHanlder;
 
     public interface Listener {
         void onPort(int proxyPort, boolean tcp);
@@ -43,6 +50,7 @@ public class PortProxy extends Connector {
 
         mListener = listener;
         mTcp = tcp;
+        mHanlder = new Handler();
     }
 
     public void connect() {
@@ -55,7 +63,9 @@ public class PortProxy extends Connector {
 
         ByteBuf buf = Unpooled.buffer();
         buf.writeBytes(new byte[]{3, 0, 0, 0});
-        conn.write(buf);
+        write(buf);
+
+        startHeartbeat();
     }
 
     @Override
@@ -64,22 +74,21 @@ public class PortProxy extends Connector {
         do {
             buf.markReaderIndex();
             int size = buf.readByte();
-            int readableBytes = buf.readableBytes();
-            if (readableBytes < size) {
+            if (buf.readableBytes() < size) {
                 buf.resetReaderIndex();
                 break;
             }
 
             int id = buf.readByte();
-            if (id == 1) {
-                int result = buf.readByte();
+            if (id == ID_PORT) {
+                buf.readByte();
                 int proxyPort = buf.readUnsignedShort();
                 mAcceptPort = buf.readUnsignedShort();
 
                 if (mListener != null) {
                     mListener.onPort(proxyPort, mTcp);
                 }
-            } else if (id == 2) {
+            } else if (id == ID_HANDSHAKE) {
                 byte[] bytes = new byte[size - 1];
                 buf.readBytes(bytes);
 
@@ -93,11 +102,39 @@ public class PortProxy extends Connector {
     }
 
     @Override
+    public void onClosed(Connection conn) {
+        super.onClosed(conn);
+
+        stopHeartbeat();
+    }
+
+    @Override
     public void onException(Connection conn, Throwable cause) {
         super.onException(conn, cause);
 
+        stopHeartbeat();
         if (mListener != null) {
             mListener.onException(cause);
         }
+    }
+
+    private void startHeartbeat() {
+        mHanlder.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                heartbeat();
+                startHeartbeat();
+            }
+        }, 30000);
+    }
+
+    private void stopHeartbeat() {
+        mHanlder.removeCallbacksAndMessages(null);
+    }
+
+    private void heartbeat() {
+        ByteBuf buf = Unpooled.buffer();
+        buf.writeByte(0);
+        write(buf);
     }
 }
