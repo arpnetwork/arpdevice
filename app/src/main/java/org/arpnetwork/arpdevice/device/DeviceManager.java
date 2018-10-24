@@ -18,7 +18,6 @@ package org.arpnetwork.arpdevice.device;
 
 import android.os.Handler;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.arpnetwork.arpdevice.constant.ErrorCode;
 
@@ -138,6 +137,8 @@ public class DeviceManager extends DefaultConnector {
 
     @Override
     public void onConnected(Connection conn) {
+        super.onConnected(conn);
+
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -161,7 +162,6 @@ public class DeviceManager extends DefaultConnector {
 
     @Override
     public void onClosed(Connection conn) {
-
         reset();
         if (!mClosed) {
             handleError(ErrorCode.RESET_BY_REMOTE, R.string.connect_miner_failed);
@@ -171,8 +171,6 @@ public class DeviceManager extends DefaultConnector {
 
     @Override
     public void onException(Connection conn, Throwable cause) {
-        Log.e(TAG, "onException. message = " + cause.getMessage());
-
         mClosed = true;
         handleError(ErrorCode.NETWORK_ERROR, R.string.connect_miner_failed);
     }
@@ -213,10 +211,14 @@ public class DeviceManager extends DefaultConnector {
                     break;
                 case SPEED_RESULT:
                     SpeedResponse speedResponse = mGson.fromJson(json, SpeedResponse.class);
-                    if (speedResponse.data != null && speedResponse.data.getUploadSpeed() >= 2 * 1024 * 1024) {
-                        mHandler.post(mDeviceReadyRunnable);
-                    } else {
-                        handleError(0, R.string.low_upload_speed);
+                    if (speedResponse.result == 0) {
+                        if (speedResponse.data != null && speedResponse.data.getUploadSpeed() >= 2 * 1024 * 1024) {
+                            mHandler.post(mDeviceReadyRunnable);
+                        } else {
+                            handleError(0, R.string.low_upload_speed);
+                        }
+                    } else { //-5
+                        handleError(speedResponse.result, R.string.speed_test_failed);
                     }
                     break;
                 case DEVICE_OFFLINE:
@@ -308,7 +310,7 @@ public class DeviceManager extends DefaultConnector {
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                write((Message) null);
+                write(new Message());
                 startHeartbeat();
             }
         }, HEARTBEAT_INTERVAL);

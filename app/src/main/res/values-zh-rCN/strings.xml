@@ -265,6 +265,7 @@
     <string name="connect_miner_failed">连接矿工失败，错误码：%d</string>
     <string name="verify_failed">验证失败</string>
     <string name="low_upload_speed">上传网速过低，无法接单</string>
+    <string name="speed_test_failed">测速失败</string>
     <string name="starting_service">服务启动中</string>
     <string name="connecting_miners">正在连接矿工</string>
     <string name="miner_connected">矿工已连接</string>

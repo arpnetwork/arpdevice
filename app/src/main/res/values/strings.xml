@@ -262,6 +262,7 @@
     <string name="connect_miner_failed">Connect miner failed. Error code: %d</string>
     <string name="verify_failed">Verify failed</string>
     <string name="low_upload_speed">The upload speed is too low to receive the order</string>
+    <string name="speed_test_failed">Speed test failed</string>
     <string name="starting_service">Starting service</string>
     <string name="connecting_miners">Connecting miners</string>
     <string name="miner_connected">Miner is connected</string>
