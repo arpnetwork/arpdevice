@@ -454,6 +454,18 @@ public class CheckDeviceActivity extends BaseActivity {
 
                     context.mCheckThread.turnOnStay();
                     context.mCheckThread.adbInstallConfirmOff();
+
+                    // Timeout for upnp.
+                    if (context.mUIHandler != null) {
+                        context.mUIHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (context.mUIHandler != null) {
+                                    context.jumpToNextActivity();
+                                }
+                            }
+                        }, 15 * 1000);
+                    }
                     break;
 
                 case Constant.CHECK_UPNP_COMPLETE:

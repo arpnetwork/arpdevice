@@ -63,7 +63,9 @@ public class BaseActivity extends AppCompatActivity {
     public void setTitle(CharSequence title) {
         super.setTitle("");
 
-        mTitleView.setText(title);
+        if (mTitleView != null) { // mTitleView maybe null when restore.
+            mTitleView.setText(title);
+        }
     }
 
     @Override

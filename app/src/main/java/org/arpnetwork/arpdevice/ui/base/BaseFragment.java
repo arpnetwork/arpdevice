@@ -114,7 +114,7 @@ public abstract class BaseFragment extends Fragment {
     }
 
     protected void setTitle(int resId) {
-        setTitle(getString(resId));
+        if (getActivity() != null) setTitle(getString(resId));
     }
 
     protected final View findViewById(int viewId) {
