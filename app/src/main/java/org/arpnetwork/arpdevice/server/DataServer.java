@@ -211,7 +211,7 @@ public final class DataServer extends DefaultConnector {
     }
 
     private void onClientMinitouchData(String cmd) {
-        Touch.getInstance().sendTouch(cmd);
+        Touch.getInstance().sendNetworkTouch(cmd);
     }
 
     private void processProtocolPacket(String protocolJson) {
@@ -331,9 +331,6 @@ public final class DataServer extends DefaultConnector {
             }
 
             mPacketQueue.clear();
-
-            // fix client terminate with no touch up.
-            Touch.getInstance().sendTouch("r\n");
         }
 
         closeChannel();

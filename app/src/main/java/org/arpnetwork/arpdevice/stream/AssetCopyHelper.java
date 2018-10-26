@@ -37,6 +37,7 @@ public class AssetCopyHelper {
 
     private static final String DIR = "/data/local/tmp/";
     private static final String ARPTOUCH_FILE_NAME = "arptouch";
+    private static final String ARPTOUCH_WRAPPER_FILE_NAME = "touchwrapper";
     private static final String ARP_PROPERTIES_NAME = "arp.properties";
     private static final String DEST_CAP_FILE_NAME = "arpcap";
     private static final String DEST_LIB_ARPCAP_FILE_NAME = "libarpcap.so";
@@ -71,6 +72,10 @@ public class AssetCopyHelper {
 
     public static void pushTouch(final SyncChannel ss, PushCallback listener) {
         pushFileFromAsset(ss, DIR + ARPTOUCH_FILE_NAME, ARPTOUCH_FILE_NAME, listener);
+    }
+
+    public static void pushTouchWrapper(final SyncChannel ss, PushCallback listener) {
+        pushFileFromAsset(ss, DIR + ARPTOUCH_WRAPPER_FILE_NAME, ARPTOUCH_WRAPPER_FILE_NAME, listener);
     }
 
     public static void pushCap(final SyncChannel ss, PushCallback listener) {
@@ -113,6 +118,10 @@ public class AssetCopyHelper {
 
     public static boolean isValidTouchBinary() {
         return isValidFile(DIR + ARPTOUCH_FILE_NAME, "touch_md5");
+    }
+
+    public static boolean isValidTouchWrpperBinary() {
+        return isValidFile(DIR + ARPTOUCH_WRAPPER_FILE_NAME, "touch_wrapper_md5");
     }
 
     public static boolean isValidCapBinary() {

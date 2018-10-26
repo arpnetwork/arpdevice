@@ -49,7 +49,8 @@ public class Touch {
     private static volatile Touch sInstance = null;
 
     private Connection mConn;
-    private ShellChannel mShell;
+    private ShellChannel mTouchWrapperShell;
+    private ShellChannel mTouchAutoShell;
     private ShellChannel mKeyInputShell;
 
     private Auth mAuth;
@@ -95,21 +96,26 @@ public class Touch {
         return mBanner;
     }
 
-    public void sendTouch(String touchInfo) {
-        if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mShell != null) {
-            mShell.write(touchInfo);
+    public void sendAutoTouch(String touchInfo) {
+        if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mTouchAutoShell != null) {
+            mTouchAutoShell.write(touchInfo);
             if (touchInfo.startsWith("m")) {
-                mShell.write("w 16\n");
+                mTouchAutoShell.write("w 16\n");
             }
+        }
+    }
 
-            if (mMonitor != null) {
-                mMonitor.enqueueTouch(touchInfo);
+    public void sendNetworkTouch(String touchInfo) {
+        if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mTouchWrapperShell != null) {
+            mTouchWrapperShell.write(touchInfo);
+            if (touchInfo.startsWith("m")) {
+                mTouchWrapperShell.write("w 16\n");
             }
         }
     }
 
     public void sendKeyevent(int keycode) { // KeyEvent.KEYCODE_BACK
-        if (System.currentTimeMillis() - mLastKeyTime < 160) {
+        if (System.currentTimeMillis() - mLastKeyTime < 250) {
             mLastKeyTime = System.currentTimeMillis();
             Log.d(TAG, "drop keyevent");
         } else {
@@ -132,8 +138,26 @@ public class Touch {
         mRecordHelper = new RecordHelper();
         if (getState() == STATE_CONNECTED) {
             mRecordHelper.startRecord(quality, mConn);
+
             mMonitor = new MonitorTouch();
-            mMonitor.startMonitor(mBanner.split(" ")[6]);
+            mMonitor.startMonitor();
+
+            mTouchWrapperShell = mConn.openShell("/data/local/tmp/touchwrapper " + mBanner.split(" ")[6] + " | /data/local/tmp/arptouch");
+            mTouchWrapperShell.setListener(new ShellChannel.ShellListener() {
+                @Override
+                public void onStdout(ShellChannel ch, byte[] data) {
+                }
+
+                @Override
+                public void onStderr(ShellChannel ch, byte[] data) {
+                }
+
+                @Override
+                public void onExit(ShellChannel ch, int code) {
+                    Log.e(TAG, "abnormal onExit = " + code);
+                    MonitorTouch.sendBroadcast();
+                }
+            });
         }
     }
 
@@ -142,6 +166,10 @@ public class Touch {
             mRecordHelper.stopRecord();
             mRecordHelper = null;
         }
+        if (mTouchWrapperShell != null) {
+            mTouchWrapperShell.close();
+        }
+
         if (mMonitor != null) {
             mMonitor.stopMonitor();
         }
@@ -246,7 +274,7 @@ public class Touch {
         }
 
         private void checkTouch() {
-            if (AssetCopyHelper.isValidTouchBinary()) {
+            if (AssetCopyHelper.isValidTouchWrpperBinary() && AssetCopyHelper.isValidTouchBinary()) {
                 startTouch();
             } else {
                 SyncChannel ss = mConn.openSync();
@@ -261,6 +289,20 @@ public class Touch {
                             startTouch();
                         } else {
                             Log.e(TAG, "pushTouch error: " + throwable);
+                            handleCopyFailed();
+                        }
+                    }
+                });
+                SyncChannel touchWrapper = mConn.openSync();
+                AssetCopyHelper.pushTouchWrapper(touchWrapper, new AssetCopyHelper.PushCallback() {
+                    @Override
+                    public void onStart() {
+                    }
+
+                    @Override
+                    public void onComplete(boolean success, Throwable throwable) {
+                        if (!success) {
+                            Log.e(TAG, "pushTouchWrapper error: " + throwable);
                             handleCopyFailed();
                         }
                     }
@@ -303,7 +345,7 @@ public class Touch {
 
         private void startTouch() {
             ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
-            mShell = ss;
+            mTouchAutoShell = ss;
             ss.setListener(new ShellChannel.ShellListener() {
                 @Override
                 public void onStdout(ShellChannel ch, byte[] data) {
