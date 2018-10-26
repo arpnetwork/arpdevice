@@ -114,8 +114,8 @@
                         android:max="100"
                         android:maxHeight="2dp"
                         android:minHeight="2dp"
-                        android:paddingLeft="7dp"
-                        android:paddingRight="7dp"
+                        android:layout_marginLeft="4dp"
+                        android:padding="10dp"
                         android:progressDrawable="@drawable/progress_style"
                         android:thumb="@drawable/seek_bar_thumb" />
 
@@ -134,7 +134,7 @@
                     android:layout_marginBottom="20dp"
                     android:layout_marginLeft="16dp"
                     android:layout_marginRight="16dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="13dp"
                     android:gravity="center_horizontal"
                     android:text="@string/order_price_message"
                     android:textColor="#999999"
