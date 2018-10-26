@@ -66,7 +66,7 @@ public class RecordHelper {
                     byteBuf.writeBytes(videoData);
 
                     DataServer.getInstance().enqueueAVPacket(byteBuf);
-                    mBuffer.discardReadBytes();
+                    mBuffer.discardSomeReadBytes();
                 } while (mBuffer.readableBytes() > 4);
             }
         });
