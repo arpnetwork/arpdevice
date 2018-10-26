@@ -35,7 +35,7 @@ public class TcpProxy extends DefaultConnector {
     }
 
     public void connect(int port) {
-        super.connect(Config.PROXY_HOST, port);
+        connect(Config.PROXY_HOST, port);
     }
 
     @Override

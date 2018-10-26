@@ -107,8 +107,18 @@ public final class DataServer extends DefaultConnector {
 
     public void onAppLaunch(boolean success) {
         if (success) {
-            start();
-            mHandler.postDelayed(mConnectTimeoutRunnable, CONNECTED_TIMEOUT);
+            if (!mConnected) {
+                synchronized (this) {
+                    try {
+                        wait();
+                    } catch (Exception e) {
+                        return;
+                    }
+                }
+            }
+            if (mConnected) {
+                start();
+            }
         } else {
             closeAndStopApp(false);
         }
@@ -131,8 +141,11 @@ public final class DataServer extends DefaultConnector {
         mPacketQueue.add(byteBuf);
     }
 
+    private boolean mConnected;
+
     @Override
     public void onConnected(Connection conn) {
+
         heartbeat();
 
         if (mDApp == null) {
@@ -140,6 +153,10 @@ public final class DataServer extends DefaultConnector {
             return;
         }
 
+        mConnected = true;
+        synchronized (this) {
+            notify();
+        }
         startHeartbeatTimer();
         startHeartbeatTimeout();
     }
@@ -152,6 +169,10 @@ public final class DataServer extends DefaultConnector {
             DAppApi.clientDisconnected(mSession, mDApp);
         }
         mSession = null;
+        mConnected = false;
+        synchronized (this) {
+            notify();
+        }
     }
 
     @Override
@@ -185,6 +206,10 @@ public final class DataServer extends DefaultConnector {
     @Override
     public void onException(Connection conn, Throwable cause) {
         stop();
+        mConnected = false;
+        synchronized (this) {
+            notify();
+        }
 
         if (mListener != null) {
             mListener.onException(cause);
@@ -315,6 +340,8 @@ public final class DataServer extends DefaultConnector {
         mAVDataThread = new SendThread();
         mAVDataThread.start();
         mStop = false;
+
+        mHandler.postDelayed(mConnectTimeoutRunnable, CONNECTED_TIMEOUT);
     }
 
     private void stop() {

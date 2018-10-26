@@ -42,7 +42,7 @@ public class HttpProxy extends Connector implements HttpServerHandler.Listener {
     }
 
     public void connect(int port) {
-        super.connect(Config.PROXY_HOST, port);
+        connect(Config.PROXY_HOST, port);
     }
 
     @Override
