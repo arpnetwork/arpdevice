@@ -100,6 +100,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private long mLaunchTime;
     private int mQuality;
     private int mTotalTime;
+    private int mRestartServiceNum;
     private boolean mStartService;
     private boolean mPaused;
     private boolean mCheckInstall;
@@ -386,7 +387,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             mDispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
             startHttpServer(mDispatcher);
 
-            checkPort(mDataPort, mHttpPort);
+            if (mDataPort == 0 || mHttpPort == 0) {
+                useProxy();
+            } else {
+                checkPort(mDataPort, mHttpPort);
+            }
 
             mStartService = true;
             mOrderStateView.setText(R.string.connecting_miners);
@@ -441,6 +446,34 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private void stopRecord() {
         Touch.getInstance().stopRecord();
+    }
+
+    private void restartService() {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                stopDeviceService();
+                mOrderStateView.setText(R.string.connecting_miners);
+
+                long delay;
+                if (mRestartServiceNum == 0) {
+                    delay = 3000;
+                } else if (mRestartServiceNum == 1) {
+                    delay = 5000;
+                } else if (mRestartServiceNum == 2) {
+                    delay = 10000;
+                } else {
+                    delay = 30000;
+                }
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        startDeviceService();
+                    }
+                }, delay);
+                mRestartServiceNum++;
+            }
+        });
     }
 
     private void postRequestPayment(final DApp dApp) {
@@ -634,12 +667,14 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onException(Throwable cause) {
+            restartService();
         }
     };
 
     private DeviceManager.OnDeviceStateChangedListener mOnDeviceStateChangedListener = new DeviceManager.OnDeviceStateChangedListener() {
         @Override
         public void onConnected() {
+            mRestartServiceNum = 0;
         }
 
         @Override
@@ -684,8 +719,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onError(int code, int msg) {
-            stopDeviceService();
-            showAlertDialog(String.format(getString(msg), code));
+            if (code == ErrorCode.NETWORK_ERROR) {
+                restartService();
+            } else {
+                stopDeviceService();
+                showAlertDialog(String.format(getString(msg), code));
+            }
         }
     };
 
@@ -862,12 +901,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onException(Throwable cause) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    showAlertDialog(String.format(getString(R.string.connect_miner_failed), ErrorCode.CONNECT_PROXY_FAILED));
-                }
-            });
+            restartService();
         }
     }
 }

@@ -19,7 +19,7 @@ package org.arpnetwork.arpdevice.config;
 public class Config {
     public static final boolean DEBUG = false;
 
-    public static final String PROTOCOL_VERSION = "1.0";
+    public static final String PROTOCOL_VERSION = "1.1";
     public static final String DEFAULT_BLOCKNUMBER = "0";
 
     public static final String API_ETH_PRICE = "https://api.etherscan.io/api?module=stats&action=ethprice";
