@@ -60,6 +60,10 @@ public class DeviceManager extends DefaultConnector {
     public static final int SPEED_RESULT = 9;
     public static final int DEVICE_OFFLINE = 10;
 
+    private static final int LOW_SPEED = -6;
+    private static final int INCOMPATIBLE_PROTOCOL = -1;
+    private static final int SUCCESS = 0;
+
     private static final int MSG_SPEED = 1;
     private static final int MSG_DEVICE = 2;
 
@@ -70,8 +74,8 @@ public class DeviceManager extends DefaultConnector {
     private DApp mDapp;
     private VerifyData mVerifyData;
     private ByteBuf mSpeedDataBuf;
-    private boolean mRegistered;
     private boolean mClosed;
+    private boolean mException;
 
     private Handler mHandler;
     private OnDeviceStateChangedListener mOnDeviceStateChangedListener;
@@ -93,8 +97,6 @@ public class DeviceManager extends DefaultConnector {
 
         mGson = new Gson();
         mHandler = new Handler();
-        mRegistered = false;
-        mClosed = false;
     }
 
     public void setOnDeviceStateChangedListener(OnDeviceStateChangedListener listener) {
@@ -105,6 +107,8 @@ public class DeviceManager extends DefaultConnector {
      * Connect to a miner
      */
     public void connect(Miner miner) {
+        mClosed = false;
+        mException = false;
         mMiner = miner;
         connect(miner.getIpString(), miner.getPortTcpInt());
     }
@@ -124,13 +128,6 @@ public class DeviceManager extends DefaultConnector {
         send(new ReleaseDeviceReq());
     }
 
-    /**
-     * Check whether this device is registered
-     */
-    public boolean isRegistered() {
-        return mRegistered;
-    }
-
     public DApp getDapp() {
         return mDapp;
     }
@@ -139,14 +136,7 @@ public class DeviceManager extends DefaultConnector {
     public void onConnected(Connection conn) {
         super.onConnected(conn);
 
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (mOnDeviceStateChangedListener != null) {
-                    mOnDeviceStateChangedListener.onConnected();
-                }
-            }
-        });
+        mHandler.post(mConnectedRunnable);
         verify();
     }
 
@@ -162,16 +152,19 @@ public class DeviceManager extends DefaultConnector {
 
     @Override
     public void onClosed(Connection conn) {
-        reset();
-        if (!mClosed) {
-            handleError(ErrorCode.RESET_BY_REMOTE, R.string.connect_miner_failed);
+        if (!mException) {
+            reset();
+            if (!mClosed) {
+                handleError(ErrorCode.RESET_BY_REMOTE, R.string.connect_miner_failed);
+            }
+            mClosed = false;
         }
-        mClosed = false;
     }
 
     @Override
     public void onException(Connection conn, Throwable cause) {
-        mClosed = true;
+        mException = true;
+        reset();
         handleError(ErrorCode.NETWORK_ERROR, R.string.connect_miner_failed);
     }
 
@@ -189,35 +182,20 @@ public class DeviceManager extends DefaultConnector {
                 case DEVICE_ASSIGNED:
                     final DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
                     mDapp = res.data;
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mOnDeviceStateChangedListener != null) {
-                                mOnDeviceStateChangedListener.onDeviceAssigned(mDapp);
-                            }
-                        }
-                    });
+                    mHandler.post(mDeviceAssignRunnable);
                     break;
                 case DEVICE_RELEASED:
                     mDapp = null;
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (mOnDeviceStateChangedListener != null) {
-                                mOnDeviceStateChangedListener.onDeviceReleased();
-                            }
-                        }
-                    });
+                    mHandler.post(mDeviceReleasedRunnable);
                     break;
                 case SPEED_RESULT:
+                    mHandler.removeCallbacks(mDeviceReadyRunnable);
                     SpeedResponse speedResponse = mGson.fromJson(json, SpeedResponse.class);
                     if (speedResponse.result == 0) {
-                        if (speedResponse.data != null && speedResponse.data.getUploadSpeed() >= 2 * 1024 * 1024) {
-                            mHandler.post(mDeviceReadyRunnable);
-                        } else {
-                            handleError(0, R.string.low_upload_speed);
-                        }
-                    } else { //-5
+                        mHandler.post(mDeviceReadyRunnable);
+                    } else if (speedResponse.result == LOW_SPEED) {
+                        handleError(0, R.string.low_upload_speed);
+                    } else {
                         handleError(speedResponse.result, R.string.speed_test_failed);
                     }
                     break;
@@ -231,8 +209,6 @@ public class DeviceManager extends DefaultConnector {
     }
 
     private void onSpeedMessage(Message msg) {
-        mHandler.removeCallbacks(mDeviceReadyRunnable);
-
         if (msg.getDataLen() == 0) {
             if (mSpeedDataBuf == null) {
                 mSpeedDataBuf = Unpooled.buffer(2 * 1024 * 1024);
@@ -272,29 +248,17 @@ public class DeviceManager extends DefaultConnector {
     }
 
     private void onRegister(int result) {
-        if (result == 0) {
-            mRegistered = true;
+        if (result == SUCCESS) {
             mHandler.postDelayed(mDeviceReadyRunnable, 500);
-        } else if (result == -1) {
+        } else if (result == INCOMPATIBLE_PROTOCOL) {
             handleError(result, R.string.incompatible_protocol);
         } else {
             handleError(result, R.string.connect_miner_failed);
         }
     }
 
-    private Runnable mDeviceReadyRunnable = new Runnable() {
-        @Override
-        public void run() {
-            startHeartbeat();
-            if (mDapp == null) {
-                if (mOnDeviceStateChangedListener != null) {
-                    mOnDeviceStateChangedListener.onDeviceReady();
-                }
-            }
-        }
-    };
-
     private void handleError(final int result, final int msg) {
+        mClosed = true;
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -307,13 +271,7 @@ public class DeviceManager extends DefaultConnector {
     }
 
     private void startHeartbeat() {
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                write(new Message());
-                startHeartbeat();
-            }
-        }, HEARTBEAT_INTERVAL);
+        mHandler.postDelayed(mHeartbeatRunnable, HEARTBEAT_INTERVAL);
     }
 
     private void verify() {
@@ -354,8 +312,58 @@ public class DeviceManager extends DefaultConnector {
     }
 
     private void reset() {
-        mRegistered = false;
-        mHandler.removeCallbacksAndMessages(null);
+        mHandler.removeCallbacks(mConnectedRunnable);
+        mHandler.removeCallbacks(mDeviceReadyRunnable);
+        mHandler.removeCallbacks(mDeviceAssignRunnable);
+        mHandler.removeCallbacks(mDeviceReleasedRunnable);
+        mHandler.removeCallbacks(mHeartbeatRunnable);
         mDapp = null;
     }
+
+    private Runnable mConnectedRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mOnDeviceStateChangedListener != null) {
+                mOnDeviceStateChangedListener.onConnected();
+            }
+        }
+    };
+
+    private Runnable mDeviceReadyRunnable = new Runnable() {
+        @Override
+        public void run() {
+            startHeartbeat();
+            if (mDapp == null) {
+                if (mOnDeviceStateChangedListener != null) {
+                    mOnDeviceStateChangedListener.onDeviceReady();
+                }
+            }
+        }
+    };
+
+    private Runnable mDeviceAssignRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mOnDeviceStateChangedListener != null) {
+                mOnDeviceStateChangedListener.onDeviceAssigned(mDapp);
+            }
+        }
+    };
+
+    private Runnable mDeviceReleasedRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mOnDeviceStateChangedListener != null) {
+                mOnDeviceStateChangedListener.onDeviceReleased();
+            }
+        }
+    };
+
+    private Runnable mHeartbeatRunnable = new Runnable() {
+        @Override
+        public void run() {
+            write(new Message());
+            startHeartbeat();
+        }
+    };
 }
