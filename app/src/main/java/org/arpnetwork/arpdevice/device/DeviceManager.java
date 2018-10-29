@@ -189,7 +189,6 @@ public class DeviceManager extends DefaultConnector {
                     mHandler.post(mDeviceReleasedRunnable);
                     break;
                 case SPEED_RESULT:
-                    mHandler.removeCallbacks(mDeviceReadyRunnable);
                     SpeedResponse speedResponse = mGson.fromJson(json, SpeedResponse.class);
                     if (speedResponse.result == 0) {
                         mHandler.post(mDeviceReadyRunnable);
@@ -248,11 +247,9 @@ public class DeviceManager extends DefaultConnector {
     }
 
     private void onRegister(int result) {
-        if (result == SUCCESS) {
-            mHandler.postDelayed(mDeviceReadyRunnable, 500);
-        } else if (result == INCOMPATIBLE_PROTOCOL) {
+        if (result == INCOMPATIBLE_PROTOCOL) {
             handleError(result, R.string.incompatible_protocol);
-        } else {
+        } else if (result != SUCCESS) {
             handleError(result, R.string.connect_miner_failed);
         }
     }
