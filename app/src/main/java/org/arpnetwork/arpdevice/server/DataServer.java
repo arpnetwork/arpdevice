@@ -287,7 +287,7 @@ public final class DataServer extends DefaultConnector {
     }
 
     private boolean protocolCompatible(ConnectReq req) {
-        return Config.PROTOCOL_VERSION.equals(req.data.version);
+        return Config.PROTOCOL_CLIENT_VERSION.equals(req.data.version);
     }
 
     private boolean verifySession(ConnectReq req) {
