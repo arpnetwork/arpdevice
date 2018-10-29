@@ -28,9 +28,6 @@ public class MessageDecoder extends ReplayingDecoder<Void> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        Message msg = Message.readFrom(in);
-        if (msg == null) return;
-
-        out.add(msg);
+        out.add(Message.readFrom(in));
     }
 }
