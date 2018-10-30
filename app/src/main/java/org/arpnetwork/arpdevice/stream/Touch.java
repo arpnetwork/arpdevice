@@ -50,7 +50,6 @@ public class Touch {
 
     private Connection mConn;
     private ShellChannel mTouchWrapperShell;
-    private ShellChannel mTouchAutoShell;
     private ShellChannel mKeyInputShell;
 
     private Auth mAuth;
@@ -96,16 +95,14 @@ public class Touch {
         return mBanner;
     }
 
-    public void sendAutoTouch(String touchInfo) {
-        if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mTouchAutoShell != null) {
-            mTouchAutoShell.write(touchInfo);
-            if (touchInfo.startsWith("m")) {
-                mTouchAutoShell.write("w 16\n");
-            }
-        }
+    /**
+     * Return the current connection state.
+     */
+    public synchronized int getState() {
+        return mState;
     }
 
-    public void sendNetworkTouch(String touchInfo) {
+    public void sendTouch(String touchInfo) {
         if (!TextUtils.isEmpty(touchInfo) && getState() == STATE_CONNECTED && mTouchWrapperShell != null) {
             mTouchWrapperShell.write(touchInfo);
             if (touchInfo.startsWith("m")) {
@@ -127,37 +124,52 @@ public class Touch {
         }
     }
 
-    /**
-     * Return the current connection state.
-     */
-    public synchronized int getState() {
-        return mState;
+    public void openTouch(final boolean openMonitor) {
+        if (openMonitor) {
+            mTouchWrapperShell = mConn.openShell("/data/local/tmp/touchwrapper " + mBanner.split(" ")[6] + " | /data/local/tmp/arptouch");
+        } else {
+            mTouchWrapperShell = mConn.openShell("/data/local/tmp/arptouch");
+        }
+        mTouchWrapperShell.setListener(new ShellChannel.ShellListener() {
+            @Override
+            public void onStdout(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onStderr(ShellChannel ch, byte[] data) {
+            }
+
+            @Override
+            public void onExit(ShellChannel ch, int code) {
+                if (openMonitor) {
+                    MonitorTouch.sendBroadcast();
+                }
+            }
+        });
+        if (openMonitor) {
+            mMonitor = new MonitorTouch();
+            mMonitor.startMonitor();
+        }
+    }
+
+    public void openTouch() {
+        openTouch(true);
+    }
+
+    public void closeTouch() {
+        if (mTouchWrapperShell != null) {
+            mTouchWrapperShell.close();
+        }
+
+        if (mMonitor != null) {
+            mMonitor.stopMonitor();
+        }
     }
 
     public void startRecord(int quality) {
         mRecordHelper = new RecordHelper();
         if (getState() == STATE_CONNECTED) {
             mRecordHelper.startRecord(quality, mConn);
-
-            mMonitor = new MonitorTouch();
-            mMonitor.startMonitor();
-
-            mTouchWrapperShell = mConn.openShell("/data/local/tmp/touchwrapper " + mBanner.split(" ")[6] + " | /data/local/tmp/arptouch");
-            mTouchWrapperShell.setListener(new ShellChannel.ShellListener() {
-                @Override
-                public void onStdout(ShellChannel ch, byte[] data) {
-                }
-
-                @Override
-                public void onStderr(ShellChannel ch, byte[] data) {
-                }
-
-                @Override
-                public void onExit(ShellChannel ch, int code) {
-                    Log.e(TAG, "abnormal onExit = " + code);
-                    MonitorTouch.sendBroadcast();
-                }
-            });
         }
     }
 
@@ -165,13 +177,6 @@ public class Touch {
         if (mRecordHelper != null) {
             mRecordHelper.stopRecord();
             mRecordHelper = null;
-        }
-        if (mTouchWrapperShell != null) {
-            mTouchWrapperShell.close();
-        }
-
-        if (mMonitor != null) {
-            mMonitor.stopMonitor();
         }
     }
 
@@ -345,7 +350,6 @@ public class Touch {
 
         private void startTouch() {
             ShellChannel ss = mConn.openShell("/data/local/tmp/arptouch");
-            mTouchAutoShell = ss;
             ss.setListener(new ShellChannel.ShellListener() {
                 @Override
                 public void onStdout(ShellChannel ch, byte[] data) {
@@ -365,11 +369,13 @@ public class Touch {
                         }
                     }
                     message.sendToTarget();
+                    ch.close();
                 }
 
                 @Override
                 public void onStderr(ShellChannel ch, byte[] data) {
                     mCheckHandler.obtainMessage(Constant.CHECK_TOUCH_FAILED).sendToTarget();
+                    ch.close();
                 }
 
                 @Override

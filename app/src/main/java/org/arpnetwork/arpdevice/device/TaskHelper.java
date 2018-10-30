@@ -300,8 +300,8 @@ public class TaskHelper {
 
     private void sendTouch(int x, int y) {
         String downClick = String.format(Locale.US, "d 0 %d %d 50 5 5\nc\n", x, y);
-        Touch.getInstance().sendAutoTouch(downClick);
-        Touch.getInstance().sendAutoTouch("u 0 \nc\n");
+        Touch.getInstance().sendTouch(downClick);
+        Touch.getInstance().sendTouch("u 0 \nc\n");
     }
 
     private void onTopTaskIllegal(String pkgName) {

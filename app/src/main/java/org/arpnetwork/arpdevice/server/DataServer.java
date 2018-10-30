@@ -236,7 +236,7 @@ public final class DataServer extends DefaultConnector {
     }
 
     private void onClientMinitouchData(String cmd) {
-        Touch.getInstance().sendNetworkTouch(cmd);
+        Touch.getInstance().sendTouch(cmd);
     }
 
     private void processProtocolPacket(String protocolJson) {

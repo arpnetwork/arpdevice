@@ -269,8 +269,8 @@
     <string name="wait_for_order">Waiting for order</string>
     <string name="received_order">Received an order</string>
     <string name="receive_order">Receive order</string>
-    <string name="dont_touch_screen">Do not touch the screen</string>
-    <string name="receive_order_tips">Do not touch the screen after receiving the order, otherwise you will withdraw from the order, affecting your income and other people\'s experience.</string>
+    <string name="dont_touch_screen">Do not touch the screen\n Any touch would quit</string>
+    <string name="receive_order_tips">Please keep charged or have at lease 50% battery power</string>
     <string name="exit_order">Exit order</string>
     <string name="confirm_to_exit">Confirm to exit receiving order?</string>
     <string name="device_offline">Your account is already signed in on another device</string>

@@ -272,8 +272,8 @@
     <string name="wait_for_order">等待接单</string>
     <string name="received_order">接到订单</string>
     <string name="receive_order">接单中</string>
-    <string name="dont_touch_screen">请勿触碰屏幕</string>
-    <string name="receive_order_tips">接到订单后请勿触碰屏幕\n否则将会退出接到的订单\n影响您的收入和他人体验</string>
+    <string name="dont_touch_screen">请勿操作手机\n对手机的任何操作都会退出接单</string>
+    <string name="receive_order_tips">接单中请保持\n连接电源或50%以上电量</string>
     <string name="exit_order">退出接单</string>
     <string name="confirm_to_exit">确定退出接单?</string>
     <string name="device_offline">您的帐户已在其他设备上登录</string>

@@ -106,23 +106,19 @@ public class Adb {
         }
     }
 
-    public void getadbInstallConfirm(ShellChannel.ShellListener listener) { // huawei settings
+    public void getAdbInstallConfirm(ShellChannel.ShellListener listener) { // huawei settings
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
             ShellChannel ss = mConnection.openShell("settings get secure adb_install_need_confirm");
             ss.setListener(listener);
         }
     }
 
-    public void globalDimOn(final int screenBrightness, final ShellChannel.ShellListener listener) {
-        if (screenBrightness < 0 || screenBrightness > 255) return;
-
+    public void getGlobalBright(final ShellChannel.ShellListener listener) {
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
             ShellChannel shellChannel = mConnection.openShell("settings get system screen_brightness_mode && settings get system screen_brightness");
             shellChannel.setListener(new ShellChannel.ShellListener() {
                 @Override
                 public void onStdout(ShellChannel ch, byte[] data) {
-                    mConnection.openShell("settings put system screen_brightness_mode 0 && settings put system screen_brightness " + screenBrightness);
-
                     if (listener != null) {
                         listener.onStdout(ch, data);
                     }
@@ -142,6 +138,14 @@ public class Adb {
                     }
                 }
             });
+        }
+    }
+
+    public void globalDimOn(final int screenBrightness) {
+        if (screenBrightness < 0 || screenBrightness > 255) return;
+
+        if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
+            mConnection.openShell("settings put system screen_brightness_mode 0 && settings put system screen_brightness " + screenBrightness);
         }
     }
 

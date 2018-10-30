@@ -112,6 +112,7 @@ public class CheckThread {
     }
 
     public void checkInstall() {
+        Touch.getInstance().openTouch(false);
         stopCheckPackageTimer();
         uninstallApp(sCheckerPkgName);
 
@@ -248,6 +249,7 @@ public class CheckThread {
             boolean hasInstalled = Util.hasPackage(mContext, sCheckerPkgName);
 
             if (hasInstalled) {
+                Touch.getInstance().closeTouch();
                 stopCheckPackageTimer();
 
                 Message message = mUIHandler.obtainMessage(Constant.ACTION_CHECK_UPNP);

@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
@@ -80,6 +81,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         TaskHelper.OnTopTaskListener, AppManager.OnAppManagerListener {
     private static final String TAG = ReceiveOrderFragment.class.getSimpleName();
     private static final int SCREEN_BRIGHTNESS_WAITING = 20;
+    private static final String KEY_PORTS = "ports";
+    private static final String KEY_BRIGHT = "bright";
+    private static final String KEY_BRIGHT_MODE = "brightness_mode";
 
     private TextView mOrderStateView;
     private View mFloatView;
@@ -125,14 +129,24 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Touch.getInstance().openTouch();
+
         setTitle(R.string.receive_order);
         getBaseActivity().setOnBackListener(mOnBackListener);
 
         mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
 
         int[] ports = CustomApplication.sInstance.getPortArray();
-        mDataPort = ports[0];
-        mHttpPort = ports[1];
+        int[] restorePorts;
+        if (ports != null && ports.length > 1) {
+            mDataPort = ports[0];
+            mHttpPort = ports[1];
+        } else if (savedInstanceState != null
+                && (restorePorts = savedInstanceState.getIntArray(KEY_PORTS)) != null && restorePorts.length > 1) {
+            mDataPort = restorePorts[0];
+            mHttpPort = restorePorts[1];
+        }
+
         DeviceInfo.get().setDataPort(mDataPort, mHttpPort);
         DeviceInfo.get().setProxy(null);
 
@@ -140,6 +154,26 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
 
         mAppManager = AppManager.getInstance(getContext().getApplicationContext());
+
+        if (savedInstanceState == null) {
+            getGlobalBright();
+        } else {
+            mScreenBrightness = savedInstanceState.getInt(KEY_BRIGHT, -1);
+            mScreenBrightnessMode = savedInstanceState.getInt(KEY_BRIGHT_MODE, -1);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putIntArray(KEY_PORTS, CustomApplication.sInstance.getPortArray());
+        if (mScreenBrightness != -1) {
+            outState.putInt(KEY_BRIGHT, mScreenBrightness);
+        }
+        if (mScreenBrightnessMode != -1) {
+            outState.putInt(KEY_BRIGHT_MODE, mScreenBrightnessMode);
+        }
     }
 
     @Override
@@ -171,14 +205,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     @Override
     public void onPause() {
         super.onPause();
-
-        if (mAppManager.getState() != AppManager.State.INSTALLING && mAppManager.getState() != AppManager.State.LAUNCHING) {
-            mHandler.postDelayed(mStopRunnable, 1000);
-        }
     }
 
     @Override
     public void onDestroy() {
+        globalDimOff();
+
         mHandler.removeCallbacksAndMessages(null);
         NetworkHelper.getInstance().unregisterNetworkListener(mNetworkChangeListener);
         stopDeviceService();
@@ -186,7 +218,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         if (mAlertDialog != null) {
             mAlertDialog.dismiss();
         }
-        globalDimOff();
 
         super.onDestroy();
     }
@@ -195,6 +226,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 0) {
             mInstallSuccess = true;
+
+            Touch.getInstance().openTouch();
+            globalDimOn(SCREEN_BRIGHTNESS_WAITING);
         }
     }
 
@@ -275,6 +309,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             bundle.putBoolean(Constant.KEY_FROM_MY, true);
             startActivityForResult(CheckDeviceActivity.class, 0, bundle);
             mCheckInstall = true;
+
+            Touch.getInstance().closeTouch();
+            globalDimOff();
         }
     }
 
@@ -366,7 +403,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                     new Runnable() {
                         @Override
                         public void run() {
-                            globalDimOn(SCREEN_BRIGHTNESS_WAITING);
+                            if (!mCheckInstall) {
+                                globalDimOn(SCREEN_BRIGHTNESS_WAITING);
+                            }
                         }
                     }, 30 * 1000);
 
@@ -555,10 +594,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     }
 
-    private void globalDimOn(int screenBrightness) {
-        Adb adb = new Adb(Touch.getInstance().getConnection());
-        final LinkedList<String> items = new LinkedList<String>();
-        adb.globalDimOn(screenBrightness, new ShellChannel.ShellListener() {
+    private void getGlobalBright() {
+        final Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.getGlobalBright(new ShellChannel.ShellListener() {
+            final LinkedList<String> items = new LinkedList<String>();
+
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 // 1
@@ -579,6 +619,11 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             public void onExit(ShellChannel ch, int code) {
             }
         });
+    }
+
+    private void globalDimOn(int screenBrightness) {
+        Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.globalDimOn(screenBrightness);
     }
 
     private void globalDimOff() {
@@ -841,7 +886,14 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean isCharging = intent.getBooleanExtra(Constant.EXTENDED_DATA_CHARGING, true);
-            if (!isCharging && mAppManager.getState() != AppManager.State.LAUNCHING
+
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = getActivity().registerReceiver(null, ifilter);
+            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            float batteryPct = level / (float) scale;
+
+            if (!isCharging && batteryPct < 0.5 && mAppManager.getState() != AppManager.State.LAUNCHING
                     && mAppManager.getState() != AppManager.State.LAUNCHED) {
                 finish();
             }

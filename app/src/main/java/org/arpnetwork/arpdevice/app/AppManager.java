@@ -310,10 +310,11 @@ public class AppManager {
         }
     }
 
-    private void globalDimOn(int screenBrightness) {
-        Adb adb = new Adb(Touch.getInstance().getConnection());
-        final LinkedList<String> items = new LinkedList<String>();
-        adb.globalDimOn(screenBrightness, new ShellChannel.ShellListener() {
+    private void globalDimOn(final int screenBrightness) {
+        final Adb adb = new Adb(Touch.getInstance().getConnection());
+        adb.getGlobalBright(new ShellChannel.ShellListener() {
+            final LinkedList<String> items = new LinkedList<String>();
+
             @Override
             public void onStdout(ShellChannel ch, byte[] data) {
                 // 1
@@ -323,17 +324,17 @@ public class AppManager {
                 if (items.size() > 1) {
                     mScreenBrightnessMode = Integer.parseInt(items.get(0).trim());
                     mScreenBrightness = Integer.parseInt(items.get(1).trim());
+
+                    adb.globalDimOn(screenBrightness);
                 }
             }
 
             @Override
             public void onStderr(ShellChannel ch, byte[] data) {
-
             }
 
             @Override
             public void onExit(ShellChannel ch, int code) {
-
             }
         });
     }

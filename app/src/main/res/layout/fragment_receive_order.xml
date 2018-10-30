@@ -33,8 +33,9 @@
                 android:layout_above="@+id/tv_tips"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="20dp"
+                android:gravity="center_horizontal"
                 android:text="@string/dont_touch_screen"
-                android:textColor="#ff14ad84"
+                android:textColor="#EC6941"
                 android:textSize="16sp" />
 
             <TextView
@@ -43,7 +44,8 @@
                 android:layout_marginTop="40dp"
                 android:gravity="center_horizontal"
                 android:text="@string/receive_order_tips"
-                android:textColor="#ff999999" />
+                android:textColor="#ff999999"
+                android:textSize="13sp" />
 
         </LinearLayout>
 
@@ -52,7 +54,8 @@
             style="@style/ButtonOrange"
             android:layout_alignParentBottom="true"
             android:layout_marginBottom="@dimen/plain_margin"
-            android:text="@string/exit_order" />
+            android:text="@string/exit_order"
+            android:visibility="gone" />
     </RelativeLayout>
 
     <View
