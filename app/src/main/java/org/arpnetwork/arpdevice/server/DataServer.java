@@ -61,6 +61,7 @@ public final class DataServer extends DefaultConnector {
     private SendThread mAVDataThread;
     private int mQuality;
     private boolean mStop;
+    private boolean mConnected;
     private AppManager mAppManager;
 
     private ConnectionListener mListener;
@@ -98,6 +99,10 @@ public final class DataServer extends DefaultConnector {
 
     public void releaseDApp() {
         mDApp = null;
+        mConnected = false;
+        synchronized (this) {
+            notify();
+        }
         stop();
     }
 
@@ -107,8 +112,8 @@ public final class DataServer extends DefaultConnector {
 
     public void onAppLaunch(boolean success) {
         if (success) {
-            if (!mConnected) {
-                synchronized (this) {
+            synchronized (this) {
+                if (!mConnected && mDApp != null) {
                     try {
                         wait();
                     } catch (Exception e) {
@@ -141,11 +146,8 @@ public final class DataServer extends DefaultConnector {
         mPacketQueue.add(byteBuf);
     }
 
-    private boolean mConnected;
-
     @Override
     public void onConnected(Connection conn) {
-
         heartbeat();
 
         if (mDApp == null) {
@@ -163,7 +165,6 @@ public final class DataServer extends DefaultConnector {
 
     @Override
     public void onClosed(Connection conn) {
-
         if (mDApp != null) {
             stop();
             DAppApi.clientDisconnected(mSession, mDApp);
@@ -230,7 +231,6 @@ public final class DataServer extends DefaultConnector {
     }
 
     private void onReceiveTimestamp(long clientTime) {
-
         Message pkt = ProtocolPacket.generateTimestamp(clientTime);
         write(pkt);
     }
