@@ -49,18 +49,16 @@ import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.DApp;
+import org.arpnetwork.arpdevice.data.AppInfo;
 import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.device.Adb;
 import org.arpnetwork.arpdevice.device.DeviceManager;
 import org.arpnetwork.arpdevice.device.TaskHelper;
 import org.arpnetwork.arpdevice.download.DownloadManager;
-import org.arpnetwork.arpdevice.proxy.HttpProxy;
 import org.arpnetwork.arpdevice.proxy.PortProxy;
 import org.arpnetwork.arpdevice.proxy.TcpProxy;
+import org.arpnetwork.arpdevice.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.server.DataServer;
-import org.arpnetwork.arpdevice.server.http.Dispatcher;
-import org.arpnetwork.arpdevice.server.http.HttpServer;
-import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.CheckDeviceActivity;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
@@ -80,8 +78,9 @@ import java.util.Random;
 public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler.OnReceivePromiseListener,
         TaskHelper.OnTopTaskListener, AppManager.OnAppManagerListener {
     private static final String TAG = ReceiveOrderFragment.class.getSimpleName();
+
     private static final int SCREEN_BRIGHTNESS_WAITING = 20;
-    private static final String KEY_PORTS = "ports";
+    private static final String KEY_PORT = "ports";
     private static final String KEY_BRIGHT = "bright";
     private static final String KEY_BRIGHT_MODE = "brightness_mode";
 
@@ -89,15 +88,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private View mFloatView;
 
     private DeviceManager mDeviceManager;
-    private HttpServer mHttpServer;
     private AppManager mAppManager;
     private Miner mMiner;
 
-    private DefaultRPCDispatcher mDispatcher;
+    private PromiseHandler mPromiseHandler;
     private PortProxy mTcpPortProxy;
-    private PortProxy mHttpPortProxy;
     private TcpProxy mTcpProxy;
-    private HttpProxy mHttpProxy;
 
     private BigInteger mLastAmount = BigInteger.ZERO;
     private BigInteger mReceivedAmount = BigInteger.ZERO;
@@ -119,9 +115,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private Dialog mExitAlertDialog;
     private Handler mHandler = new Handler();
 
-    private int mDataPort;
-    private int mHttpPort;
-
     private int mScreenBrightnessMode = -1; // 0: close 1:open
     private int mScreenBrightness = -1; // 0-255
 
@@ -136,24 +129,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
 
-        int[] ports = CustomApplication.sInstance.getPortArray();
-        int[] restorePorts;
-        if (ports != null && ports.length > 1) {
-            mDataPort = ports[0];
-            mHttpPort = ports[1];
-        } else if (savedInstanceState != null
-                && (restorePorts = savedInstanceState.getIntArray(KEY_PORTS)) != null && restorePorts.length > 1) {
-            mDataPort = restorePorts[0];
-            mHttpPort = restorePorts[1];
+        int restorePort;
+        if (savedInstanceState != null && (restorePort = savedInstanceState.getInt(KEY_PORT)) > 0) {
+            DeviceInfo.get().setDataPort(restorePort);
         }
-
-        DeviceInfo.get().setDataPort(mDataPort, mHttpPort);
         DeviceInfo.get().setProxy(null);
+        mAppManager = AppManager.getInstance(getContext().getApplicationContext());
+        mPromiseHandler = new PromiseHandler(this, mMiner);
 
         registerReceiver();
         NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
-
-        mAppManager = AppManager.getInstance(getContext().getApplicationContext());
 
         if (savedInstanceState == null) {
             getGlobalBright();
@@ -167,7 +152,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putIntArray(KEY_PORTS, CustomApplication.sInstance.getPortArray());
+        outState.putInt(KEY_PORT, DeviceInfo.get().tcpPort);
         if (mScreenBrightness != -1) {
             outState.putInt(KEY_BRIGHT, mScreenBrightness);
         }
@@ -210,7 +195,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     @Override
     public void onDestroy() {
         globalDimOff();
-
+        OKHttpUtils.cancelAll();
         mHandler.removeCallbacksAndMessages(null);
         NetworkHelper.getInstance().unregisterNetworkListener(mNetworkChangeListener);
         stopDeviceService();
@@ -315,17 +300,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
     }
 
-    private void checkPort(int tcpPort, int httpPort) {
+    private void checkPort(int tcpPort) {
         RPCRequest request = new RPCRequest();
         request.setId(String.valueOf(new Random().nextInt(Integer.MAX_VALUE)));
         request.setMethod("device_checkPort");
         request.putInt(tcpPort);
-        request.putInt(httpPort);
 
         String json = request.toJSON();
         String url = String.format(Locale.US, "http://%s:%d", mMiner.getIpString(), mMiner.getPortHttpInt());
 
-        new OKHttpUtils().post(url, json, "device_checkPort", new SimpleCallback<Void>() {
+        new OKHttpUtils().post(url, json, "checkPort", new SimpleCallback<Void>() {
             @Override
             public void onSuccess(okhttp3.Response response, Void result) {
                 connectMiner();
@@ -346,7 +330,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private void useProxy() {
         DeviceInfo.get().setProxy(Config.PROXY_HOST);
         DataServer.getInstance().close(true);
-        stopHttpServer();
         requestTcpPort();
     }
 
@@ -355,17 +338,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mTcpPortProxy.connect();
     }
 
-    private void requestHttpPort() {
-        mHttpPortProxy = new PortProxy(new ProxyListener(), false);
-        mHttpPortProxy.connect();
-    }
-
     private void closeProxy() {
         if (mTcpPortProxy != null) {
             mTcpPortProxy.close(true);
-        }
-        if (mHttpPortProxy != null) {
-            mHttpPortProxy.close(true);
         }
     }
 
@@ -375,17 +350,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             public void run() {
                 mTcpProxy = new TcpProxy(session);
                 mTcpProxy.connect(port);
-            }
-        });
-    }
-
-    private void connectHttpProxy(final int port, final byte[] session) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                mDispatcher.setProxy(true);
-                mHttpProxy = new HttpProxy(mDispatcher, session);
-                mHttpProxy.connect(port);
             }
         });
     }
@@ -412,24 +376,20 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             mAppManager.setOnTopTaskListener(this);
             mAppManager.setOnAppManagerListener(this);
 
+            int port = DeviceInfo.get().tcpPort;
             DataServer.getInstance().setListener(mConnectionListener);
             DataServer.getInstance().setAppManager(mAppManager);
             try {
-                DataServer.getInstance().startServer(mDataPort);
+                DataServer.getInstance().startServer(port);
             } catch (Exception e) {
                 showAlertDialog(getString(R.string.start_service_failed));
                 return;
             }
 
-            mDispatcher = new DefaultRPCDispatcher(getContext(), mMiner);
-            mDispatcher.setAppManager(mAppManager);
-            mDispatcher.setPromiseHandler(new PromiseHandler(this, mMiner));
-            startHttpServer(mDispatcher);
-
-            if (mDataPort == 0 || mHttpPort == 0) {
+            if (port == 0) {
                 useProxy();
             } else {
-                checkPort(mDataPort, mHttpPort);
+                checkPort(port);
             }
 
             mStartService = true;
@@ -443,7 +403,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             mAppManager.setOnAppManagerListener(null);
 
             DownloadManager.getInstance().cancelAll();
-            stopHttpServer();
             releaseDApp();
             DataServer.getInstance().setListener(null);
             DataServer.getInstance().close(true);
@@ -457,24 +416,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
 
         hideFloatLayer();
-    }
-
-    private void startHttpServer(Dispatcher dispatcher) {
-        if (mHttpServer == null) {
-            try {
-                mHttpServer = new HttpServer(mHttpPort, dispatcher);
-                mHttpServer.start();
-            } catch (Exception e) {
-                showAlertDialog(getString(R.string.start_service_failed));
-            }
-        }
-    }
-
-    private void stopHttpServer() {
-        if (mHttpServer != null) {
-            mHttpServer.stop();
-            mHttpServer = null;
-        }
     }
 
     private void startRecordIfNeeded() {
@@ -763,7 +704,30 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
 
         @Override
+        public void onPromiseReceived(Promise promise) {
+            mPromiseHandler.processPromise(promise);
+        }
+
+        @Override
+        public void onAppInstall(AppInfo info) {
+            mAppManager.appInstall(info);
+        }
+
+        @Override
+        public void onAppUninstall(String pkgName) {
+            mAppManager.uninstallApp(pkgName);
+        }
+
+        @Override
+        public void onAppStart(String pkgName) {
+            mAppManager.startApp(pkgName);
+        }
+
+        @Override
         public void onError(int code, int msg) {
+            if (getContext() == null) {
+                return;
+            }
             if (code == ErrorCode.NETWORK_ERROR) {
                 restartService();
             } else {
@@ -928,14 +892,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        requestHttpPort();
-                    }
-                });
-            } else {
-                DeviceInfo.get().httpPort = proxyPort;
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
                         connectMiner();
                     }
                 });
@@ -946,8 +902,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         public void onHandshake(int acceptPort, byte[] session, boolean tcp) {
             if (tcp) {
                 connectTcpProxy(acceptPort, session);
-            } else {
-                connectHttpProxy(acceptPort, session);
             }
         }
 

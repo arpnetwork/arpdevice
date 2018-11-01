@@ -45,9 +45,6 @@ public class DeviceInfo {
     @SerializedName("tcp_port")
     public int tcpPort;
 
-    @SerializedName("http_port")
-    public int httpPort;
-
     @SerializedName("os_ver")
     public String osVer;
 
@@ -106,8 +103,7 @@ public class DeviceInfo {
         return this.proxy != null;
     }
 
-    public void setDataPort(int tcpPort, int httpPort) {
+    public void setDataPort(int tcpPort) {
         this.tcpPort = tcpPort;
-        this.httpPort = httpPort;
     }
 }

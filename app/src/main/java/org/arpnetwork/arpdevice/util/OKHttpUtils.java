@@ -39,13 +39,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OKHttpUtils {
-    private static final int DEFAULT_RETRY_TIMES = 1;
     private static final MediaType JSON = MediaType.parse("application/json");
     private static OkHttpClient mOkHttpClient;
 
     private final Gson mGson = new Gson();
     private Handler mHandler = new Handler(Looper.getMainLooper());
-    private int mRetryTimes = DEFAULT_RETRY_TIMES;
 
     private static synchronized OkHttpClient getOkHttpClient() {
         if (mOkHttpClient == null) {
@@ -93,7 +91,7 @@ public class OKHttpUtils {
         request(request, callback);
     }
 
-    public void cancelTag(Object tag) {
+    public static void cancelTag(Object tag) {
         if (tag == null) return;
         for (Call call : getOkHttpClient().dispatcher().queuedCalls()) {
             if (tag.equals(call.request().tag())) {
@@ -107,7 +105,7 @@ public class OKHttpUtils {
         }
     }
 
-    public void cancelAll() {
+    public static void cancelAll() {
         for (Call call : getOkHttpClient().dispatcher().queuedCalls()) {
             call.cancel();
         }
@@ -176,12 +174,7 @@ public class OKHttpUtils {
             public void onFailure(Call call, IOException e) {
                 if (callback == null) return;
 
-                if (mRetryTimes == DEFAULT_RETRY_TIMES) {
-                    mRetryTimes--;
-                    request(request, callback);
-                } else {
-                    callbackFailure(callback, request, e);
-                }
+                callbackFailure(callback, request, e);
             }
 
             @Override

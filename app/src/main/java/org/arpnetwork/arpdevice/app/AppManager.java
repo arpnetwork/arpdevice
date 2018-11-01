@@ -20,6 +20,8 @@ import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
 
+import org.arpnetwork.arpdevice.data.AppInfo;
+
 import org.arpnetwork.adb.ShellChannel;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.database.InstalledApp;
@@ -119,6 +121,10 @@ public class AppManager {
         return mDApp;
     }
 
+    public void appInstall(AppInfo info) {
+        appInstall(info.packageName, info.url, info.filesize, info.md5);
+    }
+
     public void appInstall(final String packageName, String url, int fileSize, String md5) {
         boolean isInstalled = mInstalledApps != null && mInstalledApps.contains(packageName);
         if (isInstalled) {
@@ -157,7 +163,11 @@ public class AppManager {
             DownloadManager.getInstance().start(url, apkFile, new IDownloadListener() {
                 @Override
                 public void onFinish(File file) {
-                    appInstall(file, packageName);
+                    if (mDApp != null) {
+                        appInstall(file, packageName);
+                    } else if (file != null && file.exists()) {
+                        file.delete();
+                    }
                 }
 
                 @Override
@@ -248,7 +258,6 @@ public class AppManager {
         InstalledApp installedApp = new InstalledApp();
         installedApp.pkgName = pkgName;
         installedApp.saveRecord();
-
     }
 
     private synchronized void appInstall(File file, final String packageName) {

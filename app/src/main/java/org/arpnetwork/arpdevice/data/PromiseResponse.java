@@ -14,19 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.server.http;
+package org.arpnetwork.arpdevice.data;
 
-public abstract class Dispatcher {
-
-    public Dispatcher() {
-    }
-
-    public final void service(Request request, Response response) {
-        response.setStatus(200);
-        response.setContentType("application/json;charset=utf-8");
-
-        doRequest(request, response);
-    }
-
-    protected abstract void doRequest(Request request, Response response);
+public class PromiseResponse extends Response<Promise> {
 }

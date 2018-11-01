@@ -19,7 +19,7 @@ package org.arpnetwork.arpdevice.config;
 public class Config {
     public static final boolean DEBUG = false;
 
-    public static final String PROTOCOL_VERSION = "1.1";
+    public static final String PROTOCOL_VERSION = "1.2";
     public static final String PROTOCOL_CLIENT_VERSION = "1.0";
     public static final String DEFAULT_BLOCKNUMBER = "0";
 
@@ -32,7 +32,6 @@ public class Config {
     public static final int PROXY_PORT = 3000;
 
     public static final int DATA_SERVER_PORT = 33333;
-    public static final int HTTP_SERVER_PORT = 33334;
 
     public static final int ORDER_PRICE_LOW = 0;
     public static final int ORDER_PRICE_HIGH = 100;

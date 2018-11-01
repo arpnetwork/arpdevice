@@ -35,7 +35,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
@@ -76,7 +75,6 @@ public class CheckDeviceActivity extends BaseActivity {
     private AndroidUpnpService upnpService;
     private ClingRegistryListener mClingRegistryListener;
     private int mDataPort;
-    private int mHttpPort;
 
     private boolean mFromMy;
     private Miner mMiner;
@@ -246,8 +244,7 @@ public class CheckDeviceActivity extends BaseActivity {
             intent.setClass(this, HomeActivity.class);
         }
 
-        CustomApplication.sInstance.setPortArray(mDataPort, mHttpPort);
-        DeviceInfo.get().setDataPort(mDataPort, mHttpPort);
+        DeviceInfo.get().setDataPort(mDataPort);
 
         startActivity(intent);
         finish();
@@ -470,7 +467,6 @@ public class CheckDeviceActivity extends BaseActivity {
 
                 case Constant.CHECK_UPNP_COMPLETE:
                     context.mDataPort = msg.arg1;
-                    context.mHttpPort = msg.arg2;
                     // We ignore UPNP result here for proxy solution.
                     context.mTitleText.setText(R.string.check_success);
                     context.mImage.setImageResource(R.mipmap.check_success);

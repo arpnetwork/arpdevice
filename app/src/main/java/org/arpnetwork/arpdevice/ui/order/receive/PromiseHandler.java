@@ -40,8 +40,7 @@ public class PromiseHandler {
         mMiner = miner;
     }
 
-    public boolean processPromise(String promiseJson) {
-        Promise promise = Promise.fromJson(promiseJson);
+    public boolean processPromise(Promise promise) {
         if (checkPromise(promise)) {
             promise.save();
 

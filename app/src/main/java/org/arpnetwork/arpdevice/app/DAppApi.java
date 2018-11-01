@@ -16,11 +16,10 @@
 
 package org.arpnetwork.arpdevice.app;
 
-
 import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.data.DApp;
 import org.arpnetwork.arpdevice.data.Result;
-import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
+import org.arpnetwork.arpdevice.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SignUtil;

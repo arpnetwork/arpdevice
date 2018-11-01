@@ -36,7 +36,7 @@ import org.arpnetwork.arpdevice.contracts.tasks.AbsExceptionTask;
 import org.arpnetwork.arpdevice.contracts.tasks.OnValueResult;
 import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.dialog.PromiseDialog;
-import org.arpnetwork.arpdevice.server.http.rpc.RPCRequest;
+import org.arpnetwork.arpdevice.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.bean.MinerInfo;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.arpnetwork.arpdevice.server.http.rpc;
+package org.arpnetwork.arpdevice.rpc;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,7 +25,6 @@ public class RPCRequest {
     private String id;
     private String method;
     private JSONArray params;
-    private String remoteAddress;
 
     public RPCRequest() {
         this.params = new JSONArray();
@@ -92,14 +91,6 @@ public class RPCRequest {
         } catch (JSONException e) {
             return "";
         }
-    }
-
-    public void setRemoteAddress(String remoteAddress) {
-        this.remoteAddress = remoteAddress;
-    }
-
-    public String getRemoteAddress() {
-        return remoteAddress;
     }
 
     private void parseJSON(String json) throws JSONException {

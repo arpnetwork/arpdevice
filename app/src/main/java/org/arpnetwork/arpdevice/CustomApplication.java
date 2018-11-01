@@ -32,8 +32,6 @@ import org.arpnetwork.arpdevice.util.PriceProvider;
 public class CustomApplication extends Application {
     public static CustomApplication sInstance;
 
-    private int[] mPorts;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -84,13 +82,5 @@ public class CustomApplication extends Application {
     public void stopMonitorService() {
         Intent startServiceIntent = new Intent(this, MonitorService.class);
         stopService(startServiceIntent);
-    }
-
-    public void setPortArray(int dataPort, int httpPort) {
-        mPorts = new int[]{dataPort, httpPort};
-    }
-
-    public int[] getPortArray() {
-        return mPorts;
     }
 }

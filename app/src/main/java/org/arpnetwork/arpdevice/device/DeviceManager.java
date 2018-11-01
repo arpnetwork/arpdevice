@@ -20,6 +20,9 @@ import android.os.Handler;
 import android.text.TextUtils;
 
 import org.arpnetwork.arpdevice.constant.ErrorCode;
+import org.arpnetwork.arpdevice.data.AppInfo;
+import org.arpnetwork.arpdevice.data.AppInfoResponse;
+import org.arpnetwork.arpdevice.data.PromiseResponse;
 
 import com.google.gson.Gson;
 
@@ -53,12 +56,16 @@ import io.netty.buffer.Unpooled;
 public class DeviceManager extends DefaultConnector {
     private static final String TAG = DeviceManager.class.getSimpleName();
 
-    public static final int VERIFIED = 2;
-    public static final int REGISTERED = 4;
-    public static final int DEVICE_ASSIGNED = 6;
-    public static final int DEVICE_RELEASED = 7;
-    public static final int SPEED_RESULT = 9;
-    public static final int DEVICE_OFFLINE = 10;
+    private static final int VERIFIED = 2;
+    private static final int REGISTERED = 4;
+    private static final int DEVICE_ASSIGNED = 6;
+    private static final int DEVICE_RELEASED = 7;
+    private static final int SPEED_RESULT = 9;
+    private static final int DEVICE_OFFLINE = 10;
+    private static final int RECEIVE_PROMISE = 11;
+    private static final int APP_INSTALL = 12;
+    private static final int APP_UNINSTALL = 13;
+    private static final int APP_START = 14;
 
     private static final int LOW_SPEED = -6;
     private static final int INCOMPATIBLE_PROTOCOL = -1;
@@ -78,7 +85,7 @@ public class DeviceManager extends DefaultConnector {
     private boolean mException;
 
     private Handler mHandler;
-    private OnDeviceStateChangedListener mOnDeviceStateChangedListener;
+    private OnDeviceStateChangedListener mOnDeviceListener;
 
     public interface OnDeviceStateChangedListener {
         void onConnected();
@@ -88,6 +95,14 @@ public class DeviceManager extends DefaultConnector {
         void onDeviceAssigned(DApp dApp);
 
         void onDeviceReleased();
+
+        void onPromiseReceived(Promise promise);
+
+        void onAppInstall(AppInfo info);
+
+        void onAppUninstall(String pkgName);
+
+        void onAppStart(String pkgName);
 
         void onError(int code, int msg);
     }
@@ -100,7 +115,7 @@ public class DeviceManager extends DefaultConnector {
     }
 
     public void setOnDeviceStateChangedListener(OnDeviceStateChangedListener listener) {
-        mOnDeviceStateChangedListener = listener;
+        mOnDeviceListener = listener;
     }
 
     /**
@@ -180,7 +195,7 @@ public class DeviceManager extends DefaultConnector {
                     onRegister(response.result);
                     break;
                 case DEVICE_ASSIGNED:
-                    final DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
+                    DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
                     mDapp = res.data;
                     mHandler.post(mDeviceAssignRunnable);
                     break;
@@ -200,6 +215,18 @@ public class DeviceManager extends DefaultConnector {
                     break;
                 case DEVICE_OFFLINE:
                     handleError(0, R.string.device_offline);
+                    break;
+                case RECEIVE_PROMISE:
+                    onPromiseReceived(json);
+                    break;
+                case APP_INSTALL:
+                    onAppInstall(json);
+                    break;
+                case APP_UNINSTALL:
+                    onAppUninstall(json);
+                    break;
+                case APP_START:
+                    onAppStart(json);
                     break;
                 default:
                     break;
@@ -254,13 +281,61 @@ public class DeviceManager extends DefaultConnector {
         }
     }
 
+    private void onPromiseReceived(String json) {
+        final PromiseResponse res = mGson.fromJson(json, PromiseResponse.class);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnDeviceListener != null) {
+                    mOnDeviceListener.onPromiseReceived(res.data);
+                }
+            }
+        });
+    }
+
+    private void onAppInstall(String json) {
+        final AppInfoResponse res = mGson.fromJson(json, AppInfoResponse.class);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnDeviceListener != null) {
+                    mOnDeviceListener.onAppInstall(res.data);
+                }
+            }
+        });
+    }
+
+    private void onAppUninstall(String json) {
+        final AppInfoResponse res = mGson.fromJson(json, AppInfoResponse.class);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnDeviceListener != null) {
+                    mOnDeviceListener.onAppUninstall(res.data.packageName);
+                }
+            }
+        });
+    }
+
+    private void onAppStart(String json) {
+        final AppInfoResponse res = mGson.fromJson(json, AppInfoResponse.class);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mOnDeviceListener != null) {
+                    mOnDeviceListener.onAppStart(res.data.packageName);
+                }
+            }
+        });
+    }
+
     private void handleError(final int result, final int msg) {
         mClosed = true;
         mHandler.post(new Runnable() {
             @Override
             public void run() {
-                if (mOnDeviceStateChangedListener != null) {
-                    mOnDeviceStateChangedListener.onError(result, msg);
+                if (mOnDeviceListener != null) {
+                    mOnDeviceListener.onError(result, msg);
                 }
                 close();
             }
@@ -320,8 +395,8 @@ public class DeviceManager extends DefaultConnector {
     private Runnable mConnectedRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mOnDeviceStateChangedListener != null) {
-                mOnDeviceStateChangedListener.onConnected();
+            if (mOnDeviceListener != null) {
+                mOnDeviceListener.onConnected();
             }
         }
     };
@@ -331,8 +406,8 @@ public class DeviceManager extends DefaultConnector {
         public void run() {
             startHeartbeat();
             if (mDapp == null) {
-                if (mOnDeviceStateChangedListener != null) {
-                    mOnDeviceStateChangedListener.onDeviceReady();
+                if (mOnDeviceListener != null) {
+                    mOnDeviceListener.onDeviceReady();
                 }
             }
         }
@@ -341,8 +416,8 @@ public class DeviceManager extends DefaultConnector {
     private Runnable mDeviceAssignRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mOnDeviceStateChangedListener != null) {
-                mOnDeviceStateChangedListener.onDeviceAssigned(mDapp);
+            if (mOnDeviceListener != null) {
+                mOnDeviceListener.onDeviceAssigned(mDapp);
             }
         }
     };
@@ -350,8 +425,8 @@ public class DeviceManager extends DefaultConnector {
     private Runnable mDeviceReleasedRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mOnDeviceStateChangedListener != null) {
-                mOnDeviceStateChangedListener.onDeviceReleased();
+            if (mOnDeviceListener != null) {
+                mOnDeviceListener.onDeviceReleased();
             }
         }
     };

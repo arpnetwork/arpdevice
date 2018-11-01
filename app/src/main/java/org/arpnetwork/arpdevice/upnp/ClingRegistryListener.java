@@ -36,7 +36,6 @@ public class ClingRegistryListener extends DefaultRegistryListener {
     private static final String TAG = "ClingRegistryListener";
 
     private static final String DATA_DESCRIPTOR = "ARP streaming";
-    private static final String HTTP_DESCRIPTOR = "ARP http";
     /**
      * The maximum number of port mappings that we will try to retrieve from the router.
      */
@@ -48,7 +47,6 @@ public class ClingRegistryListener extends DefaultRegistryListener {
     public static final ServiceType IP_SERVICE_TYPE = new UDAServiceType("WANIPConnection", 1);
     public static final ServiceType PPP_SERVICE_TYPE = new UDAServiceType("WANPPPConnection", 1);
 
-    protected PortMapping[] portMappings;
     private ControlPoint mControlPoint;
     private Handler mHandler;
 
@@ -58,10 +56,6 @@ public class ClingRegistryListener extends DefaultRegistryListener {
     public ClingRegistryListener(android.os.Handler handler, ControlPoint controlPoint) {
         mHandler = handler;
         mControlPoint = controlPoint;
-    }
-
-    public void setMapping(PortMapping[] portMappings) {
-        this.portMappings = portMappings;
     }
 
     @Override
@@ -74,36 +68,24 @@ public class ClingRegistryListener extends DefaultRegistryListener {
             Collection<PortMapping> portMappingList = new ClingPortMappingExtractor(actionService, MAX_NUM_PORTMAPPINGS).getPortMappings();
 
             int defaultDataPort = Config.DATA_SERVER_PORT;
-            int defaultHttpPort = Config.HTTP_SERVER_PORT;
             long existDataPort = -1;
-            long existHttpPort = -1;
             while (true) {
                 boolean findData = false;
-                boolean findHttp = false;
                 for (PortMapping mapping : portMappingList) {
                     if (mapping.getInternalClient().equals(DeviceUtil.getIPAddress(true))
                             && mapping.getDescription().equalsIgnoreCase(DATA_DESCRIPTOR)) {
                         existDataPort = mapping.getExternalPort().getValue();
                     }
-                    if (mapping.getInternalClient().equals(DeviceUtil.getIPAddress(true))
-                            && mapping.getDescription().equalsIgnoreCase(HTTP_DESCRIPTOR)) {
-                        existHttpPort = mapping.getExternalPort().getValue();
-                    }
                     if (mapping.getProtocol() == PortMapping.Protocol.TCP
                             && mapping.getExternalPort().getValue() == defaultDataPort) {
                         findData = true;
                     }
-                    if (mapping.getProtocol() == PortMapping.Protocol.TCP
-                            && mapping.getExternalPort().getValue() == defaultHttpPort) {
-                        findHttp = true;
-                    }
                 }
-                if (existDataPort != -1 && existHttpPort != -1) {
+                if (existDataPort != -1) {
                     break;
-                } else if (findData || findHttp) {
-                    defaultDataPort += 2;
-                    defaultHttpPort += 2;
-                    if (defaultDataPort > 65535 || defaultHttpPort > 65535) {
+                } else if (findData) {
+                    defaultDataPort += 1;
+                    if (defaultDataPort > 65535) {
                         // exception
                         break;
                     }
@@ -112,52 +94,40 @@ public class ClingRegistryListener extends DefaultRegistryListener {
                 }
             }
 
-            if (existDataPort == -1 || existHttpPort == -1) {
-                PortMapping[] desiredMapping = new PortMapping[2];
-                desiredMapping[0] = new PortMapping(defaultDataPort, DeviceUtil.getIPAddress(true),
+            if (existDataPort == -1) {
+                PortMapping portMapping = new PortMapping(defaultDataPort, DeviceUtil.getIPAddress(true),
                         PortMapping.Protocol.TCP, DATA_DESCRIPTOR);
-
-                desiredMapping[1] = new PortMapping(defaultHttpPort, DeviceUtil.getIPAddress(true),
-                        PortMapping.Protocol.TCP, HTTP_DESCRIPTOR);
-                portMappings = desiredMapping;
 
                 final List<PortMapping> activeForService = new ArrayList<>();
                 final int finalDefaultDataPort = defaultDataPort;
-                final int finalDefaultHttpPort = defaultHttpPort;
-                for (final PortMapping pm : portMappings) {
-                    new PortMappingAdd(connectionService, registry.getUpnpService().getControlPoint(), pm) {
-                        @Override
-                        public void success(ActionInvocation invocation) {
-                            Log.d(TAG, "Port mapping added: " + pm);
-                            activeForService.add(pm);
+                new PortMappingAdd(connectionService, registry.getUpnpService().getControlPoint(), portMapping) {
+                    @Override
+                    public void success(ActionInvocation invocation) {
+                        Log.d(TAG, "Port mapping added: " + portMapping);
+                        activeForService.add(portMapping);
 
-                            if (activeForService.size() == portMappings.length) {
-                                Message message = new Message();
-                                message.what = Constant.CHECK_UPNP_COMPLETE;
-                                message.arg1 = finalDefaultDataPort;
-                                message.arg2 = finalDefaultHttpPort;
-                                message.obj = true;
-                                mHandler.sendMessage(message);
-                            }
-                        }
+                        Message message = new Message();
+                        message.what = Constant.CHECK_UPNP_COMPLETE;
+                        message.arg1 = finalDefaultDataPort;
+                        message.obj = true;
+                        mHandler.sendMessage(message);
+                    }
 
-                        @Override
-                        public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
-                            handleFailureMessage("Failed to add port mapping: " + pm);
-                            handleFailureMessage("Reason: " + defaultMsg);
+                    @Override
+                    public void failure(ActionInvocation invocation, UpnpResponse operation, String defaultMsg) {
+                        handleFailureMessage("Failed to add port mapping: " + portMapping);
+                        handleFailureMessage("Reason: " + defaultMsg);
 
-                            Message message = new Message();
-                            message.what = Constant.CHECK_UPNP_COMPLETE;
-                            mHandler.sendMessage(message);
-                        }
-                    }.run(); // Synchronous!
-                }
+                        Message message = new Message();
+                        message.what = Constant.CHECK_UPNP_COMPLETE;
+                        mHandler.sendMessage(message);
+                    }
+                }.run(); // Synchronous!
                 activePortMappings.put(connectionService, activeForService);
             } else {
                 Message message = new Message();
                 message.what = Constant.CHECK_UPNP_COMPLETE;
                 message.arg1 = (int) existDataPort;
-                message.arg2 = (int) existHttpPort;
                 mHandler.sendMessage(message);
             }
         } catch (RouterException e) {
