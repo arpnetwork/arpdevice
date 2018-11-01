@@ -732,7 +732,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 restartService();
             } else {
                 stopDeviceService();
-                showAlertDialog(String.format(getString(msg), code));
+                if (getContext() != null) {
+                    showAlertDialog(String.format(getString(msg), code));
+                }
             }
         }
     };

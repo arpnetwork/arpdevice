@@ -17,7 +17,6 @@
 package org.arpnetwork.arpdevice.ui.order.receive;
 
 import android.os.Bundle;
-import android.view.WindowManager;
 
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
 
@@ -25,15 +24,15 @@ public class ReceiveOrderActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
 
-        setContentFragment(ReceiveOrderFragment.class);
+        if (savedInstanceState == null) {
+            setContentFragment(ReceiveOrderFragment.class);
+        }
     }
 
     @Override
     protected void onDestroy() {
-        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onDestroy();
     }
 }
