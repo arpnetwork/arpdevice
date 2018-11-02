@@ -105,7 +105,7 @@ public class Connection {
         try {
             if (!mClosed) {
                 mChannelFuture.removeListener(mChannelFutureListener);
-                mChannelFuture.sync().channel().close().sync();
+                mChannelFuture.channel().close();
                 mClosed = true;
             }
         } catch (Exception e) {
@@ -147,7 +147,6 @@ public class Connection {
     }
 
     public synchronized void onClosed() {
-        mClosed = true;
         mChannelHandlerContext = null;
         if (mListener != null) {
             mListener.onClosed(this);
