@@ -62,6 +62,7 @@ import java.util.Random;
 
 public class Util {
     private static final String TAG = "Util";
+
     private Util() {
         // prevent initial.
     }
@@ -364,6 +365,14 @@ public class Util {
         boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
                 status == BatteryManager.BATTERY_STATUS_FULL;
         return isCharging;
+    }
+
+    public static float getBatteryPct(Context context) {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, ifilter);
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        return level / (float) scale;
     }
 
     public static float getScreenBrightness(Context context) {

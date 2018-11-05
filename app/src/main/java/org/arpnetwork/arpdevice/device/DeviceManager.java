@@ -136,7 +136,6 @@ public class DeviceManager extends DefaultConnector {
     public void close() {
         mClosed = true;
         close(true);
-        Util.formatCurrentStacktrace();
     }
 
     /**

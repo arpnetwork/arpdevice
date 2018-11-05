@@ -25,7 +25,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.net.NetworkInfo;
-import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.LocalBroadcastManager;
@@ -203,7 +202,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     @Override
     public void onAppInstall(boolean success) {
         if (!success && !mInstallSuccess) {
-            startCheckActivity(mMiner);
+            startCheckActivity();
         } else {
             mInstallSuccess = true;
         }
@@ -260,16 +259,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         exitButton.setOnClickListener(mOnClickExitListener);
     }
 
-    private void startCheckActivity(Miner miner) {
+    private void startCheckActivity() {
         if (!mCheckInstall) {
             Bundle bundle = new Bundle();
-            bundle.putSerializable(Constant.KEY_MINER, miner);
-            bundle.putBoolean(Constant.KEY_FROM_MY, true);
+            bundle.putBoolean(Constant.KEY_FROM_ORDER, true);
             startActivityForResult(CheckDeviceActivity.class, 0, bundle);
             mCheckInstall = true;
 
             Touch.getInstance().closeTouch();
             globalDimOff();
+            stopDeviceService();
         }
     }
 
@@ -623,7 +622,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                     hideFloatLayer();
                 }
             });
-            if (!Util.isCharging(getActivity())) {
+            float batteryPct = Util.getBatteryPct(getContext());
+            if (batteryPct < 0.5f) {
                 finish();
             }
         }
@@ -819,12 +819,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onReceive(Context context, Intent intent) {
             boolean isCharging = intent.getBooleanExtra(Constant.EXTENDED_DATA_CHARGING, true);
-
-            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = getActivity().registerReceiver(null, ifilter);
-            int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
-            int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-            float batteryPct = level / (float) scale;
+            float batteryPct = Util.getBatteryPct(getContext());
 
             if (!isCharging && batteryPct < 0.5 && mAppManager.getState() != AppManager.State.LAUNCHING
                     && mAppManager.getState() != AppManager.State.LAUNCHED) {

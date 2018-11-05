@@ -40,7 +40,6 @@ import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.ui.base.BaseActivity;
-import org.arpnetwork.arpdevice.ui.bean.Miner;
 import org.arpnetwork.arpdevice.ui.home.HomeActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.ui.wallet.WalletImporterActivity;
@@ -76,8 +75,7 @@ public class CheckDeviceActivity extends BaseActivity {
     private ClingRegistryListener mClingRegistryListener;
     private int mDataPort;
 
-    private boolean mFromMy;
-    private Miner mMiner;
+    private boolean mFromOrder;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -104,9 +102,8 @@ public class CheckDeviceActivity extends BaseActivity {
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            mFromMy = bundle.getBoolean(Constant.KEY_FROM_MY);
-            mMiner = (Miner) bundle.getSerializable(Constant.KEY_MINER);
-            if (mFromMy) {
+            mFromOrder = bundle.getBoolean(Constant.KEY_FROM_ORDER);
+            if (mFromOrder) {
                 // Clear KEY_INSTALL_USB and check install again.
                 PreferenceManager.getInstance().putBoolean(Constant.KEY_INSTALL_USB, false);
             }
@@ -134,7 +131,7 @@ public class CheckDeviceActivity extends BaseActivity {
 
     @Override
     protected boolean onExitApp() {
-        if (mFromMy) {
+        if (mFromOrder) {
             return false;
         }
         return true;
@@ -230,7 +227,7 @@ public class CheckDeviceActivity extends BaseActivity {
     }
 
     private void jumpToNextActivity() {
-        if (mFromMy) {
+        if (mFromOrder) {
             finish();
             return;
         }
