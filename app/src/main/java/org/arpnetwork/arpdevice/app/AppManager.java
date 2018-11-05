@@ -255,7 +255,7 @@ public class AppManager {
     }
 
     private void saveInstalledApp(String pkgName) {
-        InstalledApp installedApp = new InstalledApp();
+        InstalledApp installedApp = InstalledApp.get(pkgName);
         installedApp.pkgName = pkgName;
         installedApp.saveRecord();
     }

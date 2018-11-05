@@ -32,6 +32,14 @@ public class InstalledApp extends BaseRecord {
         return find(pkgName) != null;
     }
 
+    public static InstalledApp get(String pkgName) {
+        InstalledApp app = find(pkgName);
+        if (app == null) {
+            app = new InstalledApp();
+        }
+        return app;
+    }
+
     public static List<InstalledApp> findAll() {
         return new Select().from(InstalledApp.class).execute();
     }
