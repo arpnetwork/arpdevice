@@ -86,7 +86,7 @@ public class DAppApi {
         request.putString(nonce);
 
         String data = String.format(Locale.US, "%s:%s:%d:%s:%s", METHOD_APP_INSTALL, pkg, result, nonce, dApp.address);
-        String sign = SignUtil.sign(data);
+        String sign = SignUtil.signWithAccount(data);
         request.putString(sign);
 
         String json = request.toJSON();
@@ -106,7 +106,7 @@ public class DAppApi {
         request.putString(nonce);
 
         String data = String.format(Locale.US, "%s:%s:%d:%s:%s", METHOD_APP_STOP, pkg, reason, nonce, dApp.address);
-        String sign = SignUtil.sign(data);
+        String sign = SignUtil.signWithAccount(data);
         request.putString(sign);
 
         String json = request.toJSON();
@@ -125,7 +125,7 @@ public class DAppApi {
         request.putString(nonce);
 
         String data = String.format(Locale.US, "%s:%s:%s:%s", METHOD_CLIENT_CONNECTED, session, nonce, dApp.address);
-        String sign = SignUtil.sign(data);
+        String sign = SignUtil.signWithAccount(data);
         request.putString(sign);
 
         String json = request.toJSON();
@@ -171,7 +171,7 @@ public class DAppApi {
         request.putString(nonce);
 
         String data = String.format(Locale.US, "%s:%s:%s:%s", METHOD_CLIENT_DISCONNECTED, session, nonce, dApp.address);
-        String sign = SignUtil.sign(data);
+        String sign = SignUtil.signWithAccount(data);
         request.putString(sign);
 
         String json = request.toJSON();
@@ -191,7 +191,7 @@ public class DAppApi {
         request.putString(nonce);
 
         String data = String.format(Locale.US, "%s:%s:%s:%s", METHOD_REQUEST_PAYMENT, amount, nonce, dApp.address);
-        String sign = SignUtil.sign(data);
+        String sign = SignUtil.signWithAccount(data);
         request.putString(sign);
 
         String json = request.toJSON();

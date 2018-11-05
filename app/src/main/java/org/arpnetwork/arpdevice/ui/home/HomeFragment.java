@@ -361,7 +361,6 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                SignUtil.generateSigner(password);
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {

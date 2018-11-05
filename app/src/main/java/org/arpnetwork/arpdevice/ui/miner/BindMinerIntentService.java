@@ -105,7 +105,7 @@ public class BindMinerIntentService extends IntentService {
             gasPrice = new BigInteger(intent.getExtras().getString(KEY_GASPRICE));
             gasLimit = new BigInteger(intent.getExtras().getString(KEY_GASLIMIT));
 
-            Credentials credentials = Wallet.loadCredentials(password);
+            Credentials credentials = Wallet.loadWalletCredentials(password);
             transactionManager = new CustomRawTransactionManager(EtherAPI.getWeb3J(), credentials,
                     DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH, DEFAULT_POLLING_FREQUENCY); // 1 hour waiting.
         }

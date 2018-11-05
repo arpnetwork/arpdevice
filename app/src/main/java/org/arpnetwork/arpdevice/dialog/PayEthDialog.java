@@ -134,7 +134,7 @@ public class PayEthDialog {
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    final Credentials credentials = Wallet.loadCredentials(password);
+                                    final Credentials credentials = Wallet.loadWalletCredentials(password);
                                     context.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {

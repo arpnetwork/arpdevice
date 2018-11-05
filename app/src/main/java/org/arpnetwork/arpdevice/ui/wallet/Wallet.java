@@ -21,15 +21,24 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import org.arpnetwork.arpdevice.util.PreferenceManager;
+import org.arpnetwork.arpdevice.util.Util;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.WalletUtils;
 
 import java.io.File;
 
-public class Wallet {
-    public static final String KEYSTORE_PATH = "keystore_path";
+/**
+ * Wallet keystore is imported by user and used for token keeping and transaction signing.
+ * Account keystore is created automatically, used for signing protocol data, but keep no token.
+ */
 
-    private static final String ADDRESS = "address";
+public class Wallet {
+    private static final String KEYSTORE_PATH = "keystore_path";
+    private static final String WALLET_ADDRESS = "wallet_address";
+
+    private static final String ACCOUNT_PATH = "account_path";
+    private static final String ACCOUNT_PASSWORD = "account_password";
+    private static final String ACCOUNT_ADDRESS = "account_address";
 
     private String address;
 
@@ -49,32 +58,34 @@ public class Wallet {
     }
 
     public void save() {
-        PreferenceManager.getInstance().putString(ADDRESS, address);
+        putStorageString(WALLET_ADDRESS, address);
     }
 
     public static Wallet get() {
-        Wallet wallet = new Wallet();
-        wallet.address = PreferenceManager.getInstance().getString(ADDRESS);
+        Wallet wallet = new Wallet(getStorageString(WALLET_ADDRESS));
         return wallet;
     }
 
+    public static String getAccountAddress() {
+        String accountAddress = getStorageString(ACCOUNT_ADDRESS);
+        return accountAddress.length() > 0 ? accountAddress : null;
+    }
+
     public static boolean exists() {
-        String path = PreferenceManager.getInstance().getString(KEYSTORE_PATH);
+        String path = getStorageString(KEYSTORE_PATH);
         if (!TextUtils.isEmpty(path) && new File(path).exists()) {
             return true;
         }
         return false;
     }
 
-    public static void importWallet(Context context, final String privateKey, final String password, final Callback callback) {
-        final File destDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
-        if (!destDir.exists()) {
-            if (!destDir.mkdirs()) {
-                if (callback != null) {
-                    callback.onCompleted(false);
-                }
-                return;
+    public static void importWallet(final Context context, final String privateKey, final String password, final Callback callback) {
+        final File destDir = getDestDir(context);
+        if (destDir == null) {
+            if (callback != null) {
+                callback.onCompleted(false);
             }
+            return;
         }
 
         new Thread(new Runnable() {
@@ -86,7 +97,9 @@ public class Wallet {
                     wallet.save();
 
                     String fileName = WalletUtils.generateWalletFile(password, credentials.getEcKeyPair(), destDir, false);
-                    PreferenceManager.getInstance().putString(KEYSTORE_PATH, new File(destDir, fileName).getAbsolutePath());
+                    putStorageString(KEYSTORE_PATH, new File(destDir, fileName).getAbsolutePath());
+
+                    createAccount(context);
 
                     if (callback != null) {
                         callback.onCompleted(true);
@@ -100,13 +113,50 @@ public class Wallet {
         }).start();
     }
 
-    public static Credentials loadCredentials(String password) {
-        String path = PreferenceManager.getInstance().getString(KEYSTORE_PATH);
+    public static Credentials loadWalletCredentials(String password) {
+        return loadCredentials(password, KEYSTORE_PATH);
+    }
+
+    public static Credentials loadAccountCredentials() {
+        return loadCredentials(getStorageString(ACCOUNT_PASSWORD), ACCOUNT_PATH);
+    }
+
+    private static Credentials loadCredentials(String password, String type) {
+        String path = getStorageString(type);
         try {
             Credentials credentials = WalletUtils.loadCredentials(password, new File(path));
             return credentials;
         } catch (Exception e) {
         }
         return null;
+    }
+
+    private static void createAccount(Context context) throws Exception {
+        String path = getStorageString(ACCOUNT_PATH);
+        if (path == null || path.length() == 0) {
+            String password = Util.getRandomString(9);
+            putStorageString(ACCOUNT_PASSWORD, password);
+            File file = getDestDir(context);
+            String walletFileName0 = WalletUtils.generateNewWalletFile(password, file, false);
+            putStorageString(ACCOUNT_PATH, new File(file.getPath(), walletFileName0).getAbsolutePath());
+        }
+    }
+
+    private static File getDestDir(Context context) {
+        final File destDir = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
+        if (!destDir.exists()) {
+            if (!destDir.mkdirs()) {
+                return null;
+            }
+        }
+        return destDir;
+    }
+
+    private static String getStorageString(String key) {
+        return PreferenceManager.getInstance().getString(key);
+    }
+
+    private static void putStorageString(String key, String value) {
+        PreferenceManager.getInstance().putString(key, value);
     }
 }

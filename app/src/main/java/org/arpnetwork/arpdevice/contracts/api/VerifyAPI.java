@@ -31,19 +31,6 @@ import java.nio.ByteBuffer;
 import java.security.SignatureException;
 
 public class VerifyAPI {
-
-    /**
-     * Sign random data with password for private key
-     *
-     * @param signatureContent signature content
-     * @param password         password for private key
-     * @return
-     */
-    public static String sign(String signatureContent, String password) {
-        Credentials credentials = Wallet.get().loadCredentials(password);
-        return sign(signatureContent, credentials);
-    }
-
     /**
      * Sign random data with credentials
      *

@@ -258,7 +258,7 @@ public class BindMinerFragment extends BaseFragment {
 
     private boolean isCorrectPassword() {
         String password = mPasswordText.getText().toString();
-        return !TextUtils.isEmpty(password) && Wallet.loadCredentials(password) != null;
+        return !TextUtils.isEmpty(password) && Wallet.loadWalletCredentials(password) != null;
     }
 
     private void loadAllowance() {

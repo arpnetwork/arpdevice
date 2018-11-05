@@ -187,7 +187,6 @@ public class WalletImporterFragment extends BaseFragment {
                                 // clear earning record
                                 EarningRecord.clear();
                                 Promise.clear();
-                                SignUtil.resetSigner();
                                 Intent intent = new Intent(getActivity(), HomeActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                 startActivity(intent);

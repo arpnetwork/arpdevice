@@ -193,18 +193,22 @@ public class DeviceManager extends DefaultConnector {
                 case VERIFIED:
                     onVerified(response.result, json);
                     break;
+
                 case REGISTERED:
                     onRegister(response.result, json);
                     break;
+
                 case DEVICE_ASSIGNED:
                     DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
                     mDapp = res.data;
                     mHandler.post(mDeviceAssignRunnable);
                     break;
+
                 case DEVICE_RELEASED:
                     mDapp = null;
                     mHandler.post(mDeviceReleasedRunnable);
                     break;
+
                 case SPEED_RESULT:
                     SpeedResponse speedResponse = mGson.fromJson(json, SpeedResponse.class);
                     if (speedResponse.result == 0) {
@@ -215,21 +219,27 @@ public class DeviceManager extends DefaultConnector {
                         handleError(speedResponse.result, R.string.speed_test_failed);
                     }
                     break;
+
                 case DEVICE_OFFLINE:
                     handleError(0, R.string.device_offline);
                     break;
+
                 case RECEIVE_PROMISE:
                     onPromiseReceived(json);
                     break;
+
                 case APP_INSTALL:
                     onAppInstall(json);
                     break;
+
                 case APP_UNINSTALL:
                     onAppUninstall(json);
                     break;
+
                 case APP_START:
                     onAppStart(json);
                     break;
+
                 default:
                     break;
             }
@@ -360,7 +370,7 @@ public class DeviceManager extends DefaultConnector {
 
     private void verify() {
         String salt = Util.getRandomString(32);
-        String sign = SignUtil.sign(salt);
+        String sign = SignUtil.signWithAccount(salt);
         String promiseJson = Promise.getJson();
         mVerifyData = new VerifyData(salt, sign, !TextUtils.isEmpty(promiseJson) ? promiseJson : null);
         send(new VerifyReq(mVerifyData));

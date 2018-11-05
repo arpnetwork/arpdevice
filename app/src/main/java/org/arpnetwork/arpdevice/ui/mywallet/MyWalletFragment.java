@@ -219,7 +219,7 @@ public class MyWalletFragment extends BaseFragment {
                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
                     } else {
                         dialog.dismiss();
-                        if (Wallet.loadCredentials(password) != null) {
+                        if (Wallet.loadWalletCredentials(password) != null) {
                             resetWallet();
                         } else {
                             Toast.makeText(getContext(), getString(R.string.input_passwd_error), Toast.LENGTH_SHORT).show();
