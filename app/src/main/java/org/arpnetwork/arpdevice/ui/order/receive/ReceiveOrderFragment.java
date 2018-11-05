@@ -102,7 +102,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private int mTotalTime;
     private int mRestartServiceNum;
     private boolean mStartService;
-    private boolean mPaused;
     private boolean mCheckInstall;
     private boolean mInstallSuccess;
 
@@ -122,30 +121,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Touch.getInstance().openTouch();
-
-        setTitle(R.string.receive_order);
-        getBaseActivity().setOnBackListener(mOnBackListener);
-
-        mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
-
-        int restorePort;
-        if (savedInstanceState != null && (restorePort = savedInstanceState.getInt(KEY_PORT)) > 0) {
-            DeviceInfo.get().setDataPort(restorePort);
-        }
-        DeviceInfo.get().setProxy(null);
-        mAppManager = AppManager.getInstance(getContext().getApplicationContext());
-        mPromiseHandler = new PromiseHandler(this, mMiner);
-
-        registerReceiver();
-        NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
-
-        if (savedInstanceState == null) {
-            getGlobalBright();
-        } else {
-            mScreenBrightness = savedInstanceState.getInt(KEY_BRIGHT, -1);
-            mScreenBrightnessMode = savedInstanceState.getInt(KEY_BRIGHT_MODE, -1);
-        }
+        init(savedInstanceState);
     }
 
     @Override
@@ -171,19 +147,16 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         super.onViewCreated(view, savedInstanceState);
 
         initViews();
+        startDeviceService();
     }
 
     @Override
     public void onResume() {
         super.onResume();
 
-        mHandler.removeCallbacks(mStopRunnable);
-        if (!mPaused || mCheckInstall) {
+        if (mCheckInstall) {
             startDeviceService();
             mCheckInstall = false;
-            mPaused = false;
-        } else {
-            finish();
         }
     }
 
@@ -219,18 +192,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     @Override
     public void onTopTaskIllegal(String pkgName) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                stopDeviceService();
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkTopTaskAndStart();
-                    }
-                }, 2000);
-            }
-        });
+        DataServer.getInstance().onClientDisconnected();
 
         long now = System.currentTimeMillis();
         if (now - mLaunchTime < 2000) {
@@ -262,6 +224,33 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         });
     }
 
+    private void init(Bundle savedInstanceState) {
+        Touch.getInstance().openTouch();
+
+        setTitle(R.string.receive_order);
+        getBaseActivity().setOnBackListener(mOnBackListener);
+
+        mMiner = (Miner) getArguments().getSerializable(Constant.KEY_MINER);
+
+        int restorePort;
+        if (savedInstanceState != null && (restorePort = savedInstanceState.getInt(KEY_PORT)) > 0) {
+            DeviceInfo.get().setDataPort(restorePort);
+        }
+        DeviceInfo.get().setProxy(null);
+        mAppManager = AppManager.getInstance(getContext().getApplicationContext());
+        mPromiseHandler = new PromiseHandler(this, mMiner);
+
+        registerReceiver();
+        NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
+
+        if (savedInstanceState == null) {
+            getGlobalBright();
+        } else {
+            mScreenBrightness = savedInstanceState.getInt(KEY_BRIGHT, -1);
+            mScreenBrightnessMode = savedInstanceState.getInt(KEY_BRIGHT_MODE, -1);
+        }
+    }
+
     private void initViews() {
         mOrderStateView = (TextView) findViewById(R.id.tv_order_state);
         mOrderStateView.setText(R.string.starting_service);
@@ -269,22 +258,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         Button exitButton = (Button) findViewById(R.id.btn_exit);
         exitButton.setOnClickListener(mOnClickExitListener);
-    }
-
-    private void checkTopTaskAndStart() {
-        mAppManager.getTopTask(new TaskHelper.OnGetTopTaskListener() {
-            @Override
-            public void onGetTopTask(String pkgName) {
-                if (pkgName.contains(getContext().getPackageName())) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            startDeviceService();
-                        }
-                    });
-                }
-            }
-        });
     }
 
     private void startCheckActivity(Miner miner) {
@@ -363,32 +336,24 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private synchronized void startDeviceService() {
         if (!mStartService) {
             silentOn();
-            mHandler.postDelayed(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!mCheckInstall) {
-                                globalDimOn(SCREEN_BRIGHTNESS_WAITING);
-                            }
-                        }
-                    }, 30 * 1000);
+            globalDimOnDelayed();
 
             mAppManager.setOnTopTaskListener(this);
             mAppManager.setOnAppManagerListener(this);
-
-            int port = DeviceInfo.get().tcpPort;
             DataServer.getInstance().setListener(mConnectionListener);
             DataServer.getInstance().setAppManager(mAppManager);
-            try {
-                DataServer.getInstance().startServer(port);
-            } catch (Exception e) {
-                showAlertDialog(getString(R.string.start_service_failed));
-                return;
-            }
 
+            int port = DeviceInfo.get().tcpPort;
             if (port == 0) {
                 useProxy();
             } else {
+                try {
+                    DataServer.getInstance().close(true);
+                    DataServer.getInstance().startServer(port);
+                } catch (Exception e) {
+                    showAlertDialog(getString(R.string.start_service_failed));
+                    return;
+                }
                 checkPort(port);
             }
 
@@ -413,6 +378,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             closeProxy();
 
             mStartService = false;
+            mOrderStateView.setText(R.string.miner_disconnected);
         }
 
         hideFloatLayer();
@@ -560,6 +526,17 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             public void onExit(ShellChannel ch, int code) {
             }
         });
+    }
+
+    private void globalDimOnDelayed() {
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!mCheckInstall) {
+                    globalDimOn(SCREEN_BRIGHTNESS_WAITING);
+                }
+            }
+        }, 30 * 1000);
     }
 
     private void globalDimOn(int screenBrightness) {
@@ -732,9 +709,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 restartService();
             } else {
                 stopDeviceService();
-                if (getContext() != null) {
-                    showAlertDialog(String.format(getString(msg), code));
-                }
+                showAlertDialog(String.format(getString(msg), code));
             }
         }
     };
@@ -755,14 +730,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                     }
                 }, 500);
             }
-        }
-    };
-
-    private Runnable mStopRunnable = new Runnable() {
-        @Override
-        public void run() {
-            stopDeviceService();
-            mPaused = true;
         }
     };
 

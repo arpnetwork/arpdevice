@@ -266,6 +266,7 @@
     <string name="starting_service">Starting service</string>
     <string name="connecting_miners">Connecting miners</string>
     <string name="miner_connected">Miner is connected</string>
+    <string name="miner_disconnected">Miner is disconnected</string>
     <string name="wait_for_order">Waiting for order</string>
     <string name="received_order">Received an order</string>
     <string name="receive_order">Receive order</string>

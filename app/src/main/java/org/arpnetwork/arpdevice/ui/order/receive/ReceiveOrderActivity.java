@@ -26,6 +26,7 @@ public class ReceiveOrderActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         if (savedInstanceState == null) {
             setContentFragment(ReceiveOrderFragment.class);
         }
