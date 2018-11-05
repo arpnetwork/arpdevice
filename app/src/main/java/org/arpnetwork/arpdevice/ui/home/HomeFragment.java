@@ -84,6 +84,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     private LinearLayout mLayoutPriceSetting;
     private int mOrderPrice;
     private float mRemainingAmount;
+    private boolean mStartingReceiveOrder;
 
     private PasswordDialog mPasswordDialog;
 
@@ -414,7 +415,11 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     private void startReceiveOrderActivity(Miner miner) {
         Bundle bundle = new Bundle();
         bundle.putSerializable(Constant.KEY_MINER, miner);
-        startActivity(ReceiveOrderActivity.class, bundle);
+
+        Intent intent = new Intent(getActivity(), ReceiveOrderActivity.class);
+        intent.putExtras(bundle);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
     }
 
     private void startReceiveOrder() {
@@ -425,7 +430,8 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
         if (!Util.isCharging(getActivity())) {
             UIHelper.showToast(getActivity(), getString(R.string.no_charging));
-        } else {
+        } else if (!mStartingReceiveOrder) {
+            mStartingReceiveOrder = true;
             BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
                 @Override
                 public void onPreExecute() {
@@ -441,6 +447,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                         if (bankAllowance == null) {
                             CustomApplication.sInstance.startMonitorService();
                             showAlertDialog(R.string.load_data_error);
+                            mStartingReceiveOrder = false;
                             return;
                         }
 
@@ -460,12 +467,14 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                     } else {
                         showNoBindingDialog();
                     }
+                    mStartingReceiveOrder = false;
                 }
 
                 @Override
                 public void onFail(Throwable throwable) {
                     hideProgressDialog();
                     showErrorAlertDialog(R.string.network_error);
+                    mStartingReceiveOrder = false;
                 }
             });
         }
