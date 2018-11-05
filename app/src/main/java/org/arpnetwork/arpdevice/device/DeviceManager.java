@@ -22,7 +22,9 @@ import android.text.TextUtils;
 import org.arpnetwork.arpdevice.constant.ErrorCode;
 import org.arpnetwork.arpdevice.data.AppInfo;
 import org.arpnetwork.arpdevice.data.AppInfoResponse;
+import org.arpnetwork.arpdevice.data.NetType;
 import org.arpnetwork.arpdevice.data.PromiseResponse;
+import org.arpnetwork.arpdevice.data.RegisterResponse;
 
 import com.google.gson.Gson;
 
@@ -134,6 +136,7 @@ public class DeviceManager extends DefaultConnector {
     public void close() {
         mClosed = true;
         close(true);
+        Util.formatCurrentStacktrace();
     }
 
     /**
@@ -192,7 +195,7 @@ public class DeviceManager extends DefaultConnector {
                     onVerified(response.result, json);
                     break;
                 case REGISTERED:
-                    onRegister(response.result);
+                    onRegister(response.result, json);
                     break;
                 case DEVICE_ASSIGNED:
                     DeviceAssignedResponse res = mGson.fromJson(json, DeviceAssignedResponse.class);
@@ -208,7 +211,7 @@ public class DeviceManager extends DefaultConnector {
                     if (speedResponse.result == 0) {
                         mHandler.post(mDeviceReadyRunnable);
                     } else if (speedResponse.result == LOW_SPEED) {
-                        handleError(0, R.string.low_upload_speed);
+                        handleError(speedResponse.result, R.string.low_upload_speed);
                     } else {
                         handleError(speedResponse.result, R.string.speed_test_failed);
                     }
@@ -273,11 +276,21 @@ public class DeviceManager extends DefaultConnector {
         handleError(result, R.string.verify_failed);
     }
 
-    private void onRegister(int result) {
-        if (result == INCOMPATIBLE_PROTOCOL) {
-            handleError(result, R.string.incompatible_protocol);
-        } else if (result != SUCCESS) {
-            handleError(result, R.string.connect_miner_failed);
+    private void onRegister(int result, String json) {
+        switch (result) {
+            case SUCCESS:
+                RegisterResponse res = mGson.fromJson(json, RegisterResponse.class);
+                //FIXME Show the type of network to user
+                if (res.data.netType == NetType.EXTRANET) {
+                } else {
+                }
+                break;
+            case INCOMPATIBLE_PROTOCOL:
+                handleError(result, R.string.incompatible_protocol);
+                break;
+            default:
+                handleError(result, R.string.connect_miner_failed);
+                break;
         }
     }
 
