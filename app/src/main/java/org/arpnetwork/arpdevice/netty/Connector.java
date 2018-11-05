@@ -43,11 +43,15 @@ public abstract class Connector implements Connection.Listener {
     }
 
     public void write(Object msg) {
-        mConnection.write(msg);
+        if (mConnection != null) {
+            mConnection.write(msg);
+        }
     }
 
     public void closeChannel() {
-        mConnection.closeChannel();
+        if (mConnection != null) {
+            mConnection.closeChannel();
+        }
     }
 
     public void close() {
@@ -55,11 +59,15 @@ public abstract class Connector implements Connection.Listener {
     }
 
     public void close(boolean shutdown) {
-        mConnection.close(shutdown);
+        if (mConnection != null) {
+            mConnection.close(shutdown);
+        }
     }
 
     public void shutdown() {
-        mConnection.shutdown();
+        if (mConnection != null) {
+            mConnection.shutdown();
+        }
     }
 
     @Override
