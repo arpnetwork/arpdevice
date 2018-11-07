@@ -22,6 +22,7 @@ import android.text.TextUtils;
 import org.arpnetwork.arpdevice.constant.ErrorCode;
 import org.arpnetwork.arpdevice.data.AppInfo;
 import org.arpnetwork.arpdevice.data.AppInfoResponse;
+import org.arpnetwork.arpdevice.data.AppStartCompleteReq;
 import org.arpnetwork.arpdevice.data.NetType;
 import org.arpnetwork.arpdevice.data.PromiseResponse;
 import org.arpnetwork.arpdevice.data.RegisterResponse;
@@ -346,6 +347,7 @@ public class DeviceManager extends DefaultConnector {
             public void run() {
                 if (mOnDeviceListener != null) {
                     mOnDeviceListener.onAppStart(res.data.packageName);
+                    appStartComplete(res.data.packageName);
                 }
             }
         });
@@ -378,6 +380,12 @@ public class DeviceManager extends DefaultConnector {
 
     private void register() {
         send(new RegisterReq());
+    }
+
+    private void appStartComplete(String packageName) {
+        AppInfo appInfo = new AppInfo();
+        appInfo.packageName = packageName;
+        send(new AppStartCompleteReq(appInfo));
     }
 
     private void uploadSpeedData() {

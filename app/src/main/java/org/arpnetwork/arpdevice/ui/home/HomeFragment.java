@@ -366,11 +366,14 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                 if (which == PasswordDialog.CONFIRM) {
                     final String password = builder.getPassword();
                     if (TextUtils.isEmpty(password)) {
+                        dismissPasswordDialog();
                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
                     } else {
                         dialog.dismiss();
                         bindDevice(miner, password);
                     }
+                } else {
+                    dismissPasswordDialog();
                 }
             }
         });
