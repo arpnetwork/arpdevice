@@ -93,6 +93,8 @@
     <string name="binding_miner">During binding miner, can not start receiving order</string>
     <string name="unbinding_miner">During unbinding miner, can not start receiving order</string>
     <string name="amount_insufficient">The authorized remaining amount is insufficient and cannot receive the order. Please replace the miner and try again.</string>
+    <string name="account_not_exist">The account does not exist, please re-import the wallet</string>
+    <string name="start_ordering_failed">Start ordering failed, please try again later</string>
 
     <!-- my wallet -->
     <string name="wallet_addr">Address</string>

@@ -105,6 +105,8 @@
     <string name="binding_miner">绑定矿工中，暂不能开始接单</string>
     <string name="unbinding_miner">解绑矿工中，暂不能开始接单</string>
     <string name="amount_insufficient">授权剩余额度不足，无法接单，请更换矿工后再试</string>
+    <string name="account_not_exist">账号不存在，请重新导入钱包</string>
+    <string name="start_ordering_failed">接单失败，请稍后重试</string>
 
     <!-- 我的钱包 -->
     <string name="wallet_addr">钱包地址</string>

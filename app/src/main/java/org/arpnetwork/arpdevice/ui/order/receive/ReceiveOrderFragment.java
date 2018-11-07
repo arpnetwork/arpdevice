@@ -327,6 +327,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void connectMiner() {
+        DeviceInfo.get().address = Wallet.getAccountAddress();
+
         mDeviceManager = new DeviceManager();
         mDeviceManager.setOnDeviceStateChangedListener(mOnDeviceStateChangedListener);
         mDeviceManager.connect(mMiner);
@@ -377,7 +379,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             closeProxy();
 
             mStartService = false;
-            mOrderStateView.setText(R.string.miner_disconnected);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mOrderStateView.setText(R.string.miner_disconnected);
+                }
+            });
         }
 
         hideFloatLayer();
@@ -477,7 +484,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         }
         DataServer.getInstance().releaseDApp();
 
-        mOrderStateView.setText(R.string.wait_for_order);
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mOrderStateView.setText(R.string.wait_for_order);
+            }
+        });
     }
 
     private void silentOn() {
@@ -659,7 +671,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 mAppManager.setDApp(dApp);
                 DataServer.getInstance().setDApp(dApp);
 
-                DAppApi.getNonce(Wallet.get().getAddress(), dApp, new Runnable() {
+                DAppApi.getNonce(Wallet.getAccountAddress(), dApp, new Runnable() {
                     @Override
                     public void run() {
                         postRequestPayment(dApp);

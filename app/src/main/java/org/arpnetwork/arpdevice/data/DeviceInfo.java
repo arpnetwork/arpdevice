@@ -29,6 +29,7 @@ import org.web3j.utils.Convert;
 import java.math.BigInteger;
 
 public class DeviceInfo {
+    public String address;
     public String proxy;
     public String ver;
     public String brand;

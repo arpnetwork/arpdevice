@@ -228,7 +228,7 @@ public class DAppApi {
         try {
             String nonce = result.getNonce();
             String sign = result.getSign();
-            String data = String.format("%s:%s", nonce, Wallet.get().getAddress());
+            String data = String.format("%s:%s", nonce, Wallet.getAccountAddress());
             String addr = VerifyAPI.getSignatureAddress(data, sign);
             if (addr != null && addr.equalsIgnoreCase(Numeric.cleanHexPrefix(dApp.address))) {
                 success = true;

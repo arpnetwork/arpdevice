@@ -39,6 +39,7 @@ import android.widget.TextView;
 
 import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
+import org.arpnetwork.arpdevice.app.AtomicNonce;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
@@ -47,6 +48,8 @@ import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
 
+import org.arpnetwork.arpdevice.data.Result;
+import org.arpnetwork.arpdevice.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.miner.MinerListActivity;
 import org.arpnetwork.arpdevice.ui.miner.RegisterActivity;
 
@@ -61,20 +64,30 @@ import org.arpnetwork.arpdevice.ui.mywallet.MyWalletActivity;
 import org.arpnetwork.arpdevice.ui.order.details.MyEarningActivity;
 import org.arpnetwork.arpdevice.ui.order.receive.ReceiveOrderActivity;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
+import org.arpnetwork.arpdevice.util.OKHttpUtils;
 import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
+import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.arpnetwork.arpdevice.util.Util;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.web3j.utils.Convert;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
+import java.util.Random;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class HomeFragment extends BaseFragment implements View.OnClickListener {
     private static final String TAG = "HomeFragment";
+
+    private static final int BIND_TYPE_COVER = 1;
+    private static final int BIND_TYPE_APPEND = 2;
 
     private TextView mOrderPriceView;
     private TextView mMinerName;
@@ -84,7 +97,6 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     private LinearLayout mLayoutPriceSetting;
     private int mOrderPrice;
     private float mRemainingAmount;
-    private boolean mStartingReceiveOrder;
 
     private PasswordDialog mPasswordDialog;
 
@@ -357,23 +369,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                         UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
                     } else {
                         dialog.dismiss();
-                        showProgressDialog("", false);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        hideProgressDialog();
-                                        if (!SignUtil.signerExists()) {
-                                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
-                                        } else {
-                                            startReceiveOrderActivity(miner);
-                                        }
-                                    }
-                                });
-                            }
-                        }).start();
+                        bindDevice(miner, password);
                     }
                 }
             }
@@ -429,8 +425,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
         if (!Util.isCharging(getActivity())) {
             UIHelper.showToast(getActivity(), getString(R.string.no_charging));
-        } else if (!mStartingReceiveOrder) {
-            mStartingReceiveOrder = true;
+        } else {
             BindMinerHelper.getBoundAsync(Wallet.get().getAddress(), new SimpleOnValueResult<Miner>() {
                 @Override
                 public void onPreExecute() {
@@ -439,14 +434,12 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
 
                 @Override
                 public void onValueResult(Miner result) {
-                    hideProgressDialog();
-
                     if (result != null) {
                         BankAllowance bankAllowance = BankAllowance.get();
                         if (bankAllowance == null) {
                             CustomApplication.sInstance.startMonitorService();
+                            hideProgressDialog();
                             showAlertDialog(R.string.load_data_error);
-                            mStartingReceiveOrder = false;
                             return;
                         }
 
@@ -458,25 +451,143 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                             showAlertDialog(R.string.invalid_miner);
                         } else if (mRemainingAmount < Config.MIN_REMAINING_AMOUNT) {
                             showAlertDialog(R.string.amount_insufficient);
-                        } else if (!SignUtil.signerExists()) {
-                            showPasswordDialog(result);
+                        } else if (SignUtil.signerExists()) {
+                            checkBind(result);
+                            return;
                         } else {
-                            startReceiveOrderActivity(result);
+                            showAlertDialog(R.string.account_not_exist);
                         }
                     } else {
                         showNoBindingDialog();
                     }
-                    mStartingReceiveOrder = false;
+                    hideProgressDialog();
                 }
 
                 @Override
                 public void onFail(Throwable throwable) {
                     hideProgressDialog();
                     showErrorAlertDialog(R.string.network_error);
-                    mStartingReceiveOrder = false;
                 }
             });
         }
+    }
+
+    private void checkBind(final Miner miner) {
+        RPCRequest request = new RPCRequest();
+        request.setId(String.valueOf(new Random().nextInt(Integer.MAX_VALUE)));
+        request.setMethod("device_checkBind");
+        request.putString(Wallet.get().getAddress());
+        request.putString(Wallet.getAccountAddress());
+
+        String json = request.toJSON();
+        String url = String.format(Locale.US, "http://%s:%d", miner.getIpString(), miner.getPortHttpInt());
+
+        new OKHttpUtils().post(url, json, "checkBind", new SimpleCallback<Void>() {
+            @Override
+            public void onSuccess(okhttp3.Response response, Void result) {
+                hideProgressDialog();
+                startReceiveOrderActivity(miner);
+            }
+
+            @Override
+            public void onFailure(okhttp3.Request request, Exception e) {
+                hideProgressDialog();
+                UIHelper.showToast(getContext(), R.string.network_error);
+            }
+
+            @Override
+            public void onError(okhttp3.Response response, int code, Exception e) {
+                getNonce(miner);
+            }
+        });
+    }
+
+    private void getNonce(final Miner miner) {
+        RPCRequest request = new RPCRequest();
+        request.setId(String.valueOf(new Random().nextInt(Integer.MAX_VALUE)));
+        request.setMethod("nonce_get");
+        request.putString(Wallet.get().getAddress());
+
+        String json = request.toJSON();
+        String url = String.format(Locale.US, "http://%s:%d", miner.getIpString(), miner.getPortHttpInt());
+
+        new OKHttpUtils().post(url, json, "getNonce", new SimpleCallback<Result>() {
+            @Override
+            public void onSuccess(okhttp3.Response response, Result result) {
+                AtomicNonce.sync(result.getNonce(), miner.getAddress());
+                showPasswordDialog(miner);
+            }
+
+            @Override
+            public void onFailure(okhttp3.Request request, Exception e) {
+                hideProgressDialog();
+                UIHelper.showToast(getContext(), R.string.network_error);
+            }
+
+            @Override
+            public void onError(okhttp3.Response response, int code, Exception e) {
+                hideProgressDialog();
+                UIHelper.showToast(getContext(), R.string.start_ordering_failed);
+            }
+        });
+    }
+
+    private void bindDevice(final Miner miner, String password) {
+        int type = BIND_TYPE_APPEND;
+        String walletAddr = Wallet.get().getAddress();
+        String nonce = AtomicNonce.getAndIncrement(miner.getAddress());
+        String subAddrList = "";
+        try {
+            String salt = Util.getRandomString(32);
+
+            JSONObject object = new JSONObject();
+            object.put("sub_addr", Wallet.getAccountAddress());
+            object.put("salt", salt);
+            String sign = SignUtil.signWithAccount(salt);
+            object.put("sub_sign", sign);
+
+            JSONArray array = new JSONArray();
+            array.put(object);
+
+            subAddrList = array.toString();
+        } catch (JSONException e) {
+        }
+
+        RPCRequest request = new RPCRequest();
+        request.setId(String.valueOf(new Random().nextInt(Integer.MAX_VALUE)));
+        request.setMethod("device_bind");
+        request.putString(walletAddr);
+        request.putInt(type);
+        request.putString(subAddrList);
+        request.putString(nonce);
+
+        String data = String.format(Locale.US, "%s:%s:%d:%s:%s:%s", "device_bind", walletAddr, type, subAddrList, nonce, miner.getAddress());
+
+        String sign = SignUtil.signWithWallet(password, data);
+        request.putString(sign);
+
+        String json = request.toJSON();
+        String url = String.format(Locale.US, "http://%s:%d", miner.getIpString(), miner.getPortHttpInt());
+
+        new OKHttpUtils().post(url, json, "bindDevice", new SimpleCallback<Void>() {
+            @Override
+            public void onSuccess(okhttp3.Response response, Void result) {
+                hideProgressDialog();
+                startReceiveOrderActivity(miner);
+            }
+
+            @Override
+            public void onFailure(okhttp3.Request request, Exception e) {
+                hideProgressDialog();
+                UIHelper.showToast(getContext(), R.string.network_error);
+            }
+
+            @Override
+            public void onError(okhttp3.Response response, int code, Exception e) {
+                hideProgressDialog();
+                UIHelper.showToast(getContext(), R.string.start_ordering_failed);
+            }
+        });
     }
 
     private BroadcastReceiver mBatteryChangedReceiver = new BroadcastReceiver() {

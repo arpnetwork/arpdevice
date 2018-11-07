@@ -73,7 +73,7 @@ public class Wallet {
 
     public static boolean exists() {
         String path = getStorageString(KEYSTORE_PATH);
-        if (!TextUtils.isEmpty(path) && new File(path).exists()) {
+        if (!TextUtils.isEmpty(path) && new File(path).exists() && getAccountAddress() != null) {
             return true;
         }
         return false;
@@ -137,8 +137,11 @@ public class Wallet {
             String password = Util.getRandomString(9);
             putStorageString(ACCOUNT_PASSWORD, password);
             File file = getDestDir(context);
-            String walletFileName0 = WalletUtils.generateNewWalletFile(password, file, false);
-            putStorageString(ACCOUNT_PATH, new File(file.getPath(), walletFileName0).getAbsolutePath());
+            String keystoreFileName = WalletUtils.generateNewWalletFile(password, file, false);
+
+            File keystoreFile = new File(file.getPath(), keystoreFileName);
+            putStorageString(ACCOUNT_PATH, keystoreFile.getAbsolutePath());
+            putStorageString(ACCOUNT_ADDRESS, WalletUtils.loadCredentials(password, keystoreFile).getAddress());
         }
     }
 
