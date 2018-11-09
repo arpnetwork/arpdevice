@@ -150,11 +150,10 @@ public class Adb {
     }
 
     public void globalDimRestore(int screenBrightnessMode, int screenBrightness) {
-        if (screenBrightnessMode < 0 || screenBrightnessMode > 1) return;
         if (screenBrightness < 0 || screenBrightness > 255) return;
 
         if (Touch.getInstance().getState() == Touch.STATE_CONNECTED) {
-            mConnection.openShell("settings put system screen_brightness_mode " + screenBrightnessMode + " && " + "settings put system screen_brightness " + screenBrightness);
+            mConnection.openShell("settings put system screen_brightness " + screenBrightness);
         }
     }
 }
