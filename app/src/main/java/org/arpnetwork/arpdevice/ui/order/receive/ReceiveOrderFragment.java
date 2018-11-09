@@ -470,10 +470,12 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     }
 
     private void releaseDApp() {
-        if (mDeviceManager != null && mDeviceManager.getDapp() != null) {
-            mDeviceManager.releaseDevice();
+        if (mStartService) {
+            if (mDeviceManager != null && mDeviceManager.getDapp() != null) {
+                mDeviceManager.releaseDevice();
+            }
+            onDeviceReleased();
         }
-        onDeviceReleased();
     }
 
     private void onDeviceReleased() {
