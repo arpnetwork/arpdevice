@@ -175,6 +175,7 @@
     <string name="unbinding_other">正在解绑其他矿工</string>
     <string name="binding">正在绑定，请耐心等待</string>
     <string name="unbinding">正在解绑，请耐心等待</string>
+    <string name="remaining_detail">剩余额度为可获得凭证的额度\n剩余额度为零时将不能上线接单</string>
 
     <string name="bind_miner">绑定矿工</string>
     <string name="unbind_miner">解绑矿工</string>

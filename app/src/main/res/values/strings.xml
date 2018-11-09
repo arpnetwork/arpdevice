@@ -166,6 +166,7 @@
     <string name="unbinding_other">Unbinding other miner</string>
     <string name="binding">Binding, please wait</string>
     <string name="unbinding">Unbinding, please wait</string>
+    <string name="remaining_detail">Remaining of authorized amount. When remaining amount is near zero, device could not start ordering.</string>
 
     <string name="bind_miner">Bind miner</string>
     <string name="unbind_miner">Unbind miner</string>

@@ -42,6 +42,7 @@ import org.arpnetwork.arpdevice.contracts.api.VerifyAPI;
 import org.arpnetwork.arpdevice.contracts.tasks.SimpleOnValueResult;
 import org.arpnetwork.arpdevice.data.BankAllowance;
 import org.arpnetwork.arpdevice.data.Promise;
+import org.arpnetwork.arpdevice.dialog.MessageDialog;
 import org.arpnetwork.arpdevice.dialog.PromiseDialog;
 import org.arpnetwork.arpdevice.rpc.RPCRequest;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
@@ -194,6 +195,21 @@ public class BindMinerFragment extends BaseFragment {
                 });
             }
         });
+        findViewById(R.id.btn_details).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showInfoDialog();
+            }
+        });
+    }
+
+    private void showInfoDialog() {
+        new MessageDialog.Builder(getContext())
+                .setTitle(getString(R.string.remaining_amount))
+                .setMessage(getString(R.string.remaining_detail))
+                .setPositiveButton(getString(R.string.ok), null)
+                .create()
+                .show();
     }
 
     private void registerReceiver() {

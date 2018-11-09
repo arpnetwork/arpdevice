@@ -145,13 +145,28 @@
                         android:orientation="horizontal"
                         android:padding="@dimen/plain_margin">
 
-                        <TextView
+                        <LinearLayout
                             android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:text="@string/remaining_amount"
-                            android:textColor="@color/register_title_text_color"
-                            android:textSize="13sp" />
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:text="@string/remaining_amount"
+                                android:textColor="@color/register_title_text_color"
+                                android:textSize="13sp" />
+
+                            <ImageButton
+                                android:id="@+id/btn_details"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_gravity="center_vertical"
+                                android:background="@android:color/transparent"
+                                android:padding="5dp"
+                                android:src="@mipmap/detail" />
+                        </LinearLayout>
+
 
                         <TextView
                             android:id="@+id/tv_remaining_amount"
