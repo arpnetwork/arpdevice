@@ -386,8 +386,6 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 }
             });
         }
-
-        hideFloatLayer();
     }
 
     private void startRecordIfNeeded() {
@@ -490,6 +488,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             @Override
             public void run() {
                 mOrderStateView.setText(R.string.wait_for_order);
+                hideFloatLayer();
             }
         });
     }

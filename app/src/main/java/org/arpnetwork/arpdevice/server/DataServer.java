@@ -17,6 +17,7 @@
 package org.arpnetwork.arpdevice.server;
 
 import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 
 import com.google.gson.Gson;
@@ -52,7 +53,7 @@ public final class DataServer extends DefaultConnector {
     private static volatile DataServer sInstance;
 
     private final LinkedBlockingQueue<ByteBuf> mPacketQueue = new LinkedBlockingQueue<ByteBuf>();
-    private Handler mHandler;
+    private Handler mUIHandler;
 
     private Gson mGson;
     private DApp mDApp;
@@ -221,7 +222,7 @@ public final class DataServer extends DefaultConnector {
         super();
 
         mGson = new Gson();
-        mHandler = new Handler();
+        mUIHandler = new Handler(Looper.getMainLooper());
         mStop = true;
     }
 
@@ -243,7 +244,7 @@ public final class DataServer extends DefaultConnector {
         Req req = mGson.fromJson(protocolJson, Req.class);
         switch (req.id) {
             case ProtocolPacket.CONNECT_REQ:
-                mHandler.removeCallbacks(mConnectTimeoutRunnable);
+                mUIHandler.removeCallbacks(mConnectTimeoutRunnable);
 
                 final ConnectReq connectReq = mGson.fromJson(protocolJson, ConnectReq.class);
                 if (!protocolCompatible(connectReq)) {
@@ -341,7 +342,7 @@ public final class DataServer extends DefaultConnector {
         mAVDataThread.start();
         mStop = false;
 
-        mHandler.postDelayed(mConnectTimeoutRunnable, CONNECTED_TIMEOUT);
+        mUIHandler.postDelayed(mConnectTimeoutRunnable, CONNECTED_TIMEOUT);
     }
 
     private void stop() {
@@ -358,13 +359,16 @@ public final class DataServer extends DefaultConnector {
             }
 
             mPacketQueue.clear();
+
+            // fix client terminate with no touch up.
+            Touch.getInstance().sendTouch("r\n");
         }
 
         closeChannel();
 
         stopHeartbeatTimer();
         stopHeartbeatTimeout();
-        mHandler.removeCallbacks(mConnectTimeoutRunnable);
+        mUIHandler.removeCallbacks(mConnectTimeoutRunnable);
 
         if (mAppManager != null) {
             mAppManager.stopApp();
@@ -417,7 +421,7 @@ public final class DataServer extends DefaultConnector {
         @Override
         public void run() {
             heartbeat();
-            mHandler.postDelayed(this, HEARTBEAT_INTERVAL);
+            mUIHandler.postDelayed(this, HEARTBEAT_INTERVAL);
         }
     };
 
@@ -427,11 +431,11 @@ public final class DataServer extends DefaultConnector {
     }
 
     private void startHeartbeatTimer() {
-        mHandler.postDelayed(mServerHeartTimeout, HEARTBEAT_INTERVAL);
+        mUIHandler.postDelayed(mServerHeartTimeout, HEARTBEAT_INTERVAL);
     }
 
     private void stopHeartbeatTimer() {
-        mHandler.removeCallbacks(mServerHeartTimeout);
+        mUIHandler.removeCallbacks(mServerHeartTimeout);
     }
 
     private final Runnable mClientHeartTimeout = new Runnable() {
@@ -442,10 +446,10 @@ public final class DataServer extends DefaultConnector {
     };
 
     private void startHeartbeatTimeout() {
-        mHandler.postDelayed(mClientHeartTimeout, HEARTBEAT_TIMEOUT);
+        mUIHandler.postDelayed(mClientHeartTimeout, HEARTBEAT_TIMEOUT);
     }
 
     private void stopHeartbeatTimeout() {
-        mHandler.removeCallbacks(mClientHeartTimeout);
+        mUIHandler.removeCallbacks(mClientHeartTimeout);
     }
 }

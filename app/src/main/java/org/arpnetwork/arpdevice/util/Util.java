@@ -25,6 +25,7 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.BatteryManager;
+import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Window;
@@ -65,6 +66,10 @@ public class Util {
 
     private Util() {
         // prevent initial.
+    }
+
+    public static boolean isInMainThread() {
+        return Looper.myLooper() == Looper.getMainLooper();
     }
 
     public static void copy(InputStream in, OutputStream out) {
