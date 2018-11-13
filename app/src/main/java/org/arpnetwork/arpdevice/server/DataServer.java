@@ -63,6 +63,7 @@ public final class DataServer extends DefaultConnector {
     private int mQuality;
     private boolean mStop;
     private boolean mConnected;
+    private boolean mAppLaunch;
     private AppManager mAppManager;
 
     private ConnectionListener mListener;
@@ -98,12 +99,9 @@ public final class DataServer extends DefaultConnector {
         mDApp = dApp;
     }
 
-    public void releaseDApp() {
+    public synchronized void releaseDApp() {
         mDApp = null;
         mConnected = false;
-        synchronized (this) {
-            notify();
-        }
         stop();
     }
 
@@ -111,19 +109,17 @@ public final class DataServer extends DefaultConnector {
         mAppManager = appManager;
     }
 
-    public void onAppLaunch(boolean success) {
+    public synchronized void onAppLaunch(boolean success) {
         if (success) {
-            synchronized (this) {
-                if (!mConnected && mDApp != null) {
-                    try {
-                        wait();
-                    } catch (Exception e) {
-                        return;
-                    }
+            mAppLaunch = true;
+            if (mDApp != null) {
+                if (mConnected) {
+                    start();
+                } else {
+                    mUIHandler.postDelayed(mConnectTimeoutRunnable, CONNECTED_TIMEOUT);
                 }
-            }
-            if (mConnected) {
-                start();
+            } else {
+                closeAndStopApp(true);
             }
         } else {
             closeAndStopApp(false);
@@ -156,10 +152,13 @@ public final class DataServer extends DefaultConnector {
             return;
         }
 
-        mConnected = true;
         synchronized (this) {
-            notify();
+            if (mAppLaunch) {
+                start();
+            }
+            mConnected = true;
         }
+
         startHeartbeatTimer();
         startHeartbeatTimeout();
     }
@@ -172,9 +171,6 @@ public final class DataServer extends DefaultConnector {
         }
         mSession = null;
         mConnected = false;
-        synchronized (this) {
-            notify();
-        }
     }
 
     @Override
@@ -209,9 +205,6 @@ public final class DataServer extends DefaultConnector {
     public void onException(Connection conn, Throwable cause) {
         stop();
         mConnected = false;
-        synchronized (this) {
-            notify();
-        }
 
         if (mListener != null) {
             mListener.onException(cause);
@@ -341,8 +334,6 @@ public final class DataServer extends DefaultConnector {
         mAVDataThread = new SendThread();
         mAVDataThread.start();
         mStop = false;
-
-        mUIHandler.postDelayed(mConnectTimeoutRunnable, CONNECTED_TIMEOUT);
     }
 
     private void stop() {
@@ -370,6 +361,7 @@ public final class DataServer extends DefaultConnector {
         stopHeartbeatTimeout();
         mUIHandler.removeCallbacks(mConnectTimeoutRunnable);
 
+        mAppLaunch = false;
         if (mAppManager != null) {
             mAppManager.stopApp();
         }
@@ -417,7 +409,7 @@ public final class DataServer extends DefaultConnector {
         }
     }
 
-    private final Runnable mServerHeartTimeout = new Runnable() {
+    private final Runnable mServerHeartRunnable = new Runnable() {
         @Override
         public void run() {
             heartbeat();
@@ -431,11 +423,11 @@ public final class DataServer extends DefaultConnector {
     }
 
     private void startHeartbeatTimer() {
-        mUIHandler.postDelayed(mServerHeartTimeout, HEARTBEAT_INTERVAL);
+        mUIHandler.postDelayed(mServerHeartRunnable, HEARTBEAT_INTERVAL);
     }
 
     private void stopHeartbeatTimer() {
-        mUIHandler.removeCallbacks(mServerHeartTimeout);
+        mUIHandler.removeCallbacks(mServerHeartRunnable);
     }
 
     private final Runnable mClientHeartTimeout = new Runnable() {
