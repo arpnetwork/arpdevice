@@ -172,6 +172,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         NetworkHelper.getInstance().unregisterNetworkListener(mNetworkChangeListener);
         stopDeviceService();
         unregisterReceiver();
+
+        hideExitDialog();
         if (mAlertDialog != null) {
             mAlertDialog.dismiss();
         }
@@ -594,6 +596,13 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         mExitAlertDialog.show();
     }
 
+    private void hideExitDialog() {
+        if (mExitAlertDialog != null && mExitAlertDialog.isShowing()) {
+            mExitAlertDialog.dismiss();
+            mExitAlertDialog = null;
+        }
+    }
+
     @Override
     public void onReceivePromise(Promise promise) {
         mReceivedAmount = new BigInteger(promise.getAmount(), 16);
@@ -636,7 +645,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 }
             });
             float batteryPct = Util.getBatteryPct(getContext());
-            if (batteryPct < 0.5f) {
+            if (!Util.isCharging(getActivity()) && batteryPct < 0.5f) {
                 finish();
             }
         }
@@ -751,9 +760,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         public boolean onBacked() {
             if (mFloatView.getVisibility() == View.VISIBLE) {
                 // disable OnBackListener
-                if (mExitAlertDialog != null && mExitAlertDialog.isShowing()) {
-                    mExitAlertDialog.hide();
-                }
+                hideExitDialog();
             } else {
                 showExitDialog();
             }

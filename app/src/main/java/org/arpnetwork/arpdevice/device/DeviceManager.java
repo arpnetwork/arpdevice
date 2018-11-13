@@ -257,7 +257,7 @@ public class DeviceManager extends DefaultConnector {
                 mSpeedDataBuf.readBytes(bytes);
                 send(new SpeedReq(bytes));
 
-                mSpeedDataBuf.clear();
+                mSpeedDataBuf.release();
                 mSpeedDataBuf = null;
                 uploadSpeedData();
             }
@@ -389,11 +389,21 @@ public class DeviceManager extends DefaultConnector {
     }
 
     private void uploadSpeedData() {
-        int len = 10 * 1024 * 1024;
-        String str = Util.getRandomString(len);
+        int len = 0;
+        int total = 10 * 1024 * 1024;
+        int part = 2 * 1024 * 1024;
 
         send(MSG_SPEED, null);
-        send(MSG_SPEED, str);
+        while (len < total) {
+            String str = Util.getRandomString(part);
+            send(MSG_SPEED, str);
+            len += part;
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException ignored) {
+            }
+        }
+
         send(MSG_SPEED, null);
     }
 
