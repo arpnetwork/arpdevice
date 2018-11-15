@@ -34,7 +34,6 @@ public class Constant {
 
     public static final int PERMISSION_REQUEST_CODE_CAMERA = 101;
     public static final int QRCODE_REQUEST = 102;
-
     public static final String ACTIVITY_RESULT_KEY_PRIVATE = "PRIVATE_KEY";
 
     // Defines a custom Intent action
@@ -62,6 +61,5 @@ public class Constant {
 
     public static final String ORDER_PRICE = "order_price";
 
-    public static final String STATE_INVALID = "state_invalid";
     public static final String KEY_INSTALL_USB = "install_via_usb";
 }

@@ -851,7 +851,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     private class MinerStateChangedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (Constant.STATE_INVALID.equals(intent.getAction())) {
+            if (Constant.BROADCAST_ACTION_STATE_CHANGED.equals(intent.getAction())) {
                 stopDeviceService();
                 showAlertDialog(getString(R.string.invalid_miner));
             }

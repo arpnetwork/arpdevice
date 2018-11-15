@@ -108,6 +108,8 @@ public class Touch {
             if (touchInfo.startsWith("m")) {
                 mTouchWrapperShell.write("w 16\n");
             }
+        } else {
+            Log.e(TAG, "sendTouch false. mTouchWrapperShell = " + mTouchWrapperShell + " getState = " + getState());
         }
     }
 
@@ -141,6 +143,7 @@ public class Touch {
 
             @Override
             public void onExit(ShellChannel ch, int code) {
+                Log.e(TAG, "openTouch. onExit = " + code + " openMonitor = " + openMonitor);
                 if (openMonitor) {
                     MonitorTouch.sendBroadcast();
                 }
@@ -159,6 +162,7 @@ public class Touch {
     public void closeTouch() {
         if (mTouchWrapperShell != null) {
             mTouchWrapperShell.close();
+            mTouchWrapperShell = null;
         }
 
         if (mMonitor != null) {
@@ -218,6 +222,8 @@ public class Touch {
                 mState = STATE_CONNECTED;
                 openUSBSafeDebug();
                 openKeyInputPath();
+
+                restoreTouchWrapper();
             }
         }
 
@@ -422,6 +428,12 @@ public class Touch {
         private void startKeyInput(String path) {
             String keyInput = "export CLASSPATH=" + path + ";" + " exec app_process /system/bin " + "org.arpnetwork.arpdevice.stream.KeyInput";
             mKeyInputShell = mConn.openShell(keyInput);
+        }
+
+        private void restoreTouchWrapper() {
+            if (mTouchWrapperShell != null) {
+                openTouch();
+            }
         }
 
     }
