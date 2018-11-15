@@ -55,7 +55,7 @@ public class AppManager {
 
     private DApp mDApp;
     private String mLastDAppAddress;
-    private List<String> mInstalledApps;
+    private Context mContext;
     private TaskHelper mTaskHelper;
     private Handler mHandler;
     private State mState;
@@ -111,10 +111,6 @@ public class AppManager {
         }
         mDApp = dApp;
         mLastDAppAddress = dApp.address;
-
-        if (dApp != null) {
-            getInstalledApps();
-        }
     }
 
     public DApp getDApp() {
@@ -126,7 +122,7 @@ public class AppManager {
     }
 
     public void appInstall(final String packageName, String url, int fileSize, String md5) {
-        boolean isInstalled = mInstalledApps != null && mInstalledApps.contains(packageName);
+        boolean isInstalled = Util.hasPackage(mContext, packageName);
         if (isInstalled) {
             mTaskHelper.clearUserData(packageName);
             if (!InstalledApp.exists(packageName)) {
@@ -243,15 +239,7 @@ public class AppManager {
         mTaskHelper = new TaskHelper(context.getApplicationContext());
         mHandler = new Handler();
         mState = State.IDLE;
-    }
-
-    private void getInstalledApps() {
-        mTaskHelper.getInstalledApps(new TaskHelper.OnGetInstalledAppsListener() {
-            @Override
-            public void onGetInstalledApps(List<String> apps) {
-                mInstalledApps = apps;
-            }
-        });
+        mContext = context.getApplicationContext();
     }
 
     private void saveInstalledApp(String pkgName) {
