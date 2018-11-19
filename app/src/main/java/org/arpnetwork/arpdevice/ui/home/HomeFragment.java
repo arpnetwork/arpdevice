@@ -87,7 +87,6 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     private static final String TAG = "HomeFragment";
 
     private static final int BIND_TYPE_COVER = 1;
-    private static final int BIND_TYPE_APPEND = 2;
 
     private TextView mOrderPriceView;
     private TextView mMinerName;
@@ -535,7 +534,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
     }
 
     private void bindDevice(final Miner miner, String password) {
-        int type = BIND_TYPE_APPEND;
+        int type = BIND_TYPE_COVER;
         String walletAddr = Wallet.get().getAddress();
         String nonce = AtomicNonce.getAndIncrement(miner.getAddress());
         String subAddrList = "";
