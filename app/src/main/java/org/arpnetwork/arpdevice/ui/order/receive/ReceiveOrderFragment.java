@@ -96,6 +96,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     private BigInteger mLastAmount = BigInteger.ZERO;
     private BigInteger mReceivedAmount = BigInteger.ZERO;
+    private int mTcpPort;
     private long mLaunchTime;
     private int mQuality;
     private int mTotalTime;
@@ -127,7 +128,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putInt(KEY_PORT, DeviceInfo.get().tcpPort);
+        outState.putInt(KEY_PORT, mTcpPort);
         if (mScreenBrightness != -1) {
             outState.putInt(KEY_BRIGHT, mScreenBrightness);
         }
@@ -236,8 +237,10 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         int restorePort;
         if (savedInstanceState != null && (restorePort = savedInstanceState.getInt(KEY_PORT)) > 0) {
             DeviceInfo.get().setDataPort(restorePort);
+            mTcpPort = restorePort;
+        } else {
+            mTcpPort = DeviceInfo.get().tcpPort;
         }
-        DeviceInfo.get().setProxy(null);
         mAppManager = AppManager.getInstance(getContext().getApplicationContext());
         mPromiseHandler = new PromiseHandler(this, mMiner);
 
@@ -286,6 +289,8 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         new OKHttpUtils().post(url, json, "checkPort", new SimpleCallback<Void>() {
             @Override
             public void onSuccess(okhttp3.Response response, Void result) {
+                DeviceInfo.get().setProxy(null);
+                DeviceInfo.get().setDataPort(mTcpPort);
                 connectMiner();
             }
 
@@ -346,18 +351,17 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             DataServer.getInstance().setListener(mConnectionListener);
             DataServer.getInstance().setAppManager(mAppManager);
 
-            int port = DeviceInfo.get().tcpPort;
-            if (port == 0) {
+            if (mTcpPort == 0) {
                 useProxy();
             } else {
                 try {
                     DataServer.getInstance().close(true);
-                    DataServer.getInstance().startServer(port);
+                    DataServer.getInstance().startServer(mTcpPort);
                 } catch (Exception e) {
                     showAlertDialog(getString(R.string.start_service_failed));
                     return;
                 }
-                checkPort(port);
+                checkPort(mTcpPort);
             }
 
             mStartService = true;
@@ -462,6 +466,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                     .multiply(new BigInteger(String.valueOf((int) ((1 - Config.FEE_PERCENT) * 100))))
                     .divide(new BigInteger("100"))
                     .add(mLastAmount);
+
             if (mReceivedAmount.compareTo(totalAmount) < 0) {
                 return false;
             }
@@ -872,7 +877,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
         @Override
         public void onPort(int proxyPort, boolean tcp) {
             if (tcp) {
-                DeviceInfo.get().tcpPort = proxyPort;
+                DeviceInfo.get().setDataPort(proxyPort);
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
