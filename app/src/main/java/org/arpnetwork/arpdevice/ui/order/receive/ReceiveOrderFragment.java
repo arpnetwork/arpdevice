@@ -121,6 +121,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        CustomApplication.sInstance.startMonitorService();
         init(savedInstanceState);
     }
 
@@ -383,6 +384,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
                 mDeviceManager.close();
             }
             closeProxy();
+            DeviceInfo.get().setDataPort(mTcpPort);
 
             mStartService = false;
             mHandler.post(new Runnable() {
@@ -709,7 +711,9 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
         @Override
         public void onPromiseReceived(Promise promise) {
-            mPromiseHandler.processPromise(promise);
+            if (!mPromiseHandler.processPromise(promise)) {
+                finish();
+            }
         }
 
         @Override
