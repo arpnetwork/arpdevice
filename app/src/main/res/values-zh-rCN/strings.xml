@@ -9,6 +9,7 @@
     <string name="handling">正在处理中，请稍后</string>
     <string name="network_error">网络出错，请重试</string>
     <string name="load_data_error">获取数据失败，请重试</string>
+    <string name="notify_running">ARPDevice正在运行</string>
 
     <!--empty view str start-->
     <string name="no_avaliable_network">网络不可用,点击设置网络</string>

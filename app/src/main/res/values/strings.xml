@@ -8,6 +8,7 @@
     <string name="handling">Operation is in process,please wait</string>
     <string name="network_error">Network error</string>
     <string name="load_data_error">Failed to get data, please try again</string>
+    <string name="notify_running">ARPDevice is running</string>
 
     <!-- dialog -->
     <string name="input_passwd_tip">Please input wallet password</string>

@@ -16,6 +16,7 @@
 
 package org.arpnetwork.arpdevice.monitor;
 
+import android.app.Notification;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Handler;
@@ -25,6 +26,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
 import org.arpnetwork.arpdevice.CustomApplication;
+import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.constant.Constant;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
@@ -40,6 +42,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class MonitorService extends Service {
+    private static final int id = 0x1fff;
     private Handler mHandler;
     private Timer mTimer;
 
@@ -57,6 +60,7 @@ public class MonitorService extends Service {
         super.onCreate();
 
         mHandler = new MyHandler();
+        startForeground(id, getNotification(getString(R.string.notify_running)));
     }
 
     @Override
@@ -67,6 +71,7 @@ public class MonitorService extends Service {
 
     @Override
     public void onDestroy() {
+        stopForeground(true);
         stopTimer();
 
         super.onDestroy();
@@ -136,6 +141,16 @@ public class MonitorService extends Service {
             return true;
         }
         return false;
+    }
+
+    private Notification getNotification(String text) {
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText(text)
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build();
+        notification.flags |= Notification.FLAG_ONGOING_EVENT;
+        return notification;
     }
 
     private static class MyHandler extends Handler {
