@@ -36,6 +36,7 @@ import org.arpnetwork.arpdevice.data.ProtocolPacket;
 import org.arpnetwork.arpdevice.data.Req;
 import org.arpnetwork.arpdevice.data.TouchSetting;
 import org.arpnetwork.arpdevice.data.VideoInfo;
+import org.arpnetwork.arpdevice.util.Util;
 
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -379,6 +380,10 @@ public final class DataServer extends DefaultConnector {
         public void run() {
             if (!sessionExists()) {
                 closeAndStopApp(true);
+                DAppApi.clientDisconnected(mSession, mDApp);
+                if (mListener != null) {
+                    mListener.onStop();
+                }
             }
         }
     };
