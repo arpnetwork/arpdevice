@@ -21,6 +21,13 @@ import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 /**
  * A tool for signing the protocol data, but not for the transaction data.
  */
@@ -54,5 +61,66 @@ public class SignUtil {
         } catch (JSONException e) {
         }
         return false;
+    }
+
+    /**
+     * Convenience method.
+     * buildData2Verify
+     */
+    public static <T> String buildData2Verify(T target, Object... outFields) {
+        return buildData2Verify(target, new Comparator<Field>() {
+            @Override
+            public int compare(Field o1, Field o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        }, outFields);
+    }
+
+    /**
+     * get All fields
+     * sort alphabet field
+     * get alphabet field value
+     * append value with ":"
+     * exclude filed: sign
+     */
+    public static <T> String buildData2Verify(T target, Comparator<Field> comparator, Object... outFields) {
+        List<Field> fieldList = extractFieldWithSuper(target);
+        if (comparator != null) {
+            Collections.sort(fieldList, comparator);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (Field f : fieldList) {
+            if (f.getName().equalsIgnoreCase("sign")) {
+                continue;
+            }
+            try {
+                f.setAccessible(true);
+                Object value = f.get(target);
+                if (value != null) {
+                    sb.append(value).append(":");
+                }
+            } catch (IllegalAccessException ignored) {
+            }
+        }
+        sb.deleteCharAt(sb.length() - 1);
+
+        if (outFields != null && outFields.length > 0) {
+            for (Object item : outFields) {
+                sb.append(":").append(item);
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public static <T> List<Field> extractFieldWithSuper(T target) {
+        List<Field> fieldList = new ArrayList<>();
+        Class tempClass = target.getClass();
+        while (tempClass != null && !tempClass.getName().toLowerCase().equals("java.lang.object")) {
+            fieldList.addAll(Arrays.asList(tempClass.getDeclaredFields()));
+            tempClass = tempClass.getSuperclass();
+        }
+        return fieldList;
     }
 }

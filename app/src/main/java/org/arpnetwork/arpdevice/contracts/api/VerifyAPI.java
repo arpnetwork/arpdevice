@@ -85,10 +85,10 @@ public class VerifyAPI {
         String address = null;
         try {
             address = VerifyAPI.getSignatureAddress(Hex.decode(builder.toString()), Hex.decode(promise.getSign()));
-        } catch (SignatureException ignore) {
+        } catch (SignatureException ignored) {
         }
 
-        return from.toLowerCase().equals(address.toLowerCase());
+        return from.equalsIgnoreCase(address);
     }
 
     /**

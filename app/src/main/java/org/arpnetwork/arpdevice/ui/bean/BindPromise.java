@@ -49,6 +49,10 @@ public class BindPromise implements Serializable {
         return VerifyAPI.getSignatureDataFromByte(signatureDataBytes);
     }
 
+    public String getAmountRaw() {
+        return amount;
+    }
+
     public BigInteger getAmount() {
         return Numeric.toBigInt(amount);
     }
@@ -74,7 +78,9 @@ public class BindPromise implements Serializable {
         return "BindPromise{" +
                 "amount='" + amount + '\'' +
                 ", expired=" + expired +
-                ", getSignExpired=" + signExpired +
+                ", signExpired=" + signExpired +
+                ", promiseSign='" + promiseSign + '\'' +
+                ", sign='" + sign + '\'' +
                 '}';
     }
 }

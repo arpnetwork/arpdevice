@@ -52,11 +52,11 @@ import org.arpnetwork.arpdevice.ui.order.details.ExchangeActivity;
 import org.arpnetwork.arpdevice.ui.widget.GasFeeView;
 import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.arpnetwork.arpdevice.util.OKHttpUtils;
+import org.arpnetwork.arpdevice.util.SignUtil;
 import org.arpnetwork.arpdevice.util.SimpleCallback;
 import org.arpnetwork.arpdevice.util.UIHelper;
 
 import java.math.BigInteger;
-import java.util.Locale;
 
 import okhttp3.Request;
 import okhttp3.Response;
@@ -379,10 +379,8 @@ public class BindMinerFragment extends BaseFragment {
             public void onSuccess(Response response, BindPromise result) {
                 if (getActivity() == null) return;
 
-                String data = String.format(Locale.US, "%s:%d:%d:%s:%s", result.getAmount(),
-                        result.getSignExpired(), result.getExpired(), result.getPromiseSign(),
-                        Wallet.get().getAddress());
-                if (!VerifyAPI.verifySign(data, result.getSign(), mMiner.getAddress())) {
+                String data = SignUtil.buildData2Verify(result, Wallet.get().getAddress());
+                if (VerifyAPI.verifySign(data, result.getSign(), mMiner.getAddress())) {
                     mAmountTextView.setText(String.format("%.2f ARP", result.getAmountHumanic().floatValue()));
                     mTimeTextView.setText(result.getExpiredHumanic(getContext()));
                     mBindPromise = result;

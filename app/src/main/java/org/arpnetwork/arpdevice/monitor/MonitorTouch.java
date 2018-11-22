@@ -34,7 +34,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class MonitorTouch {
     private static final String TAG = "MonitorTouch";
     private final LinkedBlockingQueue<String> mLocalPacketQueue = new LinkedBlockingQueue<String>();
-    private final ConcurrentLinkedQueue<String> mLocalOutQueue = new ConcurrentLinkedQueue<String>();
 
     private LocalParseThread mLocalParseThread;
     private RawChannel mGeteventChannel;
@@ -83,7 +82,6 @@ public class MonitorTouch {
         @Override
         public void run() {
             mLocalPacketQueue.clear();
-            mLocalOutQueue.clear();
 
             while (!mStopped) {
                 try {
