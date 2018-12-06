@@ -19,12 +19,14 @@ package org.arpnetwork.arpdevice;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.net.NetworkInfo;
 
 import com.activeandroid.ActiveAndroid;
 
 import org.arpnetwork.arpdevice.app.ActivityManager;
 import org.arpnetwork.arpdevice.data.DeviceInfo;
 import org.arpnetwork.arpdevice.monitor.MonitorService;
+import org.arpnetwork.arpdevice.ui.miner.StateHolder;
 import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.NetworkHelper;
 import org.arpnetwork.arpdevice.util.PriceProvider;
@@ -44,6 +46,8 @@ public class CustomApplication extends Application {
         PriceProvider.initOrLoadPrice(null);
 
         DeviceInfo.init(this);
+        // Restore transaction state.
+        NetworkHelper.getInstance().registerNetworkListener(mNetworkChangeListener);
     }
 
     @Override
@@ -83,4 +87,13 @@ public class CustomApplication extends Application {
         Intent startServiceIntent = new Intent(this, MonitorService.class);
         stopService(startServiceIntent);
     }
+
+    private NetworkHelper.NetworkChangeListener mNetworkChangeListener = new NetworkHelper.NetworkChangeListener() {
+        @Override
+        public void onNetworkChange(NetworkInfo info) {
+            if (info != null) {
+                StateHolder.syncLocalState(CustomApplication.this);
+            }
+        }
+    };
 }

@@ -19,10 +19,8 @@ package org.arpnetwork.arpdevice.ui.miner;
 import android.content.Context;
 import android.content.Intent;
 
-import org.arpnetwork.arpdevice.contracts.api.TransactionAPI;
 import org.arpnetwork.arpdevice.database.TransactionRecord;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -93,15 +91,7 @@ public class StateHolder {
                 List<TransactionRecord> transactionRecords = TransactionRecord.findAll();
                 for (final TransactionRecord record : transactionRecords) {
                     String txHash = record.hash;
-                    try {
-                        boolean pending = TransactionAPI.isTransactionPending(txHash);
-                        if (pending) {
-                            startService(context, txHash, record.opType, record.args);
-                        } else {
-                            deleteHash(txHash, record.opType);
-                        }
-                    } catch (IOException e) {
-                    }
+                    startService(context, txHash, record.opType, record.args);
                 }
             }
         }).start();
@@ -113,9 +103,5 @@ public class StateHolder {
         serviceIntent.putExtra(KEY_ADDRESS, args);
         serviceIntent.putExtra(KEY_TX_HASH, transactionHash);
         context.startService(serviceIntent);
-    }
-
-    private static void deleteHash(String transactionHash, int opType) {
-        TransactionRecord.delete(transactionHash, opType);
     }
 }

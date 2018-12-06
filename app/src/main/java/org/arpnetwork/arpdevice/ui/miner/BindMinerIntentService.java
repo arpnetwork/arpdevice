@@ -23,6 +23,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import org.arpnetwork.arpdevice.CustomApplication;
+import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.contracts.ARPBank;
 import org.arpnetwork.arpdevice.contracts.ARPContract;
 import org.arpnetwork.arpdevice.contracts.ARPRegistry;
@@ -40,8 +41,6 @@ import org.web3j.utils.Convert;
 
 import java.math.BigInteger;
 
-import static org.arpnetwork.arpdevice.config.Config.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH;
-import static org.arpnetwork.arpdevice.config.Config.DEFAULT_POLLING_FREQUENCY;
 import static org.arpnetwork.arpdevice.constant.Constant.KEY_ADDRESS;
 import static org.arpnetwork.arpdevice.constant.Constant.KEY_BINDPROMISE;
 import static org.arpnetwork.arpdevice.constant.Constant.KEY_EXCHANGE_AMOUNT;
@@ -84,7 +83,7 @@ public class BindMinerIntentService extends IntentService {
     public static final int OPERATION_CASH = 6;
     public static final int OPERATION_WITHDRAW = 7;
 
-    private BroadcastNotifier mBroadcaster = new BroadcastNotifier();
+    private BroadcastNotifier mBroadcaster;
 
     public BindMinerIntentService() {
         super("BindMinerIntentService");
@@ -92,6 +91,8 @@ public class BindMinerIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+        mBroadcaster = new BroadcastNotifier(this);
+
         String dbTxHash = intent.getExtras().getString(KEY_TX_HASH);
         int type = intent.getExtras().getInt(KEY_OP);
 
@@ -107,7 +108,7 @@ public class BindMinerIntentService extends IntentService {
 
             Credentials credentials = Wallet.loadWalletCredentials(password);
             transactionManager = new CustomRawTransactionManager(EtherAPI.getWeb3J(), credentials,
-                    DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH, DEFAULT_POLLING_FREQUENCY); // 1 hour waiting.
+                    Config.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH, Config.DEFAULT_POLLING_FREQUENCY); // 1 hour waiting.
         }
 
         switch (type) {
@@ -121,18 +122,20 @@ public class BindMinerIntentService extends IntentService {
                         TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
                         result = TransactionAPI.isStatusOK(receipt.getStatus());
 
-                        deleteHash(dbTxHash, OPERATION_UNBIND);
+                        deleteHash(dbTxHash);
                     } else {
                         HashBackListener hashBackListener = new HashBackListener(OPERATION_UNBIND, address);
                         transactionManager.setListener(hashBackListener);
                         result = unbindDevice(transactionManager, gasPrice, gasLimit);
 
                         String hash = hashBackListener.getTxHash();
-                        deleteHash(hash, OPERATION_UNBIND);
+                        deleteHash(hash);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "unbind device error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_UNBIND_FAILED, type, address);
+                    if (!isExistHash(type)) {
+                        Log.e(TAG, "unbind device error:" + e.getCause());
+                        mBroadcaster.broadcastWithState(STATE_UNBIND_FAILED, type, address);
+                    }
                     break;
                 }
 
@@ -156,7 +159,7 @@ public class BindMinerIntentService extends IntentService {
                         TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
                         result = TransactionAPI.isStatusOK(receipt.getStatus());
 
-                        deleteHash(dbTxHash, OPERATION_BIND);
+                        deleteHash(dbTxHash);
                     } else {
                         BindPromise bindPromise = (BindPromise) intent.getSerializableExtra(KEY_BINDPROMISE);
                         HashBackListener hashBackListener = new HashBackListener(OPERATION_BIND, address);
@@ -165,11 +168,13 @@ public class BindMinerIntentService extends IntentService {
                                 gasPrice, gasLimit);
 
                         String hash = hashBackListener.getTxHash();
-                        deleteHash(hash, OPERATION_BIND);
+                        deleteHash(hash);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "bind device error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_BIND_FAILED, type, address);
+                    if (!isExistHash(type)) {
+                        Log.e(TAG, "bind device error:" + e.getCause());
+                        mBroadcaster.broadcastWithState(STATE_BIND_FAILED, type, address);
+                    }
                     break;
                 }
 
@@ -189,18 +194,20 @@ public class BindMinerIntentService extends IntentService {
                         TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
                         result = TransactionAPI.isStatusOK(receipt.getStatus());
 
-                        deleteHash(dbTxHash, OPERATION_ARP_APPROVE);
+                        deleteHash(dbTxHash);
                     } else {
                         HashBackListener hashBackListener = new HashBackListener(OPERATION_ARP_APPROVE);
                         transactionManager.setListener(hashBackListener);
                         result = arpApprove(transactionManager, gasPrice, gasLimit);
 
                         String hash = hashBackListener.getTxHash();
-                        deleteHash(hash, OPERATION_ARP_APPROVE);
+                        deleteHash(hash);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "arpApprove, error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_APPROVE_FAILED, type, null);
+                    if (!isExistHash(type)) {
+                        Log.e(TAG, "arpApprove error:" + e.getCause());
+                        mBroadcaster.broadcastWithState(STATE_APPROVE_FAILED, type, null);
+                    }
                     break;
                 }
 
@@ -216,19 +223,21 @@ public class BindMinerIntentService extends IntentService {
                     if (!TextUtils.isEmpty(dbTxHash)) {
                         TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
                         result = TransactionAPI.isStatusOK(receipt.getStatus());
-
-                        deleteHash(dbTxHash, OPERATION_BANK_APPROVE);
+                       
+                        deleteHash(dbTxHash);
                     } else {
                         HashBackListener hashBackListener = new HashBackListener(OPERATION_BANK_APPROVE);
                         transactionManager.setListener(hashBackListener);
                         result = bankApprove(transactionManager, gasPrice, gasLimit);
 
                         String hash = hashBackListener.getTxHash();
-                        deleteHash(hash, OPERATION_BANK_APPROVE);
+                        deleteHash(hash);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "bank approve error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_FAILED, type, null);
+                    if (!isExistHash(type)) {
+                        Log.e(TAG, "bank approve error:" + e.getCause());
+                        mBroadcaster.broadcastWithState(STATE_BANK_APPROVE_FAILED, type, null);
+                    }
                     break;
                 }
 
@@ -245,18 +254,20 @@ public class BindMinerIntentService extends IntentService {
                         TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
                         result = TransactionAPI.isStatusOK(receipt.getStatus());
 
-                        deleteHash(dbTxHash, OPERATION_BANK_DEPOSIT);
+                        deleteHash(dbTxHash);
                     } else {
                         HashBackListener hashBackListener = new HashBackListener(OPERATION_BANK_DEPOSIT);
                         transactionManager.setListener(hashBackListener);
                         result = deposit(transactionManager, gasPrice, gasLimit);
 
                         String hash = hashBackListener.getTxHash();
-                        deleteHash(hash, OPERATION_BANK_DEPOSIT);
+                        deleteHash(hash);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "deposit error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_DEPOSIT_FAILED, type, null);
+                    if (!isExistHash(type)) {
+                        Log.e(TAG, "deposit error:" + e.getCause());
+                        mBroadcaster.broadcastWithState(STATE_DEPOSIT_FAILED, type, null);
+                    }
                     break;
                 }
 
@@ -267,28 +278,32 @@ public class BindMinerIntentService extends IntentService {
             case OPERATION_CASH: {
                 mBroadcaster.broadcastWithState(STATE_BANK_CASH_RUNNING, type, null);
 
-                final BigInteger amount = new BigInteger(intent.getExtras().getString(KEY_EXCHANGE_AMOUNT));
-                final Promise promise = Promise.get();
-                String address = Wallet.get().getAddress();
-
                 boolean result = false;
                 try {
                     if (!TextUtils.isEmpty(dbTxHash)) {
                         TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
                         result = TransactionAPI.isStatusOK(receipt.getStatus());
 
-                        deleteHash(dbTxHash, OPERATION_CASH);
+                        deleteHash(dbTxHash);
                     } else {
-                        HashBackListener hashBackListener = new HashBackListener(OPERATION_CASH, amount);
+                        final BigInteger amount = new BigInteger(intent.getExtras().getString(KEY_EXCHANGE_AMOUNT));
+                        final Promise promise = Promise.get();
+                        String address = Wallet.get().getAddress();
+
+                        HashBackListener hashBackListener = new HashBackListener(OPERATION_CASH);
                         transactionManager.setListener(hashBackListener);
                         result = cash(promise, address, transactionManager, gasPrice, gasLimit);
 
                         String hash = hashBackListener.getTxHash();
-                        deleteHash(hash, OPERATION_CASH);
+                        savePendingToDb(hash, amount);
+
+                        deleteHash(hash);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "cash error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_BANK_CASH_FAILED, type, null);
+                    if (!isExistHash(type)) {
+                        Log.e(TAG, "cash error:" + e.getCause());
+                        mBroadcaster.broadcastWithState(STATE_BANK_CASH_FAILED, type, null);
+                    }
                     break;
                 }
 
@@ -299,32 +314,34 @@ public class BindMinerIntentService extends IntentService {
             case OPERATION_WITHDRAW: {
                 mBroadcaster.broadcastWithState(STATE_BANK_WITHDRAW_RUNNING, type, null);
 
-                BigInteger amount;
-                String amountString = intent.getExtras().getString(KEY_EXCHANGE_AMOUNT);
-                if (amountString != null) {
-                    amount = new BigInteger(amountString);
-                } else {
-                    amount = Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
-                }
-
                 boolean result = false;
                 try {
                     if (!TextUtils.isEmpty(dbTxHash)) {
                         TransactionReceipt receipt = TransactionAPI.pollingTransaction(dbTxHash);
                         result = TransactionAPI.isStatusOK(receipt.getStatus());
 
-                        deleteHash(dbTxHash, OPERATION_WITHDRAW);
+                        deleteHash(dbTxHash);
                     } else {
+                        BigInteger amount;
+                        String amountString = intent.getExtras().getString(KEY_EXCHANGE_AMOUNT);
+                        if (amountString != null) {
+                            amount = new BigInteger(amountString);
+                        } else {
+                            amount = Convert.toWei(DEPOSIT_ARP_NUMBER, Convert.Unit.ETHER).toBigInteger();
+                        }
+
                         HashBackListener hashBackListener = new HashBackListener(OPERATION_WITHDRAW);
                         transactionManager.setListener(hashBackListener);
                         result = withdraw(amount, transactionManager, gasPrice, gasLimit);
 
                         String hash = hashBackListener.getTxHash();
-                        deleteHash(hash, OPERATION_WITHDRAW);
+                        deleteHash(hash);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "withdraw error:" + e.getCause());
-                    mBroadcaster.broadcastWithState(STATE_BANK_WITHDRAW_FAILED, type, null);
+                    if (!isExistHash(type)) {
+                        Log.e(TAG, "withdraw error:" + e.getCause());
+                        mBroadcaster.broadcastWithState(STATE_BANK_WITHDRAW_FAILED, type, null);
+                    }
                     break;
                 }
 
@@ -356,8 +373,12 @@ public class BindMinerIntentService extends IntentService {
         }
     }
 
-    private void deleteHash(String transactionHash, int opType) {
-        TransactionRecord.delete(transactionHash, opType);
+    private void deleteHash(String transactionHash) {
+        TransactionRecord.delete(transactionHash);
+    }
+
+    private boolean isExistHash(int opType) {
+        return TransactionRecord.find(opType) != null;
     }
 
     private boolean unbindDevice(CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
@@ -369,7 +390,7 @@ public class BindMinerIntentService extends IntentService {
     private boolean bindDevice(String address, BindPromise bindPromise, CustomRawTransactionManager manager, BigInteger gasPrice, BigInteger gasLimit) throws Exception {
         ARPRegistry registry = ARPRegistry.load(manager, gasPrice, gasLimit);
 
-        TransactionReceipt receipt = registry.bindDevice(address, bindPromise.getAmount(),
+        TransactionReceipt receipt = registry.bindDevice(address, bindPromise.getAmountBig(),
                 bindPromise.getExpired(), bindPromise.getSignExpired(),
                 new BigInteger(String.valueOf(bindPromise.getSignatureData().getV())),
                 bindPromise.getSignatureData().getR(), bindPromise.getSignatureData().getS()).send();
@@ -411,7 +432,6 @@ public class BindMinerIntentService extends IntentService {
         private String txHash;
         private int opType;
 
-        private BigInteger amount;
         private String args;
 
         public HashBackListener(int opType) {
@@ -423,19 +443,11 @@ public class BindMinerIntentService extends IntentService {
             this.args = args;
         }
 
-        public HashBackListener(int opType, BigInteger amount) {
-            this.opType = opType;
-            this.amount = amount;
-        }
-
         @Override
         public void onHash(String transactionHash) {
             Log.d(TAG, "HashBackListener onHash = " + transactionHash);
             txHash = transactionHash;
             saveHashToDb(transactionHash, opType, args);
-            if (opType == OPERATION_CASH) {
-                savePendingToDb(transactionHash, amount);
-            }
         }
 
         private String getTxHash() {

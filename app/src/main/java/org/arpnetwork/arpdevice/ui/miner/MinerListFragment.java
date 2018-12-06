@@ -410,6 +410,10 @@ public class MinerListFragment extends BaseFragment {
                 case StateHolder.STATE_BIND_FAILED:
                     UIHelper.showToast(getActivity(), getString(R.string.bind_failed));
 
+                    if (mBoundMiner != null && mBoundMiner.getAddress() != null) {
+                        mAdapter.removeState(mBoundMiner.getAddress());
+                    }
+
                     TaskInfo taskFailed = StateHolder.getTaskByState(StateHolder.STATE_BIND_FAILED);
                     mAdapter.updateBindState(taskFailed.address, StateHolder.STATE_BIND_FAILED);
                     break;

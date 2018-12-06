@@ -23,8 +23,6 @@ import com.activeandroid.annotation.Table;
 import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 
-import org.web3j.utils.Numeric;
-
 import java.util.List;
 
 @Table(name = "transaction_record")
@@ -58,8 +56,12 @@ public class TransactionRecord extends BaseRecord {
         return new Select().from(TransactionRecord.class).where("hash = ?", transactionHash).executeSingle();
     }
 
-    public static void delete(String transactionHash, int opType) {
-        new Delete().from(TransactionRecord.class).where("hash = ? and opType = ? ", transactionHash, opType).execute();
+    public static TransactionRecord find(int opType) {
+        return new Select().from(TransactionRecord.class).where("opType = ?", opType).executeSingle();
+    }
+
+    public static void delete(String transactionHash) {
+        new Delete().from(TransactionRecord.class).where("hash = ? ", transactionHash).execute();
     }
 
 }
