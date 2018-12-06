@@ -290,7 +290,7 @@ public class BindMinerFragment extends BaseFragment {
                     float remainingAmount = amount;
                     Promise promise = Promise.get();
                     if (promise != null) {
-                        remainingAmount = amount - promise.getFloatAmount();
+                        remainingAmount = amount - promise.getAmountFloat();
                     }
                     mRemainingAmountTextView.setText(String.format("%.2f ARP", remainingAmount));
 

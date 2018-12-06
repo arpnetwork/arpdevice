@@ -113,7 +113,7 @@ public class ARPRegistry extends Contract {
     // estimate gas limit
 
     public static BigInteger estimateBindDeviceGasLimit(String _server, BindPromise bindPromise) {
-        String functionString = FunctionEncoder.encode(funcBindDevice(_server, bindPromise.getAmount(),
+        String functionString = FunctionEncoder.encode(funcBindDevice(_server, bindPromise.getAmountBig(),
                 bindPromise.getExpired(), bindPromise.getSignExpired(),
                 new BigInteger(String.valueOf(bindPromise.getSignatureData().getV())),
                 bindPromise.getSignatureData().getR(), bindPromise.getSignatureData().getS()));

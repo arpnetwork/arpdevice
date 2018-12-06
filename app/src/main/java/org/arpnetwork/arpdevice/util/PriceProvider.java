@@ -69,9 +69,8 @@ public class PriceProvider {
         // cache valid 1 hour
         // load from network and save or update
         final String priceJson = PreferenceManager.getInstance().getString(KEY_PRICE_INFO);
-        PriceInfo cachedPrice;
         if (!TextUtils.isEmpty(priceJson)) {
-            cachedPrice = Util.loadObject(priceJson, PriceInfo.class);
+            PriceInfo cachedPrice = Util.loadObject(priceJson, PriceInfo.class);
             if (cachedPrice != null && System.currentTimeMillis() - cachedPrice.timestamp <= EXP_MS) {
                 if (callback != null) {
                     callback.onPriceInfo(cachedPrice);

@@ -59,20 +59,20 @@ public class PromiseHandler {
         Promise lastPromise = Promise.get();
         BigInteger lastAmount = BigInteger.ZERO;
         if (lastPromise != null) {
-            lastAmount = new BigInteger(lastPromise.getAmount(), 16);
+            lastAmount = lastPromise.getAmountBig();
         }
 
-        if (!TextUtils.isEmpty(promise.getCid())
+        if (!TextUtils.isEmpty(promise.getCidRaw())
                 && !TextUtils.isEmpty(promise.getFrom())
                 && !TextUtils.isEmpty(promise.getTo())
-                && !TextUtils.isEmpty(promise.getAmount())
-                && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) == 0
+                && !TextUtils.isEmpty(promise.getAmountRaw())
+                && promise.getCidBig().compareTo(allowance.id) == 0
                 && Numeric.cleanHexPrefix(promise.getFrom()).equals(Numeric.cleanHexPrefix(mMiner.getAddress()))
                 && Numeric.cleanHexPrefix(promise.getTo()).equals(Numeric.cleanHexPrefix(walletAddr))
                 && VerifyAPI.isEffectivePromise(promise)
-                && new BigInteger(promise.getAmount(), 16).compareTo(allowance.amount) <= 0
-                && new BigInteger(promise.getAmount(), 16).compareTo(allowance.paid) > 0
-                && new BigInteger(promise.getAmount(), 16).compareTo(lastAmount) > 0) {
+                && promise.getAmountBig().compareTo(allowance.amount) <= 0
+                && promise.getAmountBig().compareTo(allowance.paid) > 0
+                && promise.getAmountBig().compareTo(lastAmount) > 0) {
             res = true;
         }
         return res;

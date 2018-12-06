@@ -36,12 +36,16 @@ public class Promise {
     private String amount;
     private String sign;
 
-    public void setCid(String cid) {
-        this.cid = cid;
+    public String getCidRaw() {
+        return cid;
     }
 
-    public String getCid() {
-        return getValueString(cid, 16);
+    public BigInteger getCidBig() {
+        return Numeric.toBigInt(cid);
+    }
+
+    public void setCid(String cid) {
+        this.cid = cid;
     }
 
     public void setFrom(String from) {
@@ -64,12 +68,21 @@ public class Promise {
         this.amount = amount;
     }
 
-    public String getAmount() {
-        return getValueString(amount, 16);
+    public String getAmountRaw() {
+        return amount;
     }
 
-    public float getFloatAmount() {
-        return Convert.fromWei(getValueString(amount, 10), Convert.Unit.ETHER).floatValue();
+    /**
+     * convert amount that is hexValue with 0x to BigInteger.
+     *
+     * @return BigInteger
+     */
+    public BigInteger getAmountBig() {
+        return Numeric.toBigInt(amount);
+    }
+
+    public float getAmountFloat() {
+        return Convert.fromWei(getAmountBig().toString(), Convert.Unit.ETHER).floatValue();
     }
 
     public int compareAmount(Promise promise) {
@@ -116,9 +129,5 @@ public class Promise {
 
     public static void clear() {
         PreferenceManager.getInstance().putString(KEY, "");
-    }
-
-    private String getValueString(String string, int radix) {
-        return new BigInteger(Numeric.cleanHexPrefix(string), 16).toString(radix);
     }
 }

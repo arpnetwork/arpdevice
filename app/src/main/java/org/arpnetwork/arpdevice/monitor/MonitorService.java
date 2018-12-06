@@ -25,7 +25,6 @@ import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
 
-import org.arpnetwork.arpdevice.CustomApplication;
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.config.Config;
 import org.arpnetwork.arpdevice.constant.Constant;
@@ -43,12 +42,9 @@ import java.util.TimerTask;
 
 public class MonitorService extends Service {
     private static final int id = 0x1fff;
+    public static final int MSG_EXCHANGE = 1;
     private Handler mHandler;
     private Timer mTimer;
-
-    public static void startDialogActivity(String args) {
-        ExchangeDialogActivity.launch(CustomApplication.sInstance, args);
-    }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -100,7 +96,7 @@ public class MonitorService extends Service {
                         allowance.save();
 
                         Promise promise = Promise.get();
-                        if (promise != null && new BigInteger(promise.getCid(), 16).compareTo(allowance.id) != 0) {
+                        if (promise != null && promise.getCidBig().compareTo(allowance.id) != 0) {
                             Promise.clear();
                             promise = null;
                         }
@@ -108,14 +104,14 @@ public class MonitorService extends Service {
                         boolean exchange = false;
                         if (miner.getExpired().compareTo(BigInteger.ZERO) > 0
                                 && promise != null
-                                && !TextUtils.isEmpty(promise.getAmount())) {
+                                && !TextUtils.isEmpty(promise.getAmountRaw())) {
                             exchange = getUnexchange(allowance, miner, promise);
                         }
 
                         if (!exchange && (!allowance.valid() || !miner.expiredValid())) {
                             Intent intent = new Intent();
                             intent.setAction(Constant.BROADCAST_ACTION_STATE_CHANGED);
-                            LocalBroadcastManager.getInstance(CustomApplication.sInstance).sendBroadcast(intent);
+                            LocalBroadcastManager.getInstance(MonitorService.this).sendBroadcast(intent);
                         }
                     }
                 }
@@ -131,11 +127,11 @@ public class MonitorService extends Service {
     }
 
     private boolean getUnexchange(BankAllowance allowance, Miner miner, Promise promise) {
-        BigInteger amount = new BigInteger(promise.getAmount(), 16);
+        BigInteger amount = promise.getAmountBig();
         BigInteger unexchanged = amount.subtract(allowance.paid);
         if (unexchanged.compareTo(BigInteger.ZERO) > 0) {
             Message message = new Message();
-            message.what = 1;
+            message.what = MSG_EXCHANGE;
             message.obj = miner.getExpired().longValue() + "#" + unexchanged;
             mHandler.sendMessage(message);
             return true;
@@ -153,10 +149,21 @@ public class MonitorService extends Service {
         return notification;
     }
 
-    private static class MyHandler extends Handler {
+    private class MyHandler extends Handler {
         @Override
         public void handleMessage(Message message) {
-            startDialogActivity((String) message.obj);
+            switch (message.what) {
+                case MSG_EXCHANGE:
+                    startDialogActivity((String) message.obj);
+                    break;
+
+                default:
+                    break;
+            }
         }
+    }
+
+    private void startDialogActivity(String args) {
+        ExchangeDialogActivity.launch(MonitorService.this, args);
     }
 }

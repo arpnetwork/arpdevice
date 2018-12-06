@@ -612,7 +612,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
 
     @Override
     public void onReceivePromise(Promise promise) {
-        mReceivedAmount = new BigInteger(promise.getAmount(), 16);
+        mReceivedAmount = promise.getAmountBig();
 
         if (checkPromiseAmount()) {
             BankAllowance bankAllowance = BankAllowance.get();
@@ -681,7 +681,7 @@ public class ReceiveOrderFragment extends BaseFragment implements PromiseHandler
             if (dApp.priceValid()) {
                 Promise promise = Promise.get();
                 if (promise != null) {
-                    mLastAmount = new BigInteger(promise.getAmount(), 16);
+                    mLastAmount = promise.getAmountBig();
                 }
                 mTotalTime = 0;
 

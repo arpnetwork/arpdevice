@@ -31,7 +31,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.arpnetwork.arpdevice.R;
 import org.arpnetwork.arpdevice.constant.Constant;
@@ -67,8 +66,8 @@ import static org.arpnetwork.arpdevice.ui.miner.BindMinerIntentService.OPERATION
 public class MyWalletFragment extends BaseFragment {
     private static final String TAG = MyWalletFragment.class.getSimpleName();
 
-    private BigInteger mTotalAmount;
-    private BigInteger mDepositAmount;
+    private BigInteger mDepositTotal;
+    private BigInteger mBankBalance;
 
     private BindStateReceiver mBindStateReceiver;
 
@@ -112,41 +111,20 @@ public class MyWalletFragment extends BaseFragment {
 
     private void initViews() {
         String address = Wallet.get().getAddress();
+        refreshDepositAmount(address);
+        getEthBalance(address);
+        getARPBalance(address);
 
         TextView addrText = (TextView) findViewById(R.id.tv_addr);
         addrText.setText(address);
-
-        getARPBalance(address);
-
-        final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);
-        EtherAPI.getEtherBalance(address, new SimpleOnValueResult<BigInteger>() {
-            @Override
-            public void onValueResult(BigInteger result) {
-                if (getActivity() == null) return;
-
-                ethBalanceText.setText(String.format("%.4f", Convert.fromWei(new BigDecimal(result), Convert.Unit.ETHER)));
-            }
-
-            @Override
-            public void onFail(Throwable throwable) {
-                showErrorAlertDialog(R.string.get_balance_error_msg, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        finish();
-                    }
-                });
-            }
-        });
-
-        refreshDepositAmount();
 
         LinearLayout depositLayout = (LinearLayout) findViewById(R.id.ll_deposit);
         depositLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mTotalAmount.compareTo(BigInteger.ZERO) > 0) {
+                if (mDepositTotal != null && mDepositTotal.compareTo(BigInteger.ZERO) > 0) {
                     if (!checkReady()) return;
-                    checkBind(mTotalAmount);
+                    checkBind(mDepositTotal);
                 } else {
                     UIHelper.showToast(getContext(), R.string.no_deposit);
                 }
@@ -163,72 +141,69 @@ public class MyWalletFragment extends BaseFragment {
         });
     }
 
-    private void refreshDepositAmount() {
-        final String address = Wallet.get().getAddress();
-        final TextView depositBalance = (TextView) findViewById(R.id.tv_deposit);
-
-        new Thread(new Runnable() {
+    private void getUnexchange() {
+        ARPBank.getUnexchangeAsync(new SimpleOnValueResult<BigInteger>() {
             @Override
-            public void run() {
-                BankAllowance allowance = null;
-                try {
-                    allowance = ARPBank.allowance(address, ARPRegistry.CONTRACT_ADDRESS);
-                    if (allowance == null) {
-                        depositBalance.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                depositBalance.setText(String.format(getString(R.string.float_arp_token), 0.0f));
-                            }
-                        });
-                    } else {
-                        BigInteger allowanceAmount = allowance.amount;
-                        mDepositAmount = ARPBank.balanceOf(address);
-                        mTotalAmount = allowanceAmount.add(mDepositAmount);
-                        depositBalance.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                depositBalance.setText(String.format(getString(R.string.float_arp_token), Util.getHumanicAmount(mTotalAmount)));
-                            }
-                        });
-                    }
-                } catch (IOException e) {
-                    depositBalance.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            showErrorAlertDialog(R.string.get_balance_error_msg, new DialogInterface.OnClickListener() {
+            public void onValueResult(final BigInteger result) {
+                if (getActivity() == null) return;
+
+                if (result != null && result.compareTo(BigInteger.ZERO) > 0) {
+                    String message = String.format(getString(R.string.unexchange_tip_changing_wallet),
+                            Convert.fromWei(result.toString(), Convert.Unit.ETHER).floatValue());
+                    MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
+                    builder.setTitle(getString(R.string.exchange_unchanged_promise_found))
+                            .setMessage(message)
+                            .setPositiveButton(getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    finish();
+                                    showExchange(result);
                                 }
-                            });
-                        }
-                    });
+                            })
+                            .setNegativeButton(getString(R.string.exchange_change_wallet_ignore), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    checkPasswd();
+                                }
+                            })
+                            .create()
+                            .show();
+                } else {
+                    resetWallet();
                 }
             }
-        }).start();
-    }
 
-    private void checkAuthor() {
-        final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
-        builder.setOnClickListener(new DialogInterface.OnClickListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == PasswordDialog.CONFIRM) {
-                    final String password = builder.getPassword();
-                    if (TextUtils.isEmpty(password)) {
-                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
-                    } else {
-                        dialog.dismiss();
-                        if (Wallet.loadWalletCredentials(password) != null) {
-                            resetWallet();
-                        } else {
-                            Toast.makeText(getContext(), getString(R.string.input_passwd_error), Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
+            public void onFail(Throwable throwable) {
+                new AlertDialog.Builder(getContext())
+                        .setMessage(R.string.tip_changing_wallet)
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                resetWallet();
+                            }
+                        })
+                        .setCancelable(true)
+                        .show();
             }
         });
-        builder.create().show();
+    }
+
+    private boolean checkReady() {
+        if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
+            UIHelper.showToast(getContext(), R.string.unbinding);
+        } else if (StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING) != null) {
+            UIHelper.showToast(getContext(), R.string.binding);
+        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_APPROVE_RUNNING) != null) {
+            UIHelper.showToast(getContext(), R.string.bank_approving);
+        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_CASH_RUNNING) != null) {
+            UIHelper.showToast(getContext(), R.string.cashing);
+        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_WITHDRAW_RUNNING) != null) {
+            UIHelper.showToast(getContext(), R.string.withdrawing);
+        } else {
+            return true;
+        }
+
+        return false;
     }
 
     private void checkBind(final BigInteger totalAmount) {
@@ -242,7 +217,7 @@ public class MyWalletFragment extends BaseFragment {
             public void onValueResult(Miner result) {
                 hideProgressDialog();
 
-                if (result != null || mDepositAmount.compareTo(BigInteger.ZERO) == 0) {
+                if (result != null || mBankBalance.compareTo(BigInteger.ZERO) == 0) {
                     final MessageDialog.Builder builder = new MessageDialog.Builder(getContext());
                     builder.setTitle(getString(R.string.withdraw_title));
                     if (result == null) {
@@ -272,22 +247,27 @@ public class MyWalletFragment extends BaseFragment {
         });
     }
 
-    private boolean checkReady() {
-        if (StateHolder.getTaskByState(StateHolder.STATE_UNBIND_RUNNING) != null) {
-            UIHelper.showToast(getContext(), R.string.unbinding);
-        } else if (StateHolder.getTaskByState(StateHolder.STATE_BIND_RUNNING) != null) {
-            UIHelper.showToast(getContext(), R.string.binding);
-        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_APPROVE_RUNNING) != null) {
-            UIHelper.showToast(getContext(), R.string.bank_approving);
-        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_CASH_RUNNING) != null) {
-            UIHelper.showToast(getContext(), R.string.cashing);
-        } else if (StateHolder.getTaskByState(StateHolder.STATE_BANK_WITHDRAW_RUNNING) != null) {
-            UIHelper.showToast(getContext(), R.string.withdrawing);
-        } else {
-            return true;
-        }
-
-        return false;
+    private void checkPasswd() {
+        final PasswordDialog.Builder builder = new PasswordDialog.Builder(getContext());
+        builder.setOnClickListener(new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == PasswordDialog.CONFIRM) {
+                    final String password = builder.getPassword();
+                    if (TextUtils.isEmpty(password)) {
+                        UIHelper.showToast(getActivity(), getString(R.string.input_passwd_tip));
+                    } else {
+                        dialog.dismiss();
+                        if (Wallet.loadWalletCredentials(password) != null) {
+                            resetWallet();
+                        } else {
+                            UIHelper.showToast(getActivity(), getString(R.string.input_passwd_error));
+                        }
+                    }
+                }
+            }
+        });
+        builder.create().show();
     }
 
     private void showWithdraw(BigInteger withdrawAmount) {
@@ -304,49 +284,24 @@ public class MyWalletFragment extends BaseFragment {
         startActivity(ExchangeActivity.class, bundle);
     }
 
-    private void getUnexchange() {
-        ARPBank.getUnexchangeAsync(new SimpleOnValueResult<BigInteger>() {
+    private void getEthBalance(String address) {
+        final TextView ethBalanceText = (TextView) findViewById(R.id.tv_eth_balance);
+        EtherAPI.getEtherBalance(address, new SimpleOnValueResult<BigInteger>() {
             @Override
-            public void onValueResult(final BigInteger result) {
+            public void onValueResult(BigInteger result) {
                 if (getActivity() == null) return;
 
-                if (result != null && result.compareTo(BigInteger.ZERO) > 0) {
-                    String message = String.format(getString(R.string.unexchange_tip_changing_wallet),
-                            Convert.fromWei(result.toString(), Convert.Unit.ETHER).floatValue());
-                    MessageDialog.Builder builder = new MessageDialog.Builder(getActivity());
-                    builder.setTitle(getString(R.string.exchange_unchanged_promise_found))
-                            .setMessage(message)
-                            .setPositiveButton(getString(R.string.go_exchange), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    showExchange(result);
-                                }
-                            })
-                            .setNegativeButton(getString(R.string.exchange_change_wallet_ignore), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    checkAuthor();
-                                }
-                            })
-                            .create()
-                            .show();
-                } else {
-                    resetWallet();
-                }
+                ethBalanceText.setText(String.format("%.4f", Convert.fromWei(new BigDecimal(result), Convert.Unit.ETHER)));
             }
 
             @Override
             public void onFail(Throwable throwable) {
-                new AlertDialog.Builder(getContext())
-                        .setMessage(R.string.tip_changing_wallet)
-                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                resetWallet();
-                            }
-                        })
-                        .setCancelable(true)
-                        .show();
+                showErrorAlertDialog(R.string.get_balance_error_msg, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                });
             }
         });
     }
@@ -373,6 +328,50 @@ public class MyWalletFragment extends BaseFragment {
         });
     }
 
+    private void refreshDepositAmount(final String address) {
+        final TextView depositBalance = (TextView) findViewById(R.id.tv_deposit);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                BankAllowance allowance = null;
+                try {
+                    allowance = ARPBank.allowance(address, ARPRegistry.CONTRACT_ADDRESS);
+                    if (allowance == null) {
+                        depositBalance.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                depositBalance.setText(String.format(getString(R.string.float_arp_token), 0.0f));
+                            }
+                        });
+                    } else {
+                        BigInteger allowanceAmount = allowance.amount;
+                        mBankBalance = ARPBank.balanceOf(address);
+                        mDepositTotal = allowanceAmount.add(mBankBalance);
+                        depositBalance.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                depositBalance.setText(String.format(getString(R.string.float_arp_token), Util.getHumanicAmount(mDepositTotal)));
+                            }
+                        });
+                    }
+                } catch (IOException e) {
+                    depositBalance.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showErrorAlertDialog(R.string.get_balance_error_msg, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    finish();
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        }).start();
+    }
+
     private void resetWallet() {
         Intent intent = new Intent(getActivity(), WalletImporterActivity.class);
         startActivity(intent);
@@ -395,12 +394,12 @@ public class MyWalletFragment extends BaseFragment {
 
                 case StateHolder.STATE_BANK_WITHDRAW_SUCCESS:
                     UIHelper.showToast(getActivity(), getString(R.string.withdraw_success));
-                    refreshDepositAmount();
+                    refreshDepositAmount(Wallet.get().getAddress());
                     getARPBalance(Wallet.get().getAddress());
                     break;
 
                 case StateHolder.STATE_UNBIND_SUCCESS:
-                    refreshDepositAmount();
+                    refreshDepositAmount(Wallet.get().getAddress());
                     break;
 
                 case StateHolder.STATE_BANK_WITHDRAW_FAILED:

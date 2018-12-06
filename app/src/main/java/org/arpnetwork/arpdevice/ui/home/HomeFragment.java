@@ -290,7 +290,7 @@ public class HomeFragment extends BaseFragment implements View.OnClickListener {
                         BigInteger promiseAmount = BigInteger.ZERO;
                         final Promise promise = Promise.get();
                         if (promise != null) {
-                            promiseAmount = new BigInteger(promise.getAmount(), 16);
+                            promiseAmount = promise.getAmountBig();
 
                             BigInteger unexchanged = promiseAmount.subtract(allowance.paid);
                             float fUnexchanged = Convert.fromWei(new BigDecimal(unexchanged), Convert.Unit.ETHER).floatValue();

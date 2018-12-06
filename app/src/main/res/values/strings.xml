@@ -101,7 +101,7 @@
     <string name="wallet_addr">Address</string>
     <string name="ARP_balance">ARP account</string>
     <string name="ETH_balance">ETH account</string>
-    <string name="deposit_balance">Deposit balance</string>
+    <string name="wallet_deposit">Deposit balance</string>
     <string name="float_arp_token">%.2f ARP</string>
     <string name="loading_balance">loading</string>
     <string name="reset_wallet">Reset wallet</string>

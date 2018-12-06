@@ -157,7 +157,7 @@ public class ARPBank extends Contract {
 
     public RemoteCall<TransactionReceipt> cash(Promise promise, String spender) {
         Function function = funcCash(Numeric.cleanHexPrefix(promise.getFrom()),
-                spender, new BigInteger(promise.getAmount(), 16),
+                spender, promise.getAmountBig(),
                 VerifyAPI.getSignatureDataFromHexString(promise.getSign()));
         return executeRemoteCallTransaction(function);
     }
@@ -189,7 +189,7 @@ public class ARPBank extends Contract {
 
     public static BigInteger estimateCashGasLimit(Promise promise, String spender) {
         String cashFunctionString = FunctionEncoder.encode(funcCash(Numeric.cleanHexPrefix(promise.getFrom()),
-                spender, new BigInteger(promise.getAmount(), 16),
+                spender, promise.getAmountBig(),
                 VerifyAPI.getSignatureDataFromHexString(promise.getSign())));
         return TransactionAPI.estimateFunctionGasLimit(cashFunctionString, CONTRACT_ADDRESS);
     }
@@ -227,7 +227,7 @@ public class ARPBank extends Contract {
 
     public static BigInteger getUnexchange() throws IOException {
         if (Promise.get() != null) {
-            final BigInteger amount = new BigInteger(Promise.get().getAmount(), 16);
+            final BigInteger amount = Promise.get().getAmountBig();
             String spender = Wallet.get().getAddress();
             if (amount.compareTo(BigInteger.ZERO) > 0) {
                 Miner miner = BindMinerHelper.getBound(spender);

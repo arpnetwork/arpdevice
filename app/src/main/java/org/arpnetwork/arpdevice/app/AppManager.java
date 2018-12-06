@@ -31,7 +31,6 @@ import org.arpnetwork.arpdevice.download.DownloadManager;
 import org.arpnetwork.arpdevice.download.IDownloadListener;
 import org.arpnetwork.arpdevice.stream.Touch;
 import org.arpnetwork.arpdevice.util.Util;
-import org.web3j.utils.Numeric;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -149,7 +148,7 @@ public class AppManager {
         File apkFile = new File(destDir, String.format("%s.apk", packageName));
         if (apkFile.exists() && apkFile.length() > 0) {
             String fileMd5 = Util.md5(apkFile);
-            if (fileMd5 != null && fileMd5.equalsIgnoreCase(Numeric.cleanHexPrefix(md5))) {
+            if (fileMd5 != null && fileMd5.equalsIgnoreCase(md5)) {
                 apkExists = true;
             }
         }

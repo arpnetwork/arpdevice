@@ -17,7 +17,6 @@
 package org.arpnetwork.arpdevice.contracts.api;
 
 import org.arpnetwork.arpdevice.data.Promise;
-import org.arpnetwork.arpdevice.ui.wallet.Wallet;
 import org.spongycastle.util.encoders.Hex;
 import org.web3j.abi.TypeEncoder;
 import org.web3j.abi.datatypes.generated.Uint256;
@@ -72,10 +71,10 @@ public class VerifyAPI {
      * @return
      */
     public static boolean isEffectivePromise(Promise promise) {
-        Uint256 cid = new Uint256(new BigInteger(promise.getCid(), 16));
+        Uint256 cid = new Uint256(promise.getCidBig());
         String from = Numeric.cleanHexPrefix(promise.getFrom());
         String sender = Numeric.cleanHexPrefix(promise.getTo());
-        Uint256 amount = new Uint256(new BigInteger(promise.getAmount(), 16));
+        Uint256 amount = new Uint256(promise.getAmountBig());
 
         StringBuilder builder = new StringBuilder();
         builder.append(TypeEncoder.encode(cid));

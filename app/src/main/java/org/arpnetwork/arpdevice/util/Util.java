@@ -156,6 +156,7 @@ public class Util {
 
                 BigInteger bigInt = new BigInteger(1, digest.digest());
                 md5 = bigInt.toString(16);
+                md5 = md5.length() < 32 ? "0" + md5 : md5;
             } catch (NoSuchAlgorithmException ignored) {
             }
         }

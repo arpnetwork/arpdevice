@@ -53,12 +53,17 @@ public class BindPromise implements Serializable {
         return amount;
     }
 
-    public BigInteger getAmount() {
+    /**
+     * convert amount that is hexValue with 0x to BigInteger.
+     *
+     * @return BigInteger
+     */
+    public BigInteger getAmountBig() {
         return Numeric.toBigInt(amount);
     }
 
     public BigDecimal getAmountHumanic() {
-        return Convert.fromWei(getAmount().toString(), Convert.Unit.ETHER);
+        return Convert.fromWei(getAmountBig().toString(), Convert.Unit.ETHER);
     }
 
     public BigInteger getExpired() {
