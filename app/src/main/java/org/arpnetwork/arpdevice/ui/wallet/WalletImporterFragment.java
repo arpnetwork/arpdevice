@@ -44,11 +44,13 @@ import org.arpnetwork.arpdevice.data.Promise;
 import org.arpnetwork.arpdevice.database.EarningRecord;
 import org.arpnetwork.arpdevice.ui.base.BaseFragment;
 import org.arpnetwork.arpdevice.ui.home.HomeActivity;
-import org.arpnetwork.arpdevice.util.SignUtil;
+import org.arpnetwork.arpdevice.util.PreferenceManager;
 import org.arpnetwork.arpdevice.util.UIHelper;
 import org.web3j.crypto.WalletUtils;
 
 public class WalletImporterFragment extends BaseFragment {
+    private static final String REQUEST_CAMERA_PERMISSIONS = "requestCameraPermissions";
+
     private EditText mEditPrivateKey;
     private EditText mEditPassword;
     private EditText mEditConfirmedPassword;
@@ -116,28 +118,28 @@ public class WalletImporterFragment extends BaseFragment {
             }
         });
         Toolbar.LayoutParams lp = new Toolbar.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.RIGHT);
+                ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.RIGHT);
         lp.rightMargin = (int) getResources().getDimension(R.dimen.plain_margin);
         toolbar.addView(scannerIcon, lp);
     }
 
     private void checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                        Manifest.permission.CAMERA)) {
+            if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                boolean shouldRequest = ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.CAMERA);
+                boolean hasRequest = PreferenceManager.getInstance().getBoolean(REQUEST_CAMERA_PERMISSIONS);
+                if (shouldRequest || !hasRequest) {
+                    requestPermissions(new String[]{Manifest.permission.CAMERA},
+                            Constant.PERMISSION_REQUEST_CODE_CAMERA);
+                    PreferenceManager.getInstance().putBoolean(REQUEST_CAMERA_PERMISSIONS, true);
+                } else {
                     new AlertDialog.Builder(getActivity())
                             .setMessage(getString(R.string.required_camera_permission))
                             .setPositiveButton(R.string.ok, null)
                             .create()
                             .show();
-                } else {
-                    ActivityCompat.requestPermissions(getActivity(),
-                            new String[]{Manifest.permission.CAMERA},
-                            Constant.PERMISSION_REQUEST_CODE_CAMERA);
                 }
-                return ;
+                return;
             }
         }
         scanPrivateKey();
@@ -209,7 +211,9 @@ public class WalletImporterFragment extends BaseFragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case Constant.PERMISSION_REQUEST_CODE_CAMERA:
-                scanPrivateKey();
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    scanPrivateKey();
+                }
                 break;
 
             default:

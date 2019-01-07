@@ -6,7 +6,7 @@ android {
     defaultConfig {
         applicationId "org.arpnetwork.arpdevice"
         minSdkVersion 22
-        targetSdkVersion 22
+        targetSdkVersion 27
         versionCode 26
         versionName "1.0.26"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
